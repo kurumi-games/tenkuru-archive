@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>4 Peace Speed — Online</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%);min-height:100vh;overflow-x:hidden;touch-action:none;}
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Fira+Code:wght@400;600&display=swap');
+@keyframes dealIn{from{opacity:0;transform:translateY(-12px) scale(0.88);}to{opacity:1;transform:none;}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
+@keyframes burst{0%{transform:scale(1)}40%{transform:scale(1.3);opacity:0.7}100%{transform:scale(0.8);opacity:0}}
+@keyframes resetAnim{0%{transform:scale(1)}40%{transform:scale(1.08);filter:brightness(1.3)}100%{transform:scale(1);filter:none}}
+@keyframes countDown{0%{transform:scale(0.4);opacity:0}40%{transform:scale(1.2);opacity:1}70%{transform:scale(1);opacity:1}100%{transform:scale(0.8);opacity:0}}
+@keyframes slideIn{from{transform:translateY(-16px);opacity:0}to{transform:none;opacity:1}}
+@keyframes comboPop{0%{transform:scale(0.3) rotate(-8deg);opacity:0}50%{transform:scale(1.25) rotate(3deg);opacity:1}70%{transform:scale(0.95) rotate(-1deg)}100%{transform:scale(1) rotate(0deg);opacity:1}}
+@keyframes comboOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.4) translateY(-30px)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// ★ここにRenderのURLを入れる（デプロイ後に変更）
+const WS_URL = 'wss://4peace-server-production.up.railway.app';
+
+const h = React.createElement;
+const{useState,useEffect,useRef,useCallback}=React;
+
+const PANEL='#7055b8',BORDER='#c0a0ff';
+const PINK='#00d4ff',RED_C='#ff2d6e',BLUE_C='#ffaa00';
+const TEXT='#ffffff',DIM='#e0d0ff';
+const CC={1:'#c0003a',2:'#c05800',3:'#0068a0',4:'#6010b0',5:'#007a40'};
+const WIN_PT=15;
+
+function canPlay(v,fs,fieldLen){
+  const filled=fieldLen+1,ns=fs+v;
+  if(filled===3&&ns<5)return false;
+  if(filled===4&&ns<10)return false;
+  return true;
+}
+
+// BGM
+const MEL={
+  lounge:[['A4','16n'],['0','16n'],['A4','16n'],['G#4','16n'],['A4','8n'],['E4','8n'],['0','8n'],['F4','16n'],['0','16n'],['F4','16n'],['E4','16n'],['F4','8n'],['C4','8n'],['0','8n'],['E4','16n'],['0','16n'],['E4','16n'],['D#4','16n'],['E4','8n'],['B3','8n'],['0','8n'],['D4','8n'],['C4','8n'],['B3','8n'],['A3','8n'],['A#4','16n'],['0','16n'],['A#4','16n'],['A4','16n'],['A#4','8n'],['F4','8n'],['0','8n'],['G4','16n'],['0','16n'],['G4','16n'],['F#4','16n'],['G4','8n'],['D4','8n'],['0','8n'],['F#4','16n'],['0','16n'],['F#4','16n'],['F4','16n'],['E4','8n'],['D4','8n'],['C4','8n'],['B3','8n'],['C5','8n'],['0','16n'],['C5','16n'],['D5','8n'],['0','16n'],['D5','16n'],['E5','8n'],['0','16n'],['E5','16n'],['F5','8n'],['0','8n'],['E5','16n'],['D5','16n'],['C5','16n'],['B4','16n'],['A4','8n'],['G#4','8n'],['G4','8n'],['0','8n'],['A5','8n'],['G#5','8n'],['G5','8n'],['F#5','8n'],['F5','8n'],['E5','8n'],['D#5','8n'],['D5','8n'],['C#5','8n'],['C5','8n'],['B4','8n'],['A#4','8n'],['A4','4n'],['0','4n']],
+  chill:[['C4','4n'],['0','8n'],['D#4','8n'],['F4','4n'],['G4','4n'],['A#4','4n'],['G4','4n'],['0','4n'],['G4','8n'],['F4','8n'],['D#4','4n'],['C4','4n'],['D4','4n'],['C4','2n'],['0','4n'],['C4','8n'],['D4','8n'],['D#4','4n'],['G4','4n'],['F4','8n'],['G4','8n'],['A#4','4n'],['0','4n'],['A4','8n'],['A#4','8n'],['G4','4n'],['F4','4n'],['D#4','4n'],['D4','4n'],['C4','2n'],['G4','8n'],['A#4','8n'],['C5','4n'],['C5','4n'],['A#4','8n'],['G4','8n'],['F4','4n'],['0','4n'],['F4','8n'],['G4','8n'],['A#4','4n'],['A4','4n'],['G4','4n'],['F4','4n'],['D#4','2n']],
+  kawaii:[['G4','8n'],['A4','8n'],['B4','8n'],['D5','8n'],['D5','8n'],['B4','8n'],['A4','8n'],['G4','8n'],['A4','8n'],['0','8n'],['A4','8n'],['B4','8n'],['C5','4n'],['B4','4n'],['G4','8n'],['B4','8n'],['D5','8n'],['B4','8n'],['G5','8n'],['F#5','8n'],['E5','8n'],['D5','8n'],['E5','8n'],['D5','8n'],['B4','8n'],['A4','8n'],['G4','2n'],['0','4n'],['B4','8n'],['C5','8n'],['D5','4n'],['E5','4n'],['D5','8n'],['C5','8n'],['B4','4n'],['0','4n'],['A4','8n'],['B4','8n'],['C5','4n'],['D5','4n'],['E5','8n'],['D5','8n'],['C5','8n'],['B4','8n'],['G4','8n'],['A4','8n'],['B4','4n'],['G4','4n'],['A4','8n'],['0','8n'],['A4','8n'],['G4','8n'],['F#4','4n'],['G4','2n'],['0','4n']],
+};
+const BAS={
+  lounge:[['A2','8n'],['A2','8n'],['E2','8n'],['A2','8n'],['F2','8n'],['F2','8n'],['C2','8n'],['F2','8n'],['E2','8n'],['E2','8n'],['B1','8n'],['E2','8n'],['D2','8n'],['C2','8n'],['B1','8n'],['A1','8n'],['A#2','8n'],['A#2','8n'],['F2','8n'],['A#2','8n'],['G2','8n'],['G2','8n'],['D2','8n'],['G2','8n'],['F#2','8n'],['E2','8n'],['D2','8n'],['C2','8n'],['B1','8n'],['0','8n'],['B1','8n'],['0','8n'],['A2','8n'],['A2','8n'],['A2','8n'],['A2','8n'],['A2','8n'],['A2','8n'],['A2','8n'],['A2','8n'],['A1','4n'],['E2','4n'],['A2','4n'],['0','4n']],
+  chill:[['C3','4n'],['C3','4n'],['G2','4n'],['G2','4n'],['A#2','4n'],['A#2','4n'],['F2','4n'],['F2','4n'],['A#2','4n'],['A#2','4n'],['F2','4n'],['F2','4n'],['G2','4n'],['G2','4n'],['C3','2n'],['C3','4n'],['C3','4n'],['G2','4n'],['G2','4n'],['A#2','4n'],['A#2','4n'],['F2','4n'],['F2','4n'],['A#2','4n'],['F2','4n'],['G2','4n'],['C3','2n']],
+  kawaii:[['G2','8n'],['G2','8n'],['D3','8n'],['D3','8n'],['G2','8n'],['G2','8n'],['D3','8n'],['D3','8n'],['C3','8n'],['C3','8n'],['G2','8n'],['G2','8n'],['A2','8n'],['A2','8n'],['D3','8n'],['D3','8n'],['G2','8n'],['B2','8n'],['D3','8n'],['B2','8n'],['C3','8n'],['E3','8n'],['G3','8n'],['E3','8n'],['A2','8n'],['C3','8n'],['E3','8n'],['C3','8n'],['D3','8n'],['F#3','8n'],['A3','8n'],['D3','8n']],
+};
+const TRACK_CFG={
+  lounge:{label:'⚔️ 緊迫',bpm:168,osc:'sawtooth',bosc:'triangle',sv:-14,bv:-10,fHz:1800,rDec:1.2,rWet:0.18,env:{attack:0.005,decay:0.15,sustain:0.4,release:0.3}},
+  chill:{label:'🐰 ゆるチル',bpm:80,osc:'triangle',bosc:'sine',sv:-12,bv:-9,fHz:1200,rDec:2.2,rWet:0.28,env:{attack:0.02,decay:0.3,sustain:0.5,release:0.6}},
+  kawaii:{label:'💖 かわいい',bpm:132,osc:'square',bosc:'triangle',sv:-13,bv:-11,fHz:2400,rDec:1.0,rWet:0.14,env:{attack:0.005,decay:0.1,sustain:0.3,release:0.2}},
+};
+function useAudio(){
+  const[musicOn,setMusicOn]=useState(true);
+  const[bgmTrack,setBgmTrack]=useState('lounge');
+  const musicOnRef=useRef(true),bgmTrackRef=useRef('lounge');
+  const synthRef=useRef(null),bassRef=useRef(null),partRef=useRef(null),bassPartRef=useRef(null);
+  const startedRef=useRef(false),ctx=useRef(null);
+  function getCtx(){if(!ctx.current)ctx.current=new(window.AudioContext||window.webkitAudioContext)();if(ctx.current.state==='suspended')ctx.current.resume();return ctx.current;}
+  function sfx(freqs,type='sine',vol=0.18,dur=0.12){try{const c=getCtx();freqs.forEach(([f,d=0])=>{const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.value=f;const t=c.currentTime+d;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+dur+0.02);});}catch(e){}}
+  const playTap=useCallback(()=>{try{const c=getCtx();const o=c.createOscillator(),eg=c.createGain();o.type='square';o.frequency.value=2800;eg.gain.setValueAtTime(0.12,c.currentTime);eg.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.02);o.connect(eg);eg.connect(c.destination);o.start();o.stop(c.currentTime+0.025);}catch(e){}},[]);
+  const playBurst=useCallback(()=>sfx([[300],[230,0.07],[160,0.16]],'sawtooth',0.2,0.38),[]);
+  const playScore=useCallback((pts)=>sfx([[523],[659,0.08],[784,0.16],[pts>3?1200:900,0.26]],'sine',0.15,0.3),[]);
+  const playGo=useCallback(()=>sfx([[523],[659,0.06],[784,0.12],[1047,0.2]],'sine',0.2,0.3),[]);
+  const playTimeUp=useCallback(()=>sfx([[440],[392,0.13],[349,0.27],[294,0.42]],'sine',0.13,0.42),[]);
+  function buildPart(notes,onNote){let t=0;const evs=notes.map(([n,d])=>{const e=[t,{note:n,dur:d}];t+=Tone.Time(d).toSeconds();return e;});const p=new Tone.Part(onNote,evs);p.loop=true;p.loopEnd=t;p.start(0);return p;}
+  function killBGM(){try{Tone.getTransport().stop();Tone.getTransport().cancel();[partRef,bassPartRef].forEach(r=>{if(r.current){r.current.dispose();r.current=null;}});[synthRef,bassRef].forEach(r=>{if(r.current){r.current.dispose();r.current=null;}});}catch(e){}}
+  const startBGM=useCallback(async()=>{musicOnRef.current=true;setMusicOn(true);try{if(!startedRef.current){await Tone.start();startedRef.current=true;}killBGM();const tk=bgmTrackRef.current;const cfg=TRACK_CFG[tk]||TRACK_CFG.lounge;const filt=new Tone.Filter(cfg.fHz,'lowpass').toDestination();const rev=new Tone.Reverb({decay:cfg.rDec,wet:cfg.rWet}).connect(filt);const synth=new Tone.Synth({oscillator:{type:cfg.osc},envelope:cfg.env}).connect(rev);synth.volume.value=cfg.sv;synthRef.current=synth;const bass=new Tone.Synth({oscillator:{type:cfg.bosc},envelope:{attack:0.01,decay:0.2,sustain:0.5,release:0.3}}).toDestination();bass.volume.value=cfg.bv;bassRef.current=bass;Tone.getTransport().bpm.value=cfg.bpm;partRef.current=buildPart(MEL[tk],(t,v)=>{if(musicOnRef.current&&v.note!=='0')synth.triggerAttackRelease(v.note,v.dur,t);});bassPartRef.current=buildPart(BAS[tk],(t,v)=>{if(musicOnRef.current&&v.note!=='0')bass.triggerAttackRelease(v.note,v.dur,t);});Tone.getTransport().start();}catch(e){}},[]);
+  const stopBGM=useCallback(()=>{musicOnRef.current=false;setMusicOn(false);killBGM();},[]);
+  const toggleMusic=useCallback(()=>{musicOnRef.current?stopBGM():startBGM();},[startBGM,stopBGM]);
+  const selectTrack=useCallback((t)=>{bgmTrackRef.current=t;setBgmTrack(t);if(musicOnRef.current)startBGM();},[startBGM]);
+  useEffect(()=>()=>stopBGM(),[]);
+  const TRACKS=Object.fromEntries(Object.keys(TRACK_CFG).map(k=>[k,{label:TRACK_CFG[k].label}]));
+  return{startBGM,stopBGM,playTap,playBurst,playScore,playGo,playTimeUp,musicOn,toggleMusic,bgmTrack,selectTrack,TRACKS};
+}
+function playComboSfx(voice){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const m=ctx.createGain();m.connect(ctx.destination);
+    function t(freq,start,dur,vol=0.22,type='sine'){const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol,ctx.currentTime+start);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+start+dur);o.connect(g);g.connect(m);o.start(ctx.currentTime+start);o.stop(ctx.currentTime+start+dur+0.02);}
+    if(voice==='ワンペア'){t(659,0,0.15);t(880,0.18,0.22,0.28);}
+    else if(voice==='ツーペア'){t(523,0,0.1);t(659,0.12,0.1);t(1047,0.25,0.38,0.32);}
+    else if(voice==='スリーカード'){t(392,0,0.08);t(523,0.1,0.08);t(659,0.2,0.08);t(1047,0.3,0.5,0.35);}
+    else if(voice==='ストレート'){t(523,0,0.08);t(659,0.1,0.08);t(784,0.2,0.08);t(1047,0.3,0.1,0.25);t(1319,0.42,0.42,0.28);}
+  }catch(e){}
+}
+
+function SlideCard({value,idx,onPlay,disabled}){
+  const[dragY,setDragY]=useState(0);
+  const[isDragging,setIsDragging]=useState(false);
+  const startYR=useRef(0);
+  const startedR=useRef(false);
+  function onPointerDown(e){
+    if(disabled)return;
+    e.preventDefault();
+    const t=e.touches?e.touches[0]:e;
+    startYR.current=t.clientY;
+    startedR.current=true;
+    setIsDragging(true);
+    setDragY(0);
+  }
+  function onPointerMove(e){
+    if(!startedR.current||disabled)return;
+    e.preventDefault();
+    const t=e.touches?e.touches[0]:e;
+    const dy=t.clientY-startYR.current;
+    if(dy<0)setDragY(dy);
+  }
+  function onPointerUp(e){
+    if(!startedR.current)return;
+    startedR.current=false;
+    setIsDragging(false);
+    const curY=dragY;
+    setDragY(0);
+    if(disabled)return;
+    if(curY<-15)onPlay(idx,value);
+  }
+  return h('div',{
+    style:{
+      width:50,height:70,borderRadius:7,flexShrink:0,
+      background:'#f8f6ff',
+      border:disabled?'1.5px solid #ccc':(isDragging&&dragY<-15?'1.5px solid '+PINK:'1.5px solid #c0a0e0'),
+      display:'flex',alignItems:'center',justifyContent:'center',
+      opacity:disabled?0.3:1,
+      animation:isDragging?'none':'dealIn 0.18s ease both',
+      position:'relative',userSelect:'none',WebkitUserSelect:'none',
+      touchAction:'none',cursor:disabled?'default':'grab',
+      zIndex:isDragging?100:1,
+      transform:isDragging?`translateY(${dragY}px) scale(1.1)`:'none',
+      transition:isDragging?'none':'transform 0.2s ease',
+      boxShadow:isDragging&&dragY<-15?'0 8px 24px '+PINK+'cc':'0 2px 6px #0002',
+    },
+    onPointerDown,onPointerMove,onPointerUp,onPointerCancel:onPointerUp,
+  },
+    h('span',{style:{fontSize:26,fontWeight:900,color:CC[value],fontFamily:"'Playfair Display',serif",lineHeight:1,pointerEvents:'none'}},value),
+    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:CC[value],fontWeight:900,pointerEvents:'none'}},value),
+    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:CC[value],fontWeight:900,transform:'rotate(180deg)',pointerEvents:'none'}},value)
+  );
+}
+
+function NameScreen({onSubmit,musicOn,toggleMusic,bgmTrack,selectTrack,TRACKS}){
+  const[name,setName]=useState('');
+  const[err,setErr]=useState('');
+  const sel=(active,onClick,label)=>h('button',{onClick,style:{flex:1,borderRadius:10,padding:'8px 0',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:"'Fira Code',monospace",border:'2px solid '+(active?PINK:DIM),background:active?PINK+'22':'transparent',color:active?PINK:DIM}},label);
+  function doSubmit(){
+    const n=name.trim();
+    if(!n){setErr('名前を入力してください');return;}
+    if(n.length>12){setErr('12文字以内で入力してください');return;}
+    setErr('');onSubmit(n);
+  }
+  return h('div',{style:{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+    h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:16,width:'100%',maxWidth:320,animation:'fadeUp 0.5s ease'}},
+      h('div',{style:{animation:'float 3s ease-in-out infinite'}},
+        h('div',{style:{fontSize:9,letterSpacing:8,color:PINK,fontFamily:"'Fira Code',monospace",marginBottom:4}},'✦ ONLINE ✦'),
+        h('div',{style:{fontSize:46,fontWeight:900,lineHeight:1,background:'linear-gradient(135deg,#00d4ff,#a020f0,#ff2d6e)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}},'4 PEACE'),
+        h('div',{style:{fontSize:18,fontWeight:700,color:'#ffffff',letterSpacing:8,marginTop:2}},'SPEED')
+      ),
+      h('div',{style:{width:'100%'}},
+        h('div',{style:{fontSize:9,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",textAlign:'center',marginBottom:6}},'── BGM ──'),
+        h('div',{style:{display:'flex',gap:6}},Object.entries(TRACKS).map(([k,tr])=>sel(bgmTrack===k,()=>selectTrack(k),tr.label)))
+      ),
+      h('div',{style:{fontSize:14,color:DIM,fontFamily:"'Fira Code',monospace"}},'プレイヤー名を入力'),
+      h('input',{type:'text',placeholder:'名前（12文字以内）',value:name,onChange:e=>setName(e.target.value),onKeyDown:e=>e.key==='Enter'&&doSubmit(),maxLength:12,style:{width:'100%',padding:'12px 16px',borderRadius:12,border:'2px solid '+BORDER,background:'#ffffff22',color:'#fff',fontSize:18,fontFamily:"'Fira Code',monospace",textAlign:'center',outline:'none'}}),
+      err&&h('div',{style:{color:RED_C,fontSize:12,fontFamily:"'Fira Code',monospace"}},'⚠ '+err),
+      h('button',{onClick:doSubmit,style:{background:'linear-gradient(135deg,'+PINK+','+BLUE_C+')',border:'none',borderRadius:14,padding:'14px 0',color:'#fff',fontSize:18,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:'pointer',letterSpacing:2,width:'100%'}},'スタート！'),
+      h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:12,padding:'10px 14px',color:DIM,fontSize:14,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},musicOn?'🎵':'🔇')
+    )
+  );
+}
+function LobbyScreen({onCreate,onJoin,account,playerName,musicOn,toggleMusic,bgmTrack,selectTrack,TRACKS}){
+  const[code,setCode]=useState('');
+  const[err,setErr]=useState('');
+  const sel=(active,onClick,label)=>h('button',{onClick,style:{flex:1,borderRadius:10,padding:'8px 0',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:"'Fira Code',monospace",border:'2px solid '+(active?PINK:DIM),background:active?PINK+'22':'transparent',color:active?PINK:DIM}},label);
+  function doJoin(){const c=code.trim();if(c.length!==4||isNaN(c)){setErr('4桁の数字を入力してください');return;}setErr('');onJoin(c);}
+  return h('div',{style:{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+    h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:14,width:'100%',maxWidth:320,animation:'fadeUp 0.5s ease'}},
+      h('div',{style:{animation:'float 3s ease-in-out infinite'}},
+        h('div',{style:{fontSize:9,letterSpacing:8,color:PINK,fontFamily:"'Fira Code',monospace",marginBottom:4}},'✦ ONLINE ✦'),
+        h('div',{style:{fontSize:46,fontWeight:900,lineHeight:1,background:'linear-gradient(135deg,#00d4ff,#a020f0,#ff2d6e)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}},'4 PEACE'),
+        h('div',{style:{fontSize:18,fontWeight:700,color:'#ffffff',letterSpacing:8,marginTop:2}},'SPEED')
+      ),
+      // アカウント情報
+      account&&h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:12,padding:'10px 16px',width:'100%'}},
+        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center'}},
+          h('div',{style:{textAlign:'left'}},
+            h('div',{style:{fontSize:14,color:'#fff',fontWeight:700}},account.rank.emoji+' '+playerName),
+            h('div',{style:{fontSize:11,color:DIM,fontFamily:"'Fira Code',monospace"}},account.rank.name+' — '+account.rating+'pt')
+          ),
+          h('div',{style:{textAlign:'right'}},
+            h('div',{style:{fontSize:11,color:DIM,fontFamily:"'Fira Code',monospace"}},account.wins+'勝 '+account.losses+'敗')
+          )
+        )
+      ),
+      h('div',{style:{width:'100%'}},
+        h('div',{style:{fontSize:9,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",textAlign:'center',marginBottom:6}},'── BGM ──'),
+        h('div',{style:{display:'flex',gap:6}},Object.entries(TRACKS).map(([k,tr])=>sel(bgmTrack===k,()=>selectTrack(k),tr.label)))
+      ),
+      h('button',{onClick:onCreate,style:{background:'linear-gradient(135deg,'+PINK+','+BLUE_C+')',border:'none',borderRadius:14,padding:'14px 0',color:'#fff',fontSize:18,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:'pointer',letterSpacing:2,boxShadow:'0 4px 28px '+PINK+'55',width:'100%'}},'🏠 ルームを作る'),
+      h('div',{style:{color:DIM,fontFamily:"'Fira Code',monospace",fontSize:11}},'── または ──'),
+      h('div',{style:{width:'100%',display:'flex',flexDirection:'column',gap:8}},
+        h('input',{type:'number',placeholder:'4桁のルームコード',value:code,onChange:e=>setCode(e.target.value),style:{width:'100%',padding:'12px 16px',borderRadius:12,border:'2px solid '+BORDER,background:'#ffffff22',color:'#fff',fontSize:18,fontFamily:"'Fira Code',monospace",textAlign:'center',outline:'none'}}),
+        err&&h('div',{style:{color:RED_C,fontSize:12,fontFamily:"'Fira Code',monospace"}},'⚠ '+err),
+        h('button',{onClick:doJoin,style:{background:'linear-gradient(135deg,#a020f0,#ff2d6e)',border:'none',borderRadius:14,padding:'13px 0',color:'#fff',fontSize:18,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:'pointer',letterSpacing:2,width:'100%'}},'🚪 ルームに入る')
+      ),
+      h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:12,padding:'10px 14px',color:DIM,fontSize:14,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},musicOn?'🎵':'🔇')
+    )
+  );
+}
+function WaitingScreen({roomId,onCancel}){
+  return h('div',{style:{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+    h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:20,animation:'fadeUp 0.5s ease'}},
+      h('div',{style:{fontSize:48,animation:'float 1.5s ease-in-out infinite'}},'⏳'),
+      h('div',{style:{fontSize:14,color:DIM,fontFamily:"'Fira Code',monospace"}},'友達の入室を待っています...'),
+      h('div',{style:{background:PANEL,border:'2px solid '+PINK,borderRadius:16,padding:'20px 32px'}},
+        h('div',{style:{fontSize:11,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:8}},'ルームコード'),
+        h('div',{style:{fontSize:56,fontWeight:900,color:PINK,fontFamily:"'Fira Code',monospace",letterSpacing:8}},roomId)
+      ),
+      h('button',{onClick:onCancel,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:12,padding:'10px 24px',color:DIM,fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'キャンセル')
+    )
+  );
+}
+function ResultScreen({data,onHome}){
+  const win=data.winner==='me';
+  const change=data.ratingChange||0;
+  const newRating=data.newRating||0;
+  const newRank=data.newRank||{name:'ブロンズ',emoji:'🥉'};
+  return h('div',{style:{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+    h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:18,animation:'fadeUp 0.5s ease'}},
+      h('div',{style:{fontSize:70,animation:'float 2s ease-in-out infinite'}},win?'🏆':'💀'),
+      h('div',{style:{fontSize:36,fontWeight:900,fontFamily:"'Playfair Display',serif",background:win?'linear-gradient(135deg,#00d4ff,#a020f0)':'linear-gradient(135deg,#ff2d6e,#a020f0)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}},win?'YOU WIN!':'YOU LOSE...'),
+      h('div',{style:{display:'flex',gap:20,background:PANEL,border:'1px solid '+BORDER,borderRadius:14,padding:'14px 24px'}},
+        h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'YOU'),h('div',{style:{fontSize:38,fontWeight:900,color:PINK,fontFamily:"'Playfair Display',serif"}},data.myPt+'pt')),
+        h('div',{style:{fontSize:16,color:DIM,alignSelf:'center',fontFamily:"'Fira Code',monospace"}},'vs'),
+        h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'相手'),h('div',{style:{fontSize:38,fontWeight:900,color:RED_C,fontFamily:"'Playfair Display',serif"}},data.opPt+'pt'))
+      ),
+      // レーティング変動
+      h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:14,padding:'14px 24px',width:'100%'}},
+        h('div',{style:{fontSize:11,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:6}},'レーティング'),
+        h('div',{style:{fontSize:28,fontWeight:900,color:change>0?PINK:RED_C}},
+          (change>0?'+':'')+change
+        ),
+        h('div',{style:{fontSize:16,color:'#fff',marginTop:4}},newRank.emoji+' '+newRank.name+' — '+newRating+'pt')
+      ),
+      h('button',{onClick:onHome,style:{background:'linear-gradient(135deg,'+PINK+','+BLUE_C+')',border:'none',borderRadius:14,padding:'13px 40px',color:'#fff',fontSize:17,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:'pointer',letterSpacing:2,width:'100%'}},'🏠 ホームに戻る')
+    )
+  );
+}
+
+function App(){
+  const[phase,setPhase]=useState('name'); // 最初に名前入力
+  const[playerName,setPlayerName]=useState('');
+  const[account,setAccount]=useState(null); // {rating, rank, wins, losses}
+  const[roomId,setRoomId]=useState('');
+  const[myHand,setMyHand]=useState([]);
+  const[opHandCount,setOpHandCount]=useState(0);
+  const[opName,setOpName]=useState('');
+  const[field,setField]=useState([]);
+  const[fieldSum,setFieldSum]=useState(0);
+  const[myPt,setMyPt]=useState(0);
+  const[opPt,setOpPt]=useState(0);
+  const[rNum,setRNum]=useState(1);
+  const[timeLeft,setTimeLeft]=useState(10);
+  const[countNum,setCountNum]=useState(-1);
+  const[flashMsg,setFlashMsg]=useState(null);
+  const[burstAnim,setBurstAnim]=useState(false);
+  const[resetFA,setResetFA]=useState(false);
+  const[comboShow,setComboShow]=useState(null);
+  const[gameEndData,setGameEndData]=useState(null);
+
+  const wsR=useRef(null);
+  const roleR=useRef(null);
+  const playerNameR=useRef('');
+  const myHandR=useRef([]);
+  const fieldR=useRef([]);
+  const fieldSumR=useRef(0);
+  const timeLeftR=useRef(10);
+  const countNumR=useRef(-1);
+  const audio=useAudio();
+
+  useEffect(()=>{
+    myHandR.current=myHand;
+  },[myHand]);
+
+  useEffect(()=>()=>{
+    audio.stopBGM();
+    if(wsR.current)wsR.current.close();
+  },[]);
+
+  function connect(onOpen){
+    const ws=new WebSocket(WS_URL);
+    wsR.current=ws;
+    ws.onopen=()=>onOpen(ws);
+    ws.onmessage=(e)=>onMessage(JSON.parse(e.data));
+    ws.onclose=()=>{
+      if(phase!=='lobby'&&phase!=='gameEnd'&&phase!=='name'){
+        alert('接続が切れました');
+        goHome();
+      }
+    };
+  }
+
+  function onMessage(msg){
+    switch(msg.type){
+      case 'account':
+        setAccount({rating:msg.rating,rank:msg.rank,wins:msg.wins,losses:msg.losses});
+        setPhase('lobby');
+        break;
+      case 'created':
+        setRoomId(msg.roomId);
+        setPhase('waiting');
+        break;
+      case 'joined':
+        setRoomId(msg.roomId);
+        setOpName(msg.opName||'相手');
+        audio.startBGM();
+        setPhase('playing');
+        break;
+      case 'guestJoined':
+        setOpName(msg.opName||'相手');
+        audio.startBGM();
+        setPhase('playing');
+        break;
+      case 'state':
+        setMyHand(msg.myHand||[]);
+        myHandR.current=msg.myHand||[];
+        setOpHandCount(msg.opHandCount||0);
+        setField(msg.field||[]);
+        fieldR.current=msg.field||[];
+        setFieldSum(msg.fieldSum||0);
+        fieldSumR.current=msg.fieldSum||0;
+        setMyPt(msg.myPt||0);
+        setOpPt(msg.opPt||0);
+        setRNum(msg.rNum||1);
+        setTimeLeft(msg.timeLeft||10);
+        timeLeftR.current=msg.timeLeft||10;
+        break;
+      case 'countdown':
+        const c=msg.value;
+        countNumR.current=c;
+        setCountNum(c);
+        if(c===0)audio.playGo();
+        break;
+      case 'timer':
+        setTimeLeft(msg.value);
+        timeLeftR.current=msg.value;
+        if(msg.value===0)audio.playTimeUp();
+        break;
+      case 'field':
+        setField(msg.field);
+        fieldR.current=msg.field;
+        setFieldSum(msg.fieldSum);
+        fieldSumR.current=msg.fieldSum;
+        break;
+      case 'handUpdate':
+        const newH=[...myHandR.current];
+        newH[msg.idx]=0;
+        setMyHand(newH);
+        myHandR.current=newH;
+        break;
+      case 'newHand':
+        setMyHand(msg.hand);
+        myHandR.current=msg.hand;
+        break;
+      case 'fieldUpdate':
+        setField(msg.field);
+        fieldR.current=msg.field;
+        setFieldSum(msg.fieldSum);
+        fieldSumR.current=msg.fieldSum;
+        break;
+      case 'opPlay':
+        setField(msg.field);
+        fieldR.current=msg.field;
+        setFieldSum(msg.fieldSum);
+        fieldSumR.current=msg.fieldSum;
+        audio.playTap();
+        setOpHandCount(c=>Math.max(0,c-1));
+        break;
+      case 'burst':
+        audio.playBurst();
+        setBurstAnim(true);
+        const isMyBurst=msg.msg.by===roleR.current;
+        setFlashMsg({text:isMyBurst?'💥 バースト！あなた-2pt':'💥 相手バースト！相手-2pt',by:msg.msg.by});
+        if(roleR.current==='host'){setMyPt(msg.hostPt);setOpPt(msg.guestPt);}
+        else{setMyPt(msg.guestPt);setOpPt(msg.hostPt);}
+        setTimeout(()=>{setBurstAnim(false);setFlashMsg(null);},1000);
+        break;
+      case 'score':
+        if(msg.voice)playComboSfx(msg.voice);else audio.playScore(msg.combo?.pts||1);
+        setResetFA(true);
+        setComboShow(msg.combo);
+        // テキストをclient側でroleに合わせて生成
+        const isMyScore=msg.by===roleR.current;
+        setFlashMsg({
+          text:(isMyScore?'🙋 YOU +':'👤 相手 +')+msg.combo.pts+'pt',
+          by:msg.by
+        });
+        if(roleR.current==='host'){setMyPt(msg.hostPt);setOpPt(msg.guestPt);}
+        else{setMyPt(msg.guestPt);setOpPt(msg.hostPt);}
+        setTimeout(()=>setComboShow(null),1200);
+        setTimeout(()=>{setResetFA(false);setFlashMsg(null);},1400);
+        break;
+      case 'comboEnd':
+        setComboShow(null);
+        break;
+      case 'forceReset':
+        setResetFA(true);
+        setFlashMsg({text:'4枚！強制リセット',who:null});
+        setTimeout(()=>{setResetFA(false);setFlashMsg(null);},900);
+        break;
+      case 'finish':
+        const isMe=msg.winner===roleR.current;
+        const finalMyPt=roleR.current==='host'?msg.hostPt:msg.guestPt;
+        const finalOpPt=roleR.current==='host'?msg.guestPt:msg.hostPt;
+        setGameEndData({
+          winner:isMe?'me':'op',
+          myPt:finalMyPt,
+          opPt:finalOpPt,
+          ratingChange:msg.ratingChange,
+          newRating:msg.newRating,
+          newRank:msg.newRank,
+        });
+        // アカウント情報を更新
+        setAccount(a=>a?{...a,rating:msg.newRating,rank:msg.newRank,wins:isMe?a.wins+1:a.wins,losses:isMe?a.losses:a.losses+1}:null);
+        audio.stopBGM();
+        setPhase('gameEnd');
+        break;
+      case 'opLeft':
+        alert('相手が退出しました');
+        goHome();
+        break;
+      case 'error':
+        alert(msg.msg);
+        break;
+    }
+  }
+
+  function submitName(name){
+    playerNameR.current=name;
+    setPlayerName(name);
+    const ws=new WebSocket(WS_URL);
+    wsR.current=ws;
+    // タイムアウト：3秒で繋がらなければロビーへ強制移動
+    const timeout=setTimeout(()=>{
+      setAccount({rating:500,rank:{name:'ブロンズ',emoji:'🥉'},wins:0,losses:0});
+      setPhase('lobby');
+    },3000);
+    ws.onopen=()=>{
+      clearTimeout(timeout);
+      ws.send(JSON.stringify({type:'getAccount',name}));
+    };
+    ws.onmessage=(e)=>{
+      clearTimeout(timeout);
+      onMessage(JSON.parse(e.data));
+    };
+    ws.onerror=()=>{
+      clearTimeout(timeout);
+      // 接続失敗してもロビーには進む
+      setAccount({rating:500,rank:{name:'ブロンズ',emoji:'🥉'},wins:0,losses:0});
+      setPhase('lobby');
+    };
+    ws.onclose=()=>{};
+  }
+
+  function createRoom(){
+    const ws=wsR.current;
+    if(!ws||ws.readyState!==WebSocket.OPEN){
+      // 再接続
+      connect(w=>w.send(JSON.stringify({type:'create',name:playerNameR.current})));
+    } else {
+      ws.onmessage=(e)=>onMessage(JSON.parse(e.data));
+      ws.send(JSON.stringify({type:'create',name:playerNameR.current}));
+    }
+    roleR.current='host';
+  }
+
+  function joinRoom(id){
+    roleR.current='guest';
+    const ws=wsR.current;
+    if(!ws||ws.readyState!==WebSocket.OPEN){
+      connect(w=>w.send(JSON.stringify({type:'join',roomId:id,name:playerNameR.current})));
+    } else {
+      ws.onmessage=(e)=>onMessage(JSON.parse(e.data));
+      ws.send(JSON.stringify({type:'join',roomId:id,name:playerNameR.current}));
+    }
+  }
+
+  function playCard(idx,value){
+    if(countNumR.current>=0)return;
+    if(timeLeftR.current<=0)return;
+    if(!wsR.current||wsR.current.readyState!==WebSocket.OPEN)return;
+    const hand=myHandR.current;
+    if(!hand[idx])return;
+    if(!canPlay(value,fieldSumR.current,fieldR.current.filter(v=>v).length))return;
+    audio.playTap();
+    // 楽観的更新：手札も場も即座に更新
+    const newH=[...hand];
+    newH[idx]=0;
+    setMyHand(newH);
+    myHandR.current=newH;
+    const newField=[...fieldR.current,value];
+    const newSum=fieldSumR.current+value;
+    setField(newField);
+    fieldR.current=newField;
+    setFieldSum(newSum);
+    fieldSumR.current=newSum;
+    wsR.current.send(JSON.stringify({type:'play',idx,value}));
+  }
+
+  function goHome(){
+    if(wsR.current){
+      try{wsR.current.send(JSON.stringify({type:'leave'}));}catch(e){}
+      wsR.current.close();
+      wsR.current=null;
+    }
+    audio.stopBGM();
+    setPhase('lobby');
+    roleR.current=null;
+    setMyHand([]);setOpHandCount(0);setField([]);setFieldSum(0);
+    setMyPt(0);setOpPt(0);setRNum(1);setTimeLeft(10);
+    setCountNum(-1);countNumR.current=-1;
+    setFlashMsg(null);setGameEndData(null);setBurstAnim(false);setResetFA(false);setComboShow(null);
+    // ロビーに戻った時に再接続してアカウント更新
+    setTimeout(()=>{
+      const ws=new WebSocket(WS_URL);
+      wsR.current=ws;
+      ws.onopen=()=>ws.send(JSON.stringify({type:'getAccount',name:playerNameR.current}));
+      ws.onmessage=(e)=>onMessage(JSON.parse(e.data));
+      ws.onclose=()=>{};
+    },300);
+  }
+
+  // 名前入力画面
+  if(phase==='name'){
+    return h(NameScreen,{onSubmit:submitName,musicOn:audio.musicOn,toggleMusic:audio.toggleMusic,bgmTrack:audio.bgmTrack,selectTrack:audio.selectTrack,TRACKS:audio.TRACKS});
+  }
+  if(phase==='lobby')return h(LobbyScreen,{onCreate:createRoom,onJoin:joinRoom,account,playerName,musicOn:audio.musicOn,toggleMusic:audio.toggleMusic,bgmTrack:audio.bgmTrack,selectTrack:audio.selectTrack,TRACKS:audio.TRACKS});
+  if(phase==='waiting')return h(WaitingScreen,{roomId,onCancel:goHome});
+  if(phase==='gameEnd'&&gameEndData)return h(ResultScreen,{data:gameEndData,onHome:goHome});
+
+  const isCardDisabled=(v)=>countNum>=0||timeLeft<=0||!canPlay(v,fieldSum,field.filter(x=>x).length);
+
+  return h('div',{style:{position:'fixed',inset:0,background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",overflow:'hidden'}},
+    h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',backgroundImage:'repeating-linear-gradient(0deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px)'}}),
+    countNum>=0&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#2a103066',pointerEvents:'all'}},
+      h('div',{key:countNum,style:{fontSize:countNum===0?96:120,fontWeight:900,color:countNum===0?'#50e080':'#fff',animation:'countDown 0.65s ease both',textShadow:countNum===0?'0 0 60px #50e080':'0 0 30px #fff'}},countNum===0?'GO!!':countNum)
+    ),
+    flashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
+      h('div',{style:{background:(flashMsg.by===roleR.current||(!flashMsg.by&&flashMsg.who==='player'))?'#00203088':'#3a001088',backdropFilter:'blur(8px)',borderRadius:14,padding:'14px 26px',fontSize:18,fontWeight:900,color:(flashMsg.by===roleR.current||(!flashMsg.by&&flashMsg.who==='player'))?'#00d4ff':'#ff2d6e',boxShadow:'0 4px 32px '+((flashMsg.by===roleR.current||(!flashMsg.by&&flashMsg.who==='player'))?'#00d4ff55':'#ff2d6e55'),border:'2px solid '+((flashMsg.by===roleR.current||(!flashMsg.by&&flashMsg.who==='player'))?'#00d4ff':'#ff2d6e'),animation:'slideIn 0.2s ease',maxWidth:'88vw',textAlign:'center'}},flashMsg.text)
+    ),
+    comboShow&&h('div',{style:{position:'fixed',inset:0,zIndex:170,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
+      h('div',{style:{textAlign:'center',animation:'comboPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards'}},
+        h('div',{style:{fontSize:comboShow.pts>=5?60:52,fontWeight:900,color:comboShow.color,textShadow:'0 0 30px '+comboShow.color,lineHeight:1,letterSpacing:2}},comboShow.text),
+        h('div',{style:{fontSize:comboShow.pts>=5?40:32,fontWeight:900,color:'#fff',textShadow:'0 0 20px '+comboShow.color,marginTop:4,animation:'comboOut 0.8s 0.4s ease forwards'}},'+'+comboShow.pts+'pt')
+      )
+    ),
+    h('div',{style:{position:'fixed',top:0,left:0,right:0,zIndex:10,padding:'48px 12px 0'}},
+      h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}},
+        h('div',{style:{background:timeLeft<=5?RED_C:PANEL,border:'1px solid '+(timeLeft<=5?RED_C:BORDER),borderRadius:10,padding:'4px 10px',textAlign:'center',minWidth:54,transition:'background 0.3s',animation:timeLeft<=5&&timeLeft>0?'pulse 0.5s infinite':'none'}},
+          h('div',{style:{fontSize:8,color:timeLeft<=5?'#fff':DIM,fontFamily:"'Fira Code',monospace"}},'TIME'),
+          h('div',{style:{fontSize:24,fontWeight:900,color:timeLeft<=5?'#fff':TEXT,lineHeight:1.1}},timeLeft)
+        ),
+        h('div',{style:{display:'flex',gap:10,alignItems:'center'}},
+          h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'YOU'),h('div',{style:{fontSize:22,fontWeight:900,color:PINK}},myPt+'pt')),
+          h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:10,color:DIM,fontFamily:"'Fira Code',monospace"}},'R'+rNum)),
+          h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'相手'),h('div',{style:{fontSize:22,fontWeight:900,color:RED_C}},opPt+'pt'))
+        ),
+        h('div',{style:{display:'flex',flexDirection:'column',gap:6,alignItems:'flex-end'}},
+          h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:10,padding:'4px 8px',textAlign:'center'}},
+            h('div',{style:{fontSize:8,color:DIM,fontFamily:"'Fira Code',monospace"}},'GOAL'),
+            h('div',{style:{fontSize:16,fontWeight:900,color:'#ff9500'}},WIN_PT+'pt')
+          ),
+          h('div',{style:{display:'flex',gap:8}},
+            h('button',{onClick:audio.toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 12px',color:DIM,fontSize:16,cursor:'pointer'}},audio.musicOn?'🎵':'🔇'),
+            h('button',{onClick:goHome,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 10px',color:DIM,fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'🏠')
+          )
+        )
+      ),
+      h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:12,padding:'6px 10px',marginBottom:6}},
+        h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'👤 相手 — '+opHandCount+'枚'),
+        h('div',{style:{display:'flex',gap:3,flexWrap:'wrap',justifyContent:'center'}},
+          Array.from({length:Math.min(opHandCount,12)}).map((_,i)=>h('div',{key:i,style:{width:22,height:32,borderRadius:4,background:'linear-gradient(135deg,#0a2040,#05101e)',border:'1px solid #00d4ff33',flexShrink:0}}))
+        )
+      ),
+      h('div',{style:{background:PANEL,border:'2px solid '+(fieldSum>=8?RED_C:fieldSum>=5?'#e08020':BORDER),borderRadius:14,padding:'10px',textAlign:'center',transition:'border-color 0.25s',marginBottom:6,animation:resetFA?'resetAnim 0.5s ease':burstAnim?'burst 0.5s ease':'none'}},
+        h('div',{style:{fontSize:8,letterSpacing:4,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'── 場 ──'),
+        h('div',{style:{display:'flex',gap:5,justifyContent:'center',alignItems:'center',height:70}},
+          [0,1,2,3].map(i=>field[i]?h('div',{key:i,style:{width:50,height:70,borderRadius:7,flexShrink:0,background:'#f8f6ff',border:'1.5px solid #c0a0e0',display:'flex',alignItems:'center',justifyContent:'center',animation:'dealIn 0.18s ease both',position:'relative'}},
+            h('span',{style:{fontSize:26,fontWeight:900,color:CC[field[i]],fontFamily:"'Playfair Display',serif"}},field[i]),
+            h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:CC[field[i]],fontWeight:900}},field[i]),
+            h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:CC[field[i]],fontWeight:900,transform:'rotate(180deg)'}},field[i])
+          ):h('div',{key:i,style:{width:50,height:70,flexShrink:0}}))
+        ),
+        h('div',{style:{marginTop:5,height:36,display:'flex',alignItems:'center',justifyContent:'center',gap:8,visibility:fieldSum>0?'visible':'hidden'}},
+          h('span',{style:{fontSize:28,fontWeight:900,color:fieldSum>=8?RED_C:fieldSum>=5?'#e08020':TEXT,transition:'color 0.25s'}},fieldSum),
+          h('span',{style:{fontSize:11,color:DIM,fontFamily:"'Fira Code',monospace"}},'/ 10　あと'+(10-fieldSum))
+        )
+      )
+    ),
+    h('div',{style:{position:'fixed',top:'48vh',left:0,right:0,zIndex:50,background:PANEL,borderTop:'1.5px solid '+BORDER,padding:'8px 12px 12px',boxShadow:'0 -4px 16px #0001'}},
+      h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'YOU — '+myHand.filter(v=>v&&v!==0).length+'枚'),
+      h('div',{style:{display:'flex',gap:4,justifyContent:'center',marginBottom:4,flexWrap:'wrap'}},
+        myHand.slice(0,5).map((v,i)=>(!v||v===0)?h('div',{key:i,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+i+'_'+v,value:v,idx:i,onPlay:playCard,disabled:isCardDisabled(v)}))
+      ),
+      h('div',{style:{display:'flex',gap:4,justifyContent:'center',flexWrap:'wrap'}},
+        myHand.slice(5).map((v,i)=>(!v||v===0)?h('div',{key:i+5,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+(i+5)+'_'+v,value:v,idx:i+5,onPlay:playCard,disabled:isCardDisabled(v)}))
+      )
+    ),
+    h('div',{style:{position:'fixed',bottom:0,left:0,right:0,zIndex:49,padding:'6px 12px 8px',display:'flex',gap:5,flexWrap:'wrap',justifyContent:'center'}},
+      [['ストレート','5pt'],['スリーカード','4pt'],['ツーペア','3pt'],['ワンペア','2pt'],['バースト','-2pt']].map(([k,v])=>
+        h('div',{key:k,style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace",background:'#ffffff22',borderRadius:4,padding:'2px 5px',whiteSpace:'nowrap'}},
+          h('span',{style:{color:PINK,fontWeight:700}},k),':',v)
+      )
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(h(App,null));
+</script>
+</body>
+</html>
