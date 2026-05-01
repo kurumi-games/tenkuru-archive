@@ -1,62 +1,45 @@
-import { WebSocketServer } from "ws";
-import http from "http";
+const ws = new WebSocket("wss://4peace-server-vw1ezw.fly.dev");
 
-const server = http.createServer();
+let room = null;
 
-const wss = new WebSocketServer({ server });
+// 接続成功
+ws.onopen = () => {
+  console.log("connected to server");
+};
 
-let rooms = {};
+// メッセージ受信
+ws.onmessage = (event) => {
+  const msg = JSON.parse(event.data);
 
-wss.on("connection", (ws) => {
-  ws.on("message", (data) => {
-    const msg = JSON.parse(data);
+  if (msg.type === "created") {
+    room = msg.room;
+    alert("部屋作成: " + room);
+  }
 
-    // 部屋作成
-    if (msg.type === "create") {
-      const room = Math.random().toString(36).substring(2, 6);
-      rooms[room] = [ws];
-      ws.room = room;
+  if (msg.type === "joined") {
+    alert("参加成功！");
+  }
 
-      ws.send(JSON.stringify({
-        type: "created",
-        room: room
-      }));
-    }
+  if (msg.type === "play") {
+    alert("相手が押した！");
+  }
+};
 
-    // 参加
-    if (msg.type === "join") {
-      if (rooms[msg.room]) {
-        rooms[msg.room].push(ws);
-        ws.room = msg.room;
+// 部屋作成
+function createRoom() {
+  ws.send(JSON.stringify({ type: "create" }));
+}
 
-        ws.send(JSON.stringify({ type: "joined" }));
-      }
-    }
+// 部屋参加
+function joinRoom() {
+  const input = document.getElementById("roomInput");
+  ws.send(JSON.stringify({
+    type: "join",
+    room: input.value
+  }));
+}
 
-    // メッセージ中継
-    if (msg.type === "play") {
-      const room = ws.room;
-      if (!room) return;
-
-      rooms[room].forEach(client => {
-        if (client !== ws) {
-          client.send(JSON.stringify({
-            type: "play"
-          }));
-        }
-      });
-    }
-  });
-
-  ws.on("close", () => {
-    const room = ws.room;
-    if (room && rooms[room]) {
-      rooms[room] = rooms[room].filter(c => c !== ws);
-    }
-  });
-});
-
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
-  console.log("server started");
-});
+// ボタン押す
+function play() {
+  ws.send(JSON.stringify({ type: "play" }));
+}
