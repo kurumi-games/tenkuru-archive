@@ -352,6 +352,8 @@ function App(){
   const[onEndData,setOnEndData]=useState(null);
   const wsR=useRef(null);
   const onRoleR=useRef('');
+  const onCdIntervalR=useRef(null);
+  const onTimerIntervalR=useRef(null);
   const onMyHandR=useRef([]);
   const onFieldR=useRef([]);
   const onFieldSumR=useRef(0);
@@ -395,16 +397,18 @@ function App(){
         setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
         setOnMyPt(msg.myPt||0);setOnOpPt(msg.opPt||0);
         setOnRNum(msg.rNum||1);setOnTimeLeft(msg.timeLeft||10);onTimeLeftR.current=msg.timeLeft||10;
-        // タイムスタンプ方式のカウントダウン
         if(msg.countdownStartAt){
+          // 古いインターバルをクリア
+          if(onCdIntervalR.current)clearInterval(onCdIntervalR.current);
+          if(onTimerIntervalR.current)clearInterval(onTimerIntervalR.current);
           const startAt=msg.countdownStartAt;
           const dur=msg.countdownDuration||5;
           onCountNumR.current=dur;setOnCountNum(dur);
-          const cdInterval=setInterval(()=>{
+          onCdIntervalR.current=setInterval(()=>{
             const elapsed=Math.floor((Date.now()-startAt)/700);
             const val=dur-elapsed;
             if(val<=0){
-              clearInterval(cdInterval);
+              clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;
               onCountNumR.current=0;setOnCountNum(0);
               try{resumeAC();const t=AC.currentTime;[[523,0,0.08],[659,0.09,0.08],[784,0.18,0.08],[1047,0.27,0.25]].forEach(([f,d,dur2])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0.2,t+d);g.gain.exponentialRampToValueAtTime(0.001,t+d+dur2);o.connect(g);g.connect(AC.destination);o.start(t+d);o.stop(t+d+dur2+0.02);});}catch(e){}
             } else {
@@ -414,24 +418,28 @@ function App(){
         }
         break;
       case 'gameStart':
+        // 古いインターバルをクリア
+        if(onCdIntervalR.current){clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;}
+        if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
         onCountNumR.current=-1;setOnCountNum(-1);
-        // タイムスタンプ方式のタイマー
         const timerEnd=msg.timerEndAt;
-        const timerInterval=setInterval(()=>{
+        onTimerIntervalR.current=setInterval(()=>{
           const remaining=Math.ceil((timerEnd-Date.now())/1000);
           if(remaining<=0){
-            clearInterval(timerInterval);
+            clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;
             setOnTimeLeft(0);onTimeLeftR.current=0;
+            playMissSE();
           } else {
             setOnTimeLeft(remaining);onTimeLeftR.current=remaining;
           }
         },200);
         break;
       case 'timeUp':
+        if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
+        setOnTimeLeft(0);onTimeLeftR.current=0;
         setOnFlashMsg({text:'⏱ 時間切れ！引き分け（±0pt）',who:null});
         setTimeout(()=>setOnFlashMsg(null),1600);
         break;
-      case 'field':setOnField(msg.field);onFieldR.current=msg.field;setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;break;
       case 'handUpdate':const nh=[...onMyHandR.current];nh[msg.idx]=0;setOnMyHand(nh);onMyHandR.current=nh;break;
       case 'newHand':setOnMyHand(msg.hand);onMyHandR.current=msg.hand;break;
       case 'fieldUpdate':setOnField(msg.field);onFieldR.current=msg.field;setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;break;
@@ -481,6 +489,8 @@ function App(){
   }
   function goOnlineHome(){
     if(wsR.current){try{wsR.current.send(JSON.stringify({type:'leave'}));}catch(e){}wsR.current.close();wsR.current=null;}
+    if(onCdIntervalR.current){clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;}
+    if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
     stopBGM();setPhase('menu');phaseR.current='menu';
     setOnMyHand([]);setOnField([]);setOnFieldColors([]);setOnFieldSum(0);setOnMyPt(0);setOnOpPt(0);
     setOnCountNum(-1);onCountNumR.current=-1;setOnFlashMsg(null);setOnEndData(null);
