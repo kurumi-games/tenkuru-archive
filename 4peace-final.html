@@ -395,15 +395,50 @@ function App(){
         setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
         setOnMyPt(msg.myPt||0);setOnOpPt(msg.opPt||0);
         setOnRNum(msg.rNum||1);setOnTimeLeft(msg.timeLeft||10);onTimeLeftR.current=msg.timeLeft||10;
+        // タイムスタンプ方式のカウントダウン
+        if(msg.countdownStartAt){
+          const startAt=msg.countdownStartAt;
+          const dur=msg.countdownDuration||5;
+          onCountNumR.current=dur;setOnCountNum(dur);
+          const cdInterval=setInterval(()=>{
+            const elapsed=Math.floor((Date.now()-startAt)/700);
+            const val=dur-elapsed;
+            if(val<=0){
+              clearInterval(cdInterval);
+              onCountNumR.current=0;setOnCountNum(0);
+              try{resumeAC();const t=AC.currentTime;[[523,0,0.08],[659,0.09,0.08],[784,0.18,0.08],[1047,0.27,0.25]].forEach(([f,d,dur2])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0.2,t+d);g.gain.exponentialRampToValueAtTime(0.001,t+d+dur2);o.connect(g);g.connect(AC.destination);o.start(t+d);o.stop(t+d+dur2+0.02);});}catch(e){}
+            } else {
+              onCountNumR.current=val;setOnCountNum(val);
+            }
+          },100);
+        }
         break;
-      case 'countdown':onCountNumR.current=msg.value;setOnCountNum(msg.value);if(msg.value===0)try{resumeAC();const t=AC.currentTime;[[523,0,0.08],[659,0.09,0.08],[784,0.18,0.08],[1047,0.27,0.25]].forEach(([f,d,dur])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0.2,t+d);g.gain.exponentialRampToValueAtTime(0.001,t+d+dur);o.connect(g);g.connect(AC.destination);o.start(t+d);o.stop(t+d+dur+0.02);});}catch(e){}break;
-      case 'timer':setOnTimeLeft(msg.value);onTimeLeftR.current=msg.value;if(msg.value===0)playMissSE();break;
+      case 'gameStart':
+        onCountNumR.current=-1;setOnCountNum(-1);
+        // タイムスタンプ方式のタイマー
+        const timerEnd=msg.timerEndAt;
+        const timerInterval=setInterval(()=>{
+          const remaining=Math.ceil((timerEnd-Date.now())/1000);
+          if(remaining<=0){
+            clearInterval(timerInterval);
+            setOnTimeLeft(0);onTimeLeftR.current=0;
+          } else {
+            setOnTimeLeft(remaining);onTimeLeftR.current=remaining;
+          }
+        },200);
+        break;
+      case 'timeUp':
+        setOnFlashMsg({text:'⏱ 時間切れ！引き分け（±0pt）',who:null});
+        setTimeout(()=>setOnFlashMsg(null),1600);
+        break;
       case 'field':setOnField(msg.field);onFieldR.current=msg.field;setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;break;
       case 'handUpdate':const nh=[...onMyHandR.current];nh[msg.idx]=0;setOnMyHand(nh);onMyHandR.current=nh;break;
       case 'newHand':setOnMyHand(msg.hand);onMyHandR.current=msg.hand;break;
       case 'fieldUpdate':setOnField(msg.field);onFieldR.current=msg.field;setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;break;
       case 'opPlay':
-        setOnField(msg.field);onFieldR.current=msg.field;setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;
+        const newField=[...onFieldR.current,msg.value];
+        setOnField(newField);onFieldR.current=newField;
+        setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;
         setOnFieldColors(prev=>[...prev,onRoleR.current==='host'?'guest':'host']);
         resumeAC();playTapSE();setOnOpHandCount(c=>Math.max(0,c-1));
         break;
