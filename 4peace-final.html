@@ -354,6 +354,7 @@ function App(){
   const onRoleR=useRef('');
   const onCdIntervalR=useRef(null);
   const onTimerIntervalR=useRef(null);
+  const endTimeRef=useRef(0);
   const onMyHandR=useRef([]);
   const onFieldR=useRef([]);
   const onFieldSumR=useRef(0);
@@ -391,6 +392,10 @@ function App(){
       case 'joined':setRoomId(msg.roomId);stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';break;
       case 'guestJoined':stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';break;
       case 'state':
+        // インターバルをクリアしてからリセット
+        if(onCdIntervalR.current){clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;}
+        if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
+        endTimeRef.current=0;
         setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];
         setOnOpHandCount(msg.opHandCount||0);
         setOnField(msg.field||[]);onFieldR.current=msg.field||[];setOnFieldColors([]);
@@ -398,9 +403,6 @@ function App(){
         setOnMyPt(msg.myPt||0);setOnOpPt(msg.opPt||0);
         setOnRNum(msg.rNum||1);setOnTimeLeft(msg.timeLeft||10);onTimeLeftR.current=msg.timeLeft||10;
         if(msg.countdownStartAt){
-          // 古いインターバルをクリア
-          if(onCdIntervalR.current)clearInterval(onCdIntervalR.current);
-          if(onTimerIntervalR.current)clearInterval(onTimerIntervalR.current);
           const startAt=msg.countdownStartAt;
           const dur=msg.countdownDuration||5;
           onCountNumR.current=dur;setOnCountNum(dur);
@@ -418,13 +420,12 @@ function App(){
         }
         break;
       case 'gameStart':
-        // 古いインターバルをクリア
         if(onCdIntervalR.current){clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;}
         if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
         onCountNumR.current=-1;setOnCountNum(-1);
-        const timerEnd=msg.timerEndAt;
+        endTimeRef.current=msg.timerEndAt;
         onTimerIntervalR.current=setInterval(()=>{
-          const remaining=Math.ceil((timerEnd-Date.now())/1000);
+          const remaining=Math.ceil((endTimeRef.current-Date.now())/1000);
           if(remaining<=0){
             clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;
             setOnTimeLeft(0);onTimeLeftR.current=0;
@@ -476,7 +477,8 @@ function App(){
   function createRoom(){onRoleR.current='host';onConnect(ws=>ws.send(JSON.stringify({type:'create'})));}
   function joinRoom(code){onRoleR.current='guest';onConnect(ws=>ws.send(JSON.stringify({type:'join',roomId:code})));}
   function onlinePlayCard(idx,value){
-    if(onCountNumR.current>=0||onTimeLeftR.current<=0)return;
+    if(onCountNumR.current>=0)return;
+    if(endTimeRef.current>0&&Date.now()>=endTimeRef.current)return;
     if(!wsR.current||wsR.current.readyState!==WebSocket.OPEN)return;
     if(!onMyHandR.current[idx])return;
     if(!canPlay(value,onFieldSumR.current,onFieldR.current))return;
@@ -491,6 +493,7 @@ function App(){
     if(wsR.current){try{wsR.current.send(JSON.stringify({type:'leave'}));}catch(e){}wsR.current.close();wsR.current=null;}
     if(onCdIntervalR.current){clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;}
     if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
+    endTimeRef.current=0;
     stopBGM();setPhase('menu');phaseR.current='menu';
     setOnMyHand([]);setOnField([]);setOnFieldColors([]);setOnFieldSum(0);setOnMyPt(0);setOnOpPt(0);
     setOnCountNum(-1);onCountNumR.current=-1;setOnFlashMsg(null);setOnEndData(null);
