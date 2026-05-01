@@ -1,41 +1,62 @@
-let ws;
+import { WebSocketServer } from "ws";
+import http from "http";
 
-function getWS(){
-  const protocol = location.protocol === "https:" ? "wss" : "ws";
-  return protocol + "://" + location.host;
-}
+const server = http.createServer();
 
-function connect(){
-  ws = new WebSocket(getWS());
+const wss = new WebSocketServer({ server });
 
-  ws.onmessage = (e)=>{
-    const msg = JSON.parse(e.data);
+let rooms = {};
 
-    if(msg.type==='created'){
-      document.getElementById("info").innerText="コード:"+msg.room;
+wss.on("connection", (ws) => {
+  ws.on("message", (data) => {
+    const msg = JSON.parse(data);
+
+    // 部屋作成
+    if (msg.type === "create") {
+      const room = Math.random().toString(36).substring(2, 6);
+      rooms[room] = [ws];
+      ws.room = room;
+
+      ws.send(JSON.stringify({
+        type: "created",
+        room: room
+      }));
     }
 
-    if(msg.type==='play'){
-      document.getElementById("field").innerText="相手がカード出した";
+    // 参加
+    if (msg.type === "join") {
+      if (rooms[msg.room]) {
+        rooms[msg.room].push(ws);
+        ws.room = msg.room;
+
+        ws.send(JSON.stringify({ type: "joined" }));
+      }
     }
-  };
-}
 
-function createRoom(){
-  connect();
-  ws.onopen=()=>{
-    ws.send(JSON.stringify({type:'create'}));
-  };
-}
+    // メッセージ中継
+    if (msg.type === "play") {
+      const room = ws.room;
+      if (!room) return;
 
-function joinRoom(){
-  connect();
-  const room = document.getElementById("roomInput").value;
+      rooms[room].forEach(client => {
+        if (client !== ws) {
+          client.send(JSON.stringify({
+            type: "play"
+          }));
+        }
+      });
+    }
+  });
 
-  ws.onopen=()=>{
-    ws.send(JSON.stringify({
-      type:'join',
-      room: room
-    }));
-  };
-}
+  ws.on("close", () => {
+    const room = ws.room;
+    if (room && rooms[room]) {
+      rooms[room] = rooms[room].filter(c => c !== ws);
+    }
+  });
+});
+
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => {
+  console.log("server started");
+});
