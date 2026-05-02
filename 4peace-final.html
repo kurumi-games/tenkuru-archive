@@ -423,9 +423,9 @@ function App(){
         } else {setOnFlashMsg(null);lastVoiceR.current=null;}
         if(msg.comboShow){setOnComboShow(msg.comboShow);}else{setOnComboShow(null);}
 
-        // バースト音：falseからtrueになった瞬間だけ鳴らす
+        // バースト音：resolvingフェーズでfalseからtrueになった瞬間だけ鳴らす
         const prevBurst=onBurstAnimR.current;
-        const newBurst=!!msg.burstAnim;
+        const newBurst=!!msg.burstAnim&&msg.phase==='resolving';
         if(newBurst&&!prevBurst){resumeAC();playBurstSE();}
         if(newBurst!==prevBurst){setOnBurstAnim(newBurst);onBurstAnimR.current=newBurst;}
         setOnResetFA(!!msg.resetAnim);
@@ -698,7 +698,7 @@ function App(){
         h('div',{ref:onFieldAreaRef,style:{background:PANEL,border:'2px solid '+(onFieldSum>=8?(onFieldColors[onFieldColors.length-1]===role?'#4da8ff':RED_C):onFieldSum>=5?'#e08020':BORDER),borderRadius:14,padding:'10px',textAlign:'center',transition:'border-color 0.25s',marginBottom:6,animation:onResetFA?'resetAnim 0.5s ease':onBurstAnim?'burst 0.5s ease':'none'}},
           h('div',{style:{fontSize:8,letterSpacing:4,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'── 場 ──'),
           h('div',{style:{display:'flex',gap:5,justifyContent:'center',alignItems:'center',height:70}},
-            [0,1,2,3].map(i=>onField[i]?h(FieldCard,{key:i,value:onField[i],by:onFieldColors[i]||null}):h('div',{key:i,style:{width:50,height:70,flexShrink:0}}))
+            [0,1,2,3].map(i=>onField[i]?h(FieldCard,{key:i,value:onField[i],by:onFieldColors[i]==='dealer'?'dealer':'player'}):h('div',{key:i,style:{width:50,height:70,flexShrink:0}}))
           ),
           h('div',{style:{marginTop:5,height:36,display:'flex',alignItems:'center',justifyContent:'center',gap:8,visibility:onFieldSum>0?'visible':'hidden'}},
             h('span',{style:{fontSize:28,fontWeight:900,color:onFieldSum>=8?(onFieldColors[onFieldColors.length-1]===role?'#4da8ff':RED_C):onFieldSum>=5?'#e08020':TEXT,transition:'color 0.25s'}},onFieldSum),
