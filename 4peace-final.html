@@ -353,6 +353,7 @@ function App(){
   const wsR=useRef(null);
   const onRoleR=useRef('');
   const onBurstAnimR=useRef(false);
+  const timeupSEFiredR=useRef(false);
   const onCdIntervalR=useRef(null);
   const onTimerIntervalR=useRef(null);
   const endTimeRef=useRef(0);
@@ -396,8 +397,12 @@ function App(){
         const role=onRoleR.current;
         setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];
         setOnOpHandCount(msg.opHandCount||0);
-        setOnField(msg.field||[]);onFieldR.current=msg.field||[];
+        const prevFieldLen=onFieldR.current.length;
+        const newField=msg.field||[];
+        setOnField(newField);onFieldR.current=newField;
         setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
+        // フィールドが短くなった（リセット）時はカラーをクリア
+        if(newField.length<prevFieldLen)setOnFieldColors([]);
         setOnMyPt(role==='host'?msg.hostPt:msg.guestPt);
         setOnOpPt(role==='host'?msg.guestPt:msg.hostPt);
         setOnRNum(msg.rNum||1);
@@ -416,7 +421,8 @@ function App(){
         if(newBurst&&!prevBurst){resumeAC();playBurstSE();}
         if(newBurst!==prevBurst){setOnBurstAnim(newBurst);onBurstAnimR.current=newBurst;}
         setOnResetFA(!!msg.resetAnim);
-        if(msg.phase==='timeup'&&msg.timeLeft<=0&&onTimeLeftR.current>0){playMissSE();onTimeLeftR.current=0;}
+        if(msg.phase==='timeup'&&!timeupSEFiredR.current){timeupSEFiredR.current=true;playMissSE();}
+        if(msg.phase!=='timeup')timeupSEFiredR.current=false;
         if(!msg.field||msg.field.length===0)setOnFieldColors([]);
         break;
       }
