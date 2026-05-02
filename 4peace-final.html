@@ -416,7 +416,7 @@ function App(){
         if(newBurst&&!prevBurst){resumeAC();playBurstSE();}
         if(newBurst!==prevBurst){setOnBurstAnim(newBurst);onBurstAnimR.current=newBurst;}
         setOnResetFA(!!msg.resetAnim);
-        if(msg.phase==='timeup'&&onTimeLeftR.current>0&&msg.timeLeft<=0)playMissSE();
+        if(msg.phase==='timeup'&&msg.timeLeft<=0&&onTimeLeftR.current>0){playMissSE();onTimeLeftR.current=0;}
         if(!msg.field||msg.field.length===0)setOnFieldColors([]);
         break;
       }
@@ -514,7 +514,7 @@ function App(){
     const nh=[...onMyHandR.current];nh[idx]=0;setOnMyHand(nh);onMyHandR.current=nh;
     const nf=[...onFieldR.current,value];const ns=onFieldSumR.current+value;
     setOnField(nf);onFieldR.current=nf;setOnFieldSum(ns);onFieldSumR.current=ns;
-    setOnFieldColors(prev=>[...prev,onRoleR.current]);
+    setOnFieldColors(prev=>[...prev,'player']);
     wsR.current.send(JSON.stringify({type:'play',idx,value}));
   }
   function goOnlineHome(){
