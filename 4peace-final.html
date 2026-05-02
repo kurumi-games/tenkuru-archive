@@ -437,10 +437,11 @@ function App(){
 
         // バースト・リセットアニメ
         const prevBurst=onBurstAnimR.current;
-        if(!!msg.burstAnim!==prevBurst){
-          setOnBurstAnim(!!msg.burstAnim);
-          onBurstAnimR.current=!!msg.burstAnim;
-          if(msg.burstAnim&&!prevBurst){resumeAC();playBurstSE();}
+        const newBurst=!!msg.burstAnim&&msg.phase!=='timeup'&&msg.phase!=='countdown';
+        if(newBurst!==prevBurst){
+          setOnBurstAnim(newBurst);
+          onBurstAnimR.current=newBurst;
+          if(newBurst&&!prevBurst){resumeAC();playBurstSE();}
         }
         setOnResetFA(!!msg.resetAnim);
 
@@ -451,9 +452,9 @@ function App(){
         if(!msg.field||msg.field.length===0){
           setOnFieldColors([]);
         } else if(msg.field.length!==onFieldR.current.length&&msg.lastPlayRole){
-          // カードが追加された時
           const role=onRoleR.current;
-          const by=msg.lastPlayRole===role?'player':'dealer';
+          // ホストが出したら青(player)、ゲストが出したら赤(dealer)
+          const by=msg.lastPlayRole==='host'?(role==='host'?'player':'dealer'):(role==='guest'?'player':'dealer');
           setOnFieldColors(prev=>{
             if(msg.field.length===1)return[by];
             if(msg.field.length>prev.length)return[...prev,by];
@@ -496,6 +497,7 @@ function App(){
   function goOnlineHome(){
     if(wsR.current){try{wsR.current.send(JSON.stringify({type:'leave'}));}catch(e){}wsR.current.close();wsR.current=null;}
     lastVoiceR.current=null;
+    onBurstAnimR.current=false;
     stopBGM();setPhase('menu');phaseR.current='menu';
     setOnMyHand([]);setOnField([]);setOnFieldColors([]);setOnFieldSum(0);setOnMyPt(0);setOnOpPt(0);
     setOnCountNum(-1);onCountNumR.current=-1;setOnFlashMsg(null);setOnEndData(null);
