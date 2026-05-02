@@ -352,8 +352,6 @@ function App(){
   const[onEndData,setOnEndData]=useState(null);
   const wsR=useRef(null);
   const onRoleR=useRef('');
-  const onBurstAnimR=useRef(false);
-  const lastVoiceR=useRef(null);
   const onCdIntervalR=useRef(null);
   const onTimerIntervalR=useRef(null);
   const endTimeRef=useRef(0);
@@ -393,40 +391,6 @@ function App(){
       case 'created':setRoomId(msg.roomId);setPhase('online_waiting');phaseR.current='online_waiting';break;
       case 'joined':setRoomId(msg.roomId);stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';break;
       case 'guestJoined':stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';break;
-      case 'tick':{
-        const role=onRoleR.current;
-        setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];
-        setOnOpHandCount(msg.opHandCount||0);
-        setOnField(msg.field||[]);onFieldR.current=msg.field||[];
-        setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
-        setOnMyPt(role==='host'?msg.hostPt:msg.guestPt);
-        setOnOpPt(role==='host'?msg.guestPt:msg.hostPt);
-        setOnRNum(msg.rNum||1);
-        setOnTimeLeft(msg.timeLeft||10);onTimeLeftR.current=msg.timeLeft||10;
-        const cd=msg.phase==='countdown'?msg.countdown:-1;
-        const prevCd=onCountNumR.current;
-        if(cd!==prevCd){
-          onCountNumR.current=cd;setOnCountNum(cd);
-          if(prevCd===0&&cd===-1){try{resumeAC();const t=AC.currentTime;[[523,0,0.08],[659,0.09,0.08],[784,0.18,0.08],[1047,0.27,0.25]].forEach(([f,d,dur])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0.2,t+d);g.gain.exponentialRampToValueAtTime(0.001,t+d+dur);o.connect(g);g.connect(AC.destination);o.start(t+d);o.stop(t+d+dur+0.02);});}catch(e){}}
-        }
-        if(msg.flashMsg){
-          const fm=msg.flashMsg;const isMy=fm.by===role;
-          setOnFlashMsg({text:fm.text.replace('ホスト',isMy?'YOU':'相手').replace('ゲスト',isMy?'YOU':'相手'),who:isMy?'player':'dealer'});
-          if(fm.voice&&fm.voice!==lastVoiceR.current){lastVoiceR.current=fm.voice;playComboSfx(fm.voice);}
-        }else{setOnFlashMsg(null);lastVoiceR.current=null;}
-        if(msg.comboShow)setOnComboShow(msg.comboShow);else setOnComboShow(null);
-        // バースト音：resolvingフェーズでfalse→trueの瞬間のみ
-        const prevBurst=onBurstAnimR.current;
-        const newBurst=!!msg.burstAnim&&msg.phase==='resolving';
-        if(newBurst&&!prevBurst){resumeAC();playBurstSE();}
-        if(newBurst!==prevBurst){setOnBurstAnim(newBurst);onBurstAnimR.current=newBurst;}
-        setOnResetFA(!!msg.resetAnim);
-        // 時間切れSE（一回だけ）
-        if(msg.phase==='timeup'&&onTimeLeftR.current>0&&msg.timeLeft<=0)playMissSE();
-        // フィールドリセット時のみカラーをクリア
-        if(!msg.field||msg.field.length===0)setOnFieldColors([]);
-        break;
-      }
       case 'state':
         // インターバルをクリアしてからリセット
         if(onCdIntervalR.current){clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;}
@@ -434,7 +398,7 @@ function App(){
         endTimeRef.current=0;
         setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];
         setOnOpHandCount(msg.opHandCount||0);
-        setOnField(msg.field||[]);onFieldR.current=msg.field||[];
+        setOnField(msg.field||[]);onFieldR.current=msg.field||[];setOnFieldColors([]);
         setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
         setOnMyPt(msg.myPt||0);setOnOpPt(msg.opPt||0);
         setOnRNum(msg.rNum||1);setOnTimeLeft(msg.timeLeft||10);onTimeLeftR.current=msg.timeLeft||10;
@@ -484,7 +448,7 @@ function App(){
         const newField=[...onFieldR.current,msg.value];
         setOnField(newField);onFieldR.current=newField;
         setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;
-        setOnFieldColors(prev=>[...prev,'dealer']);
+        setOnFieldColors(prev=>[...prev,onRoleR.current==='host'?'guest':'host']);
         resumeAC();playTapSE();setOnOpHandCount(c=>Math.max(0,c-1));
         break;
       case 'burst':
@@ -513,8 +477,7 @@ function App(){
   function createRoom(){onRoleR.current='host';onConnect(ws=>ws.send(JSON.stringify({type:'create'})));}
   function joinRoom(code){onRoleR.current='guest';onConnect(ws=>ws.send(JSON.stringify({type:'join',roomId:code})));}
   function onlinePlayCard(idx,value){
-    if(onCountNumR.current>=0)return;
-    if(endTimeRef.current>0&&Date.now()>=endTimeRef.current)return;
+    if(onCountNumR.current>=0||onTimeLeftR.current<=0)return;
     if(!wsR.current||wsR.current.readyState!==WebSocket.OPEN)return;
     if(!onMyHandR.current[idx])return;
     if(!canPlay(value,onFieldSumR.current,onFieldR.current))return;
@@ -522,12 +485,14 @@ function App(){
     const nh=[...onMyHandR.current];nh[idx]=0;setOnMyHand(nh);onMyHandR.current=nh;
     const nf=[...onFieldR.current,value];const ns=onFieldSumR.current+value;
     setOnField(nf);onFieldR.current=nf;setOnFieldSum(ns);onFieldSumR.current=ns;
-    setOnFieldColors(prev=>[...prev,'player']);
+    setOnFieldColors(prev=>[...prev,onRoleR.current]);
     wsR.current.send(JSON.stringify({type:'play',idx,value}));
   }
   function goOnlineHome(){
     if(wsR.current){try{wsR.current.send(JSON.stringify({type:'leave'}));}catch(e){}wsR.current.close();wsR.current=null;}
-    onBurstAnimR.current=false;lastVoiceR.current=null;
+    if(onCdIntervalR.current){clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;}
+    if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
+    endTimeRef.current=0;
     stopBGM();setPhase('menu');phaseR.current='menu';
     setOnMyHand([]);setOnField([]);setOnFieldColors([]);setOnFieldSum(0);setOnMyPt(0);setOnOpPt(0);
     setOnCountNum(-1);onCountNumR.current=-1;setOnFlashMsg(null);setOnEndData(null);
@@ -756,7 +721,7 @@ function App(){
         h('div',{ref:onFieldAreaRef,style:{background:PANEL,border:'2px solid '+(onFieldSum>=8?(onFieldColors[onFieldColors.length-1]===role?'#4da8ff':RED_C):onFieldSum>=5?'#e08020':BORDER),borderRadius:14,padding:'10px',textAlign:'center',transition:'border-color 0.25s',marginBottom:6,animation:onResetFA?'resetAnim 0.5s ease':onBurstAnim?'burst 0.5s ease':'none'}},
           h('div',{style:{fontSize:8,letterSpacing:4,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'── 場 ──'),
           h('div',{style:{display:'flex',gap:5,justifyContent:'center',alignItems:'center',height:70}},
-            [0,1,2,3].map(i=>onField[i]?h(FieldCard,{key:i,value:onField[i],by:onFieldColors[i]==='dealer'?'dealer':'player'}):h('div',{key:i,style:{width:50,height:70,flexShrink:0}}))
+            [0,1,2,3].map(i=>onField[i]?h(FieldCard,{key:i,value:onField[i],by:onFieldColors[i]==='host'?'player':'dealer'}):h('div',{key:i,style:{width:50,height:70,flexShrink:0}}))
           ),
           h('div',{style:{marginTop:5,height:36,display:'flex',alignItems:'center',justifyContent:'center',gap:8,visibility:onFieldSum>0?'visible':'hidden'}},
             h('span',{style:{fontSize:28,fontWeight:900,color:onFieldSum>=8?(onFieldColors[onFieldColors.length-1]===role?'#4da8ff':RED_C):onFieldSum>=5?'#e08020':TEXT,transition:'color 0.25s'}},onFieldSum),
@@ -767,10 +732,10 @@ function App(){
       h('div',{style:{position:'fixed',top:'48vh',left:0,right:0,zIndex:50,background:PANEL,borderTop:'1.5px solid '+BORDER,padding:'8px 12px 12px',boxShadow:'0 -4px 16px #0001'}},
         h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'YOU — '+onMyHand.filter(v=>v&&v!==0).length+'枚'),
         h('div',{style:{display:'flex',gap:4,justifyContent:'center',marginBottom:4,flexWrap:'wrap'}},
-          onMyHand.slice(0,5).map((v,i)=>(!v||v===0)?h('div',{key:i,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+i+'_'+v,value:v,onPlay:()=>onlinePlayCard(i,v),disabled:isCardOff(v),cardRole:'player',fieldBottom:onFieldAreaRef.current?onFieldAreaRef.current.getBoundingClientRect().bottom:null}))
+          onMyHand.slice(0,5).map((v,i)=>(!v||v===0)?h('div',{key:i,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+i+'_'+v,value:v,onPlay:()=>onlinePlayCard(i,v),disabled:isCardOff(v),cardRole:onRoleR.current==='host'?'player':'dealer',fieldBottom:onFieldAreaRef.current?onFieldAreaRef.current.getBoundingClientRect().bottom:null}))
         ),
         h('div',{style:{display:'flex',gap:4,justifyContent:'center',flexWrap:'wrap'}},
-          onMyHand.slice(5).map((v,i)=>(!v||v===0)?h('div',{key:i+5,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+(i+5)+'_'+v,value:v,onPlay:()=>onlinePlayCard(i+5,v),disabled:isCardOff(v),cardRole:'player',fieldBottom:onFieldAreaRef.current?onFieldAreaRef.current.getBoundingClientRect().bottom:null}))
+          onMyHand.slice(5).map((v,i)=>(!v||v===0)?h('div',{key:i+5,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+(i+5)+'_'+v,value:v,onPlay:()=>onlinePlayCard(i+5,v),disabled:isCardOff(v),cardRole:onRoleR.current==='host'?'player':'dealer',fieldBottom:onFieldAreaRef.current?onFieldAreaRef.current.getBoundingClientRect().bottom:null}))
         )
       )
     );
