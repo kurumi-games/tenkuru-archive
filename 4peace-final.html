@@ -401,7 +401,7 @@ function App(){
         setOnField(newField);onFieldR.current=newField;
         setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
         // サーバーから fieldOwners が届いた場合はそれを使う
-        // fieldOwners は ['host','guest',...] 形式。host=青('player')、guest=赤('dealer') で固定
+        // host=青('player')、guest=赤('dealer') で固定
         if(msg.fieldOwners){
           const colors=msg.fieldOwners.map(o=>o==='host'?'player':'dealer');
           setOnFieldColors(colors);
@@ -487,7 +487,7 @@ function App(){
         const newField=[...onFieldR.current,msg.value];
         setOnField(newField);onFieldR.current=newField;
         setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;
-        // ホストから見た相手=ゲスト='dealer'(赤)、ゲストから見た相手=ホスト='player'(青)
+        // 相手のカード色: ホストの相手=ゲスト=赤('dealer')、ゲストの相手=ホスト=青('player')
         setOnFieldColors(prev=>[...prev,onRoleR.current==='host'?'dealer':'player']);
         resumeAC();playTapSE();setOnOpHandCount(c=>Math.max(0,c-1));
         break;
@@ -525,7 +525,7 @@ function App(){
     const nh=[...onMyHandR.current];nh[idx]=0;setOnMyHand(nh);onMyHandR.current=nh;
     const nf=[...onFieldR.current,value];const ns=onFieldSumR.current+value;
     setOnField(nf);onFieldR.current=nf;setOnFieldSum(ns);onFieldSumR.current=ns;
-    // ホストの自分カード='player'（青）、ゲストの自分カード='dealer'（赤）
+    // ホスト=青('player')、ゲスト=赤('dealer') で固定
     setOnFieldColors(prev=>[...prev,onRoleR.current==='host'?'player':'dealer']);
     wsR.current.send(JSON.stringify({type:'play',idx,value}));
   }
