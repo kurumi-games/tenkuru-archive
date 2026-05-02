@@ -68,156 +68,21 @@ function canPlay(v,fieldSum,field){
   return true;
 }
 
-// ── BGM (集中系ローファイ・アンビエント) ──
-// ★外部MP3を使う場合はここのURLを差し替えるだけでOK★
-// const BGM_URL = 'https://your-repo.github.io/4peace-game/bgm.mp3';
-let bgmRunning=false,bgmTimers=[],bgmNodes=[];
+// ── BGM (Grit Sprint.mp3) ──
+let bgmRunning=false,bgmAudio=null;
 function stopBGM(){
   bgmRunning=false;
-  bgmTimers.forEach(id=>clearTimeout(id));bgmTimers=[];
-  bgmNodes.forEach(n=>{try{n.stop();}catch(e){}});bgmNodes=[];
+  if(bgmAudio){bgmAudio.pause();bgmAudio.currentTime=0;}
 }
 function startBGM(){
-  if(bgmRunning)return;bgmRunning=true;
-  const SR=AC.sampleRate,BPM=75,beat=60/BPM;
-
-  // マスター出力（ソフトリミッター）
-  const mst=AC.createDynamicsCompressor();
-  mst.threshold.value=-12;mst.ratio.value=6;mst.attack.value=0.01;mst.release.value=0.4;
-  mst.connect(AC.destination);
-
-  // リバーブ（空間感）
-  const revLen=Math.floor(SR*3);
-  const revBuf=AC.createBuffer(2,revLen,SR);
-  for(let c=0;c<2;c++){const d=revBuf.getChannelData(c);for(let i=0;i<revLen;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/revLen,2.5);}
-  const rev=AC.createConvolver();rev.buffer=revBuf;
-  const revG=AC.createGain();revG.gain.value=0.18;rev.connect(revG);revG.connect(mst);
-
-  // ── ドローン（持続低音）──
-  // Amマイナーペンタ基音: A2=110Hz
-  function startDrone(){
-    [[110,0.06],[165,0.03],[220,0.025]].forEach(([freq,vol])=>{
-      const o1=AC.createOscillator(),o2=AC.createOscillator();
-      const g=AC.createGain(),lp=AC.createBiquadFilter();
-      lp.type='lowpass';lp.frequency.value=400;
-      o1.type='sine';o1.frequency.value=freq;
-      o2.type='sine';o2.frequency.value=freq*1.002; // わずかなデチューン
-      const gv=AC.createGain();gv.gain.value=vol;
-      // ゆっくりトレモロ
-      const lfo=AC.createOscillator();const lg=AC.createGain();
-      lfo.frequency.value=0.15;lg.gain.value=vol*0.3;
-      lfo.connect(lg);lg.connect(gv.gain);lfo.start();
-      o1.connect(lp);o2.connect(lp);lp.connect(gv);gv.connect(g);
-      g.connect(mst);g.connect(rev);
-      o1.start();o2.start();
-      bgmNodes.push(o1,o2,lfo);
-    });
+  if(bgmRunning)return;
+  bgmRunning=true;
+  if(!bgmAudio){
+    bgmAudio=new Audio('Grit Sprint.mp3');
+    bgmAudio.loop=true;
+    bgmAudio.volume=0.45;
   }
-
-  // ── コードパッド（Am→F→C→G をゆっくり循環）──
-  const chords=[
-    [220,261.6,329.6],   // Am: A C E
-    [174.6,220,261.6],   // F:  F A C
-    [261.6,329.6,392],   // C:  C E G
-    [196,246.9,293.7],   // G:  G B D
-  ];
-  let chordIdx=0;
-  function playChord(){
-    if(!bgmRunning)return;
-    const t=AC.currentTime;
-    const notes=chords[chordIdx%chords.length];
-    chordIdx++;
-    notes.forEach(freq=>{
-      const o1=AC.createOscillator(),o2=AC.createOscillator();
-      const g=AC.createGain(),lp=AC.createBiquadFilter();
-      lp.type='lowpass';lp.frequency.value=900;lp.Q.value=0.5;
-      o1.type='sine';o1.frequency.value=freq;
-      o2.type='triangle';o2.frequency.value=freq*1.001;
-      const dur=beat*8; // 8拍ずつ
-      g.gain.setValueAtTime(0,t);
-      g.gain.linearRampToValueAtTime(0.055,t+0.6);
-      g.gain.setValueAtTime(0.055,t+dur-0.8);
-      g.gain.linearRampToValueAtTime(0,t+dur);
-      o1.connect(lp);o2.connect(lp);lp.connect(g);
-      g.connect(mst);g.connect(rev);
-      o1.start(t);o2.start(t);o1.stop(t+dur+0.05);o2.stop(t+dur+0.05);
-      bgmNodes.push(o1,o2);
-    });
-    bgmTimers.push(setTimeout(playChord,beat*8*1000-80));
-  }
-
-  // ── ベースノート（コードのルート音、1オクターブ下）──
-  const bassRoots=[110,87.3,130.8,98];
-  let bassIdx=0;
-  function playBass(){
-    if(!bgmRunning)return;
-    const t=AC.currentTime;
-    const freq=bassRoots[bassIdx%bassRoots.length];
-    bassIdx++;
-    // 2拍ごとにゆったり1音
-    [0,beat*2,beat*4,beat*6].forEach((offset,i)=>{
-      if(i===1||i===3)return; // 間引いてスペース感を出す
-      const o=AC.createOscillator(),g=AC.createGain(),lp=AC.createBiquadFilter();
-      lp.type='lowpass';lp.frequency.value=200;
-      o.type='sine';o.frequency.value=freq;
-      g.gain.setValueAtTime(0,t+offset);
-      g.gain.linearRampToValueAtTime(0.22,t+offset+0.04);
-      g.gain.exponentialRampToValueAtTime(0.001,t+offset+beat*1.6);
-      o.connect(lp);lp.connect(g);g.connect(mst);
-      o.start(t+offset);o.stop(t+offset+beat*1.7);
-      bgmNodes.push(o);
-    });
-    bgmTimers.push(setTimeout(playBass,beat*8*1000-80));
-  }
-
-  // ── ソフトハイハット（ブラシ風、裏拍のみ）──
-  function playHihat(){
-    if(!bgmRunning)return;
-    const t=AC.currentTime;
-    // 1小節(4拍)の2拍目・4拍目だけ、極めて小さく
-    [beat,beat*3].forEach(offset=>{
-      const n=Math.floor(SR*0.04);
-      const buf=AC.createBuffer(1,n,SR);
-      const d=buf.getChannelData(0);
-      for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,5);
-      const src=AC.createBufferSource(),g=AC.createGain(),hp=AC.createBiquadFilter();
-      hp.type='highpass';hp.frequency.value=10000;
-      src.buffer=buf;src.connect(hp);hp.connect(g);g.connect(mst);
-      g.gain.setValueAtTime(0.06,t+offset);
-      g.gain.exponentialRampToValueAtTime(0.001,t+offset+0.04);
-      src.start(t+offset);
-    });
-    bgmTimers.push(setTimeout(playHihat,beat*4*1000-40));
-  }
-
-  // ── キラキラ装飾音（たまにランダムで鳴る）──
-  function playSparkle(){
-    if(!bgmRunning)return;
-    // Amペンタ: A C D E G
-    const penta=[440,523.2,587.3,659.3,784];
-    const t=AC.currentTime;
-    const numNotes=Math.floor(Math.random()*2)+1;
-    for(let i=0;i<numNotes;i++){
-      const freq=penta[Math.floor(Math.random()*penta.length)]*(Math.random()<0.3?2:1);
-      const offset=Math.random()*beat*2;
-      const o=AC.createOscillator(),g=AC.createGain();
-      o.type='sine';o.frequency.value=freq;
-      g.gain.setValueAtTime(0,t+offset);
-      g.gain.linearRampToValueAtTime(0.04,t+offset+0.02);
-      g.gain.exponentialRampToValueAtTime(0.001,t+offset+0.5);
-      o.connect(g);g.connect(rev);g.connect(mst);
-      o.start(t+offset);o.stop(t+offset+0.55);
-      bgmNodes.push(o);
-    }
-    const nextMs=(beat*4+Math.random()*beat*8)*1000;
-    bgmTimers.push(setTimeout(playSparkle,nextMs));
-  }
-
-  startDrone();
-  playChord();
-  playBass();
-  playHihat();
-  bgmTimers.push(setTimeout(playSparkle,beat*6*1000));
+  bgmAudio.play().catch(()=>{});
 }
 
 // SE用AudioContext（BGMとは独立）
