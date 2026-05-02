@@ -435,39 +435,26 @@ function App(){
         if(msg.comboShow){setOnComboShow(msg.comboShow);}
         else{setOnComboShow(null);}
 
-        // バースト・リセットアニメ
+        // バースト・リセットアニメ（フェーズ変化時のみ）
         const prevBurst=onBurstAnimR.current;
-        const newBurst=!!msg.burstAnim&&msg.phase!=='timeup'&&msg.phase!=='countdown';
-        if(newBurst!==prevBurst){
-          setOnBurstAnim(newBurst);
-          onBurstAnimR.current=newBurst;
-          if(newBurst&&!prevBurst){resumeAC();playBurstSE();}
-        }
+        const newBurst=!!msg.burstAnim;
+        if(newBurst&&!prevBurst){resumeAC();playBurstSE();}
+        if(newBurst!==prevBurst){setOnBurstAnim(newBurst);onBurstAnimR.current=newBurst;}
         setOnResetFA(!!msg.resetAnim);
 
-        // 時間切れSE
-        if(msg.phase==='timeup'&&msg.timeLeft<=0&&onTimeLeftR.current>0){playMissSE();}
+        // 時間切れSE（一回だけ）
+        if(msg.phase==='timeup'&&onTimeLeftR.current>0&&msg.timeLeft<=0){playMissSE();}
 
-        // フィールドカラー更新
-        if(!msg.field||msg.field.length===0){
-          setOnFieldColors([]);
-        } else if(msg.field.length!==onFieldR.current.length&&msg.lastPlayRole){
-          const role=onRoleR.current;
-          // ホストが出したら青(player)、ゲストが出したら赤(dealer)
-          const by=msg.lastPlayRole==='host'?(role==='host'?'player':'dealer'):(role==='guest'?'player':'dealer');
-          setOnFieldColors(prev=>{
-            if(msg.field.length===1)return[by];
-            if(msg.field.length>prev.length)return[...prev,by];
-            return prev;
-          });
-        }
+        // フィールドリセット時のみカラーをクリア
+        if(!msg.field||msg.field.length===0){setOnFieldColors([]);}
         break;
       }
       case 'opPlay':{
         const newField=[...onFieldR.current,msg.value];
         setOnField(newField);onFieldR.current=newField;
         setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;
-        setOnFieldColors(prev=>[...prev,onRoleR.current==='host'?'guest':'host']);
+        // 相手が出したカード → dealer色
+        setOnFieldColors(prev=>[...prev,'dealer']);
         resumeAC();playTapSE();setOnOpHandCount(c=>Math.max(0,c-1));
         break;}
       case 'finish':{
