@@ -435,9 +435,9 @@ function App(){
         if(msg.comboShow){setOnComboShow(msg.comboShow);}
         else{setOnComboShow(null);}
 
-        // バースト・リセットアニメ（フェーズ変化時のみ）
+        // バースト・リセットアニメ（resolvingフェーズのみ）
         const prevBurst=onBurstAnimR.current;
-        const newBurst=!!msg.burstAnim;
+        const newBurst=!!msg.burstAnim&&msg.phase==='resolving';
         if(newBurst&&!prevBurst){resumeAC();playBurstSE();}
         if(newBurst!==prevBurst){setOnBurstAnim(newBurst);onBurstAnimR.current=newBurst;}
         setOnResetFA(!!msg.resetAnim);
@@ -445,7 +445,7 @@ function App(){
         // 時間切れSE（一回だけ）
         if(msg.phase==='timeup'&&onTimeLeftR.current>0&&msg.timeLeft<=0){playMissSE();}
 
-        // フィールドリセット時のみカラーをクリア
+        // フィールドリセット時のみカラーをクリア（Tickでは色を変えない）
         if(!msg.field||msg.field.length===0){setOnFieldColors([]);}
         break;
       }
@@ -477,7 +477,8 @@ function App(){
     const nh=[...onMyHandR.current];nh[idx]=0;setOnMyHand(nh);onMyHandR.current=nh;
     const nf=[...onFieldR.current,value];const ns=onFieldSumR.current+value;
     setOnField(nf);onFieldR.current=nf;setOnFieldSum(ns);onFieldSumR.current=ns;
-    setOnFieldColors(prev=>[...prev,onRoleR.current]);
+    // 自分のカードは常にplayer色（青）で追加
+    setOnFieldColors(prev=>[...prev,'player']);
     // サーバーに入力を送信
     wsR.current.send(JSON.stringify({type:'play',idx,value}));
   }
