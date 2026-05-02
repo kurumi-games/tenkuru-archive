@@ -352,6 +352,7 @@ function App(){
   const[onEndData,setOnEndData]=useState(null);
   const wsR=useRef(null);
   const onRoleR=useRef('');
+  const onBurstAnimR=useRef(false);
   const onCdIntervalR=useRef(null);
   const onTimerIntervalR=useRef(null);
   const endTimeRef=useRef(0);
@@ -391,6 +392,34 @@ function App(){
       case 'created':setRoomId(msg.roomId);setPhase('online_waiting');phaseR.current='online_waiting';break;
       case 'joined':setRoomId(msg.roomId);stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';break;
       case 'guestJoined':stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';break;
+      case 'tick':{
+        const role=onRoleR.current;
+        setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];
+        setOnOpHandCount(msg.opHandCount||0);
+        setOnField(msg.field||[]);onFieldR.current=msg.field||[];
+        setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
+        setOnMyPt(role==='host'?msg.hostPt:msg.guestPt);
+        setOnOpPt(role==='host'?msg.guestPt:msg.hostPt);
+        setOnRNum(msg.rNum||1);
+        setOnTimeLeft(msg.timeLeft||10);onTimeLeftR.current=msg.timeLeft||10;
+        const cd=msg.phase==='countdown'?msg.countdown:-1;
+        const prevCd=onCountNumR.current;
+        if(cd!==prevCd){onCountNumR.current=cd;setOnCountNum(cd);
+          if(prevCd===0&&cd===-1){try{resumeAC();const t=AC.currentTime;[[523,0,0.08],[659,0.09,0.08],[784,0.18,0.08],[1047,0.27,0.25]].forEach(([f,d,dur])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0.2,t+d);g.gain.exponentialRampToValueAtTime(0.001,t+d+dur);o.connect(g);g.connect(AC.destination);o.start(t+d);o.stop(t+d+dur+0.02);});}catch(e){}}
+        }
+        if(msg.flashMsg){const fm=msg.flashMsg;const isMy=fm.by===role;
+          setOnFlashMsg({text:fm.text.replace('ホスト',isMy?'YOU':'相手').replace('ゲスト',isMy?'YOU':'相手'),who:isMy?'player':'dealer'});
+        }else{setOnFlashMsg(null);}
+        if(msg.comboShow)setOnComboShow(msg.comboShow);else setOnComboShow(null);
+        const prevBurst=onBurstAnimR.current;
+        const newBurst=!!msg.burstAnim&&msg.phase==='resolving';
+        if(newBurst&&!prevBurst){resumeAC();playBurstSE();}
+        if(newBurst!==prevBurst){setOnBurstAnim(newBurst);onBurstAnimR.current=newBurst;}
+        setOnResetFA(!!msg.resetAnim);
+        if(msg.phase==='timeup'&&onTimeLeftR.current>0&&msg.timeLeft<=0)playMissSE();
+        if(!msg.field||msg.field.length===0)setOnFieldColors([]);
+        break;
+      }
       case 'state':
         // インターバルをクリアしてからリセット
         if(onCdIntervalR.current){clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;}
@@ -448,7 +477,7 @@ function App(){
         const newField=[...onFieldR.current,msg.value];
         setOnField(newField);onFieldR.current=newField;
         setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;
-        setOnFieldColors(prev=>[...prev,onRoleR.current==='host'?'guest':'host']);
+        setOnFieldColors(prev=>[...prev,'dealer']);
         resumeAC();playTapSE();setOnOpHandCount(c=>Math.max(0,c-1));
         break;
       case 'burst':
@@ -721,7 +750,7 @@ function App(){
         h('div',{ref:onFieldAreaRef,style:{background:PANEL,border:'2px solid '+(onFieldSum>=8?(onFieldColors[onFieldColors.length-1]===role?'#4da8ff':RED_C):onFieldSum>=5?'#e08020':BORDER),borderRadius:14,padding:'10px',textAlign:'center',transition:'border-color 0.25s',marginBottom:6,animation:onResetFA?'resetAnim 0.5s ease':onBurstAnim?'burst 0.5s ease':'none'}},
           h('div',{style:{fontSize:8,letterSpacing:4,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'── 場 ──'),
           h('div',{style:{display:'flex',gap:5,justifyContent:'center',alignItems:'center',height:70}},
-            [0,1,2,3].map(i=>onField[i]?h(FieldCard,{key:i,value:onField[i],by:onFieldColors[i]==='host'?'player':'dealer'}):h('div',{key:i,style:{width:50,height:70,flexShrink:0}}))
+            [0,1,2,3].map(i=>onField[i]?h(FieldCard,{key:i,value:onField[i],by:onFieldColors[i]==='dealer'?'dealer':'player'}):h('div',{key:i,style:{width:50,height:70,flexShrink:0}}))
           ),
           h('div',{style:{marginTop:5,height:36,display:'flex',alignItems:'center',justifyContent:'center',gap:8,visibility:onFieldSum>0?'visible':'hidden'}},
             h('span',{style:{fontSize:28,fontWeight:900,color:onFieldSum>=8?(onFieldColors[onFieldColors.length-1]===role?'#4da8ff':RED_C):onFieldSum>=5?'#e08020':TEXT,transition:'color 0.25s'}},onFieldSum),
