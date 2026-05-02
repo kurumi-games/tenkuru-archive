@@ -354,6 +354,7 @@ function App(){
   const onRoleR=useRef('');
   const lastVoiceR=useRef(null);
   const endTimeRef=useRef(0);
+  const onBurstAnimR=useRef(false);
   const onMyHandR=useRef([]);
   const onFieldR=useRef([]);
   const onFieldSumR=useRef(0);
@@ -435,14 +436,30 @@ function App(){
         else{setOnComboShow(null);}
 
         // バースト・リセットアニメ
-        setOnBurstAnim(!!msg.burstAnim);
+        const prevBurst=onBurstAnimR.current;
+        if(!!msg.burstAnim!==prevBurst){
+          setOnBurstAnim(!!msg.burstAnim);
+          onBurstAnimR.current=!!msg.burstAnim;
+          if(msg.burstAnim&&!prevBurst){resumeAC();playBurstSE();}
+        }
         setOnResetFA(!!msg.resetAnim);
 
         // 時間切れSE
         if(msg.phase==='timeup'&&msg.timeLeft<=0&&onTimeLeftR.current>0){playMissSE();}
 
-        // フィールドカラー更新（フィールドリセット時にクリア）
-        if(!msg.field||msg.field.length===0){setOnFieldColors([]);}
+        // フィールドカラー更新
+        if(!msg.field||msg.field.length===0){
+          setOnFieldColors([]);
+        } else if(msg.field.length!==onFieldR.current.length&&msg.lastPlayRole){
+          // カードが追加された時
+          const role=onRoleR.current;
+          const by=msg.lastPlayRole===role?'player':'dealer';
+          setOnFieldColors(prev=>{
+            if(msg.field.length===1)return[by];
+            if(msg.field.length>prev.length)return[...prev,by];
+            return prev;
+          });
+        }
         break;
       }
       case 'opPlay':{
@@ -718,10 +735,10 @@ function App(){
       h('div',{style:{position:'fixed',top:'48vh',left:0,right:0,zIndex:50,background:PANEL,borderTop:'1.5px solid '+BORDER,padding:'8px 12px 12px',boxShadow:'0 -4px 16px #0001'}},
         h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'YOU — '+onMyHand.filter(v=>v&&v!==0).length+'枚'),
         h('div',{style:{display:'flex',gap:4,justifyContent:'center',marginBottom:4,flexWrap:'wrap'}},
-          onMyHand.slice(0,5).map((v,i)=>(!v||v===0)?h('div',{key:i,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+i+'_'+v,value:v,onPlay:()=>onlinePlayCard(i,v),disabled:isCardOff(v),cardRole:'player',fieldBottom:onFieldAreaRef.current?onFieldAreaRef.current.getBoundingClientRect().bottom:null}))
+          onMyHand.slice(0,5).map((v,i)=>(!v||v===0)?h('div',{key:i,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+i+'_'+v,value:v,onPlay:()=>onlinePlayCard(i,v),disabled:isCardOff(v),cardRole:onRoleR.current==='host'?'player':'dealer',fieldBottom:onFieldAreaRef.current?onFieldAreaRef.current.getBoundingClientRect().bottom:null}))
         ),
         h('div',{style:{display:'flex',gap:4,justifyContent:'center',flexWrap:'wrap'}},
-          onMyHand.slice(5).map((v,i)=>(!v||v===0)?h('div',{key:i+5,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+(i+5)+'_'+v,value:v,onPlay:()=>onlinePlayCard(i+5,v),disabled:isCardOff(v),cardRole:'player',fieldBottom:onFieldAreaRef.current?onFieldAreaRef.current.getBoundingClientRect().bottom:null}))
+          onMyHand.slice(5).map((v,i)=>(!v||v===0)?h('div',{key:i+5,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+(i+5)+'_'+v,value:v,onPlay:()=>onlinePlayCard(i+5,v),disabled:isCardOff(v),cardRole:onRoleR.current==='host'?'player':'dealer',fieldBottom:onFieldAreaRef.current?onFieldAreaRef.current.getBoundingClientRect().bottom:null}))
         )
       )
     );
