@@ -349,6 +349,7 @@ function App(){
   const onRoleR=useRef('');
   const onBurstAnimR=useRef(false);
   const timeupSEFiredR=useRef(false);
+  const comboSEFiredR=useRef(false);
   const onCdIntervalR=useRef(null);
   const onTimerIntervalR=useRef(null);
   const endTimeRef=useRef(0);
@@ -412,8 +413,9 @@ function App(){
           if(prevCd===0&&cd===-1){try{resumeAC();const t=AC.currentTime;[[523,0,0.08],[659,0.09,0.08],[784,0.18,0.08],[1047,0.27,0.25]].forEach(([f,d,dur])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0.2,t+d);g.gain.exponentialRampToValueAtTime(0.001,t+d+dur);o.connect(g);g.connect(AC.destination);o.start(t+d);o.stop(t+d+dur+0.02);});}catch(e){}}
         }
         if(msg.flashMsg){const fm=msg.flashMsg;const isMy=fm.by===role;
-          setOnFlashMsg({text:fm.text.replace('ホスト',isMy?'YOU':'相手').replace('ゲスト',isMy?'YOU':'相手'),who:isMy?'player':'dealer'});
-        }else{setOnFlashMsg(null);}
+          setOnFlashMsg({text:fm.text.replace('ホスト',isMy?'YOU':'相手').replace('ゲスト',isMy?'YOU':'相手'),who:fm.by});
+          if(fm.voice&&!comboSEFiredR.current){comboSEFiredR.current=true;resumeAC();playComboSfx(fm.voice);}
+        }else{setOnFlashMsg(null);comboSEFiredR.current=false;}
         if(msg.comboShow)setOnComboShow(msg.comboShow);else setOnComboShow(null);
         const prevBurst=onBurstAnimR.current;
         const newBurst=!!msg.burstAnim&&msg.phase==='resolving';
