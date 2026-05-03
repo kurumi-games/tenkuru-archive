@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PiCRuK</title>
+<title>PiCLuK</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <style>
@@ -59,9 +59,9 @@ function calcPts(cards){
   return{total:1,label:'ノーボーナス +1pt',voice:'ノーボーナス'};
 }
 
-function canPlay(v,fieldSum,field){
-  if(field.filter(x=>x!==null).length>=4)return false;
-  const filled=field.filter(x=>x!==null).length+1;
+function canPlay(v,fieldSum,fieldLen){
+  if(fieldLen>=4)return false;
+  const filled=fieldLen+1;
   const newSum=fieldSum+v;
   if(filled===3&&newSum<5)return false;
   if(filled===4&&newSum<10)return false;
@@ -88,31 +88,35 @@ function startBGM(){
 // ── サーバー時刻同期 ──
 // ping/pongで3回計測し平均オフセットを算出してからコールバックを呼ぶ
 function syncServerTime(ws, offsetRef, callback) {
+  // addEventListener方式でpongを待つ
   let count = 0;
   const offsets = [];
-  function doPing() {
-    if (!ws || ws.readyState !== WebSocket.OPEN) { callback(); return; }
-    ws.send(JSON.stringify({ type: 'ping', clientTime: Date.now() }));
-  }
-  const origOnMessage = ws.onmessage;
-  ws.onmessage = (e) => {
+  function onPong(e) {
     try {
       const msg = JSON.parse(e.data);
       if (msg.type === 'pong') {
         const rtt = Date.now() - msg.clientTime;
         offsets.push(msg.serverTime + (rtt / 2) - Date.now());
         count++;
-        if (count < 3) { setTimeout(doPing, 50); }
-        else {
+        if (count < 3) {
+          setTimeout(doPing, 50);
+        } else {
+          ws.removeEventListener('message', onPong);
           offsetRef.current = offsets.reduce((a, b) => a + b, 0) / offsets.length;
-          ws.onmessage = origOnMessage;
           callback();
         }
-        return;
       }
-    } catch(e) {}
-    if (origOnMessage) origOnMessage(e);
-  };
+    } catch(err) {}
+  }
+  function doPing() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+      ws.removeEventListener('message', onPong);
+      callback();
+      return;
+    }
+    ws.send(JSON.stringify({ type: 'ping', clientTime: Date.now() }));
+  }
+  ws.addEventListener('message', onPong);
   doPing();
 }
 
@@ -497,82 +501,6 @@ function App(){
         if(msg.phase!=='timeup')timeupSEFiredR.current=false;
         break;
       }
-      case 'state':
-        // インターバルをクリアしてからリセット
-        if(onCdIntervalR.current){clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;}
-        if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
-        endTimeRef.current=0;
-        setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];
-        setOnOpHandCount(msg.opHandCount||0);
-        setOnField(msg.field||[]);onFieldR.current=msg.field||[];setOnFieldColors([]);
-        setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
-        setOnMyPt(msg.myPt||0);setOnOpPt(msg.opPt||0);
-        setOnRNum(msg.rNum||1);setOnTimeLeft(msg.timeLeft||10);onTimeLeftR.current=msg.timeLeft||10;
-        if(msg.countdownStartAt){
-          const startAt=msg.countdownStartAt;
-          const dur=msg.countdownDuration||5;
-          onCountNumR.current=dur;setOnCountNum(dur);
-          onCdIntervalR.current=setInterval(()=>{
-            const elapsed=Math.floor((Date.now()-startAt)/700);
-            const val=dur-elapsed;
-            if(val<=0){
-              clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;
-              onCountNumR.current=0;setOnCountNum(0);
-              try{resumeAC();const t=AC.currentTime;[[523,0,0.08],[659,0.09,0.08],[784,0.18,0.08],[1047,0.27,0.25]].forEach(([f,d,dur2])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0.2,t+d);g.gain.exponentialRampToValueAtTime(0.001,t+d+dur2);o.connect(g);g.connect(AC.destination);o.start(t+d);o.stop(t+d+dur2+0.02);});}catch(e){}
-            } else {
-              onCountNumR.current=val;setOnCountNum(val);
-            }
-          },100);
-        }
-        break;
-      case 'gameStart':
-        if(onCdIntervalR.current){clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;}
-        if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
-        onCountNumR.current=-1;setOnCountNum(-1);
-        endTimeRef.current=msg.timerEndAt;
-        onTimerIntervalR.current=setInterval(()=>{
-          const remaining=Math.ceil((endTimeRef.current-Date.now())/1000);
-          if(remaining<=0){
-            clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;
-            setOnTimeLeft(0);onTimeLeftR.current=0;
-            playMissSE();
-          } else {
-            setOnTimeLeft(remaining);onTimeLeftR.current=remaining;
-          }
-        },200);
-        break;
-      case 'timeUp':
-        if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
-        setOnTimeLeft(0);onTimeLeftR.current=0;
-        setOnFlashMsg({text:'⏱ 時間切れ！引き分け（±0pt）',who:null});
-        setTimeout(()=>setOnFlashMsg(null),1600);
-        break;
-      case 'handUpdate':const nh=[...onMyHandR.current];nh[msg.idx]=0;setOnMyHand(nh);onMyHandR.current=nh;break;
-      case 'newHand':setOnMyHand(msg.hand);onMyHandR.current=msg.hand;break;
-      case 'fieldUpdate':setOnField(msg.field);onFieldR.current=msg.field;setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;break;
-      case 'opPlay':
-        const newField=[...onFieldR.current,msg.value];
-        setOnField(newField);onFieldR.current=newField;
-        setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;
-        // ホストの相手=guest=赤('dealer'), ゲストの相手=host=青('player')
-        setOnFieldColors(prev=>[...prev,onRoleR.current==='host'?'dealer':'player']);
-        resumeAC();playTapSE();setOnOpHandCount(c=>Math.max(0,c-1));
-        break;
-      case 'burst':
-        resumeAC();playBurstSE();setOnBurstAnim(true);
-        const ib=msg.msg.by===onRoleR.current;
-        setOnFlashMsg({text:ib?'💥 バースト！あなた-2pt':'💥 相手バースト！相手-2pt',who:msg.msg.by});
-        if(onRoleR.current==='host'){setOnMyPt(msg.hostPt);setOnOpPt(msg.guestPt);}else{setOnMyPt(msg.guestPt);setOnOpPt(msg.hostPt);}
-        setTimeout(()=>{setOnBurstAnim(false);setOnFlashMsg(null);},1000);break;
-      case 'score':
-        if(msg.voice)playComboSfx(msg.voice);
-        setOnResetFA(true);setOnComboShow(msg.combo);
-        const isMy=msg.msg?.by===onRoleR.current;
-        setOnFlashMsg({text:(isMy?'🙋 YOU +':'👤 相手 +')+msg.combo.pts+'pt',who:msg.msg?.by});
-        if(onRoleR.current==='host'){setOnMyPt(msg.hostPt);setOnOpPt(msg.guestPt);}else{setOnMyPt(msg.guestPt);setOnOpPt(msg.hostPt);}
-        setTimeout(()=>setOnComboShow(null),1200);setTimeout(()=>{setOnResetFA(false);setOnFlashMsg(null);},1400);break;
-      case 'comboEnd':setOnComboShow(null);break;
-      case 'forceReset':setOnResetFA(true);setOnFlashMsg({text:'4枚！強制リセット',who:null});setTimeout(()=>{setOnResetFA(false);setOnFlashMsg(null);},900);break;
       case 'finish':
         const isMe=msg.winner===onRoleR.current;
         setOnEndData({winner:isMe?'me':'op',myPt:onRoleR.current==='host'?msg.hostPt:msg.guestPt,opPt:onRoleR.current==='host'?msg.guestPt:msg.hostPt});
@@ -587,7 +515,7 @@ function App(){
     if(onCountNumR.current>=0||onTimeLeftR.current<=0)return;
     if(!wsR.current||wsR.current.readyState!==WebSocket.OPEN)return;
     if(!onMyHandR.current[idx])return;
-    if(!canPlay(value,onFieldSumR.current,onFieldR.current))return;
+    if(!canPlay(value,onFieldSumR.current,onFieldR.current.length))return;
     resumeAC();playTapSE();
     const nh=[...onMyHandR.current];nh[idx]=0;setOnMyHand(nh);onMyHandR.current=nh;
     const nf=[...onFieldR.current,value];const ns=onFieldSumR.current+value;
@@ -687,7 +615,7 @@ function App(){
     if(delay!==null){d=delay;}
     else{
       const cf=fieldR.current,cs=fieldSumR.current,fl=cf.length;
-      const canWin=dHR.current.some(v=>canPlay(v,cs,cf)&&cs+v===10);
+      const canWin=dHR.current.some(v=>canPlay(v,cs,cf.length)&&cs+v===10);
       const diff=diffRef.current;
       if(canWin)d=diff==='easy'?600+Math.random()*800:diff==='hard'?50+Math.random()*100:100+Math.random()*200;
       else if(fl===0){if(diff==='easy')d=800+Math.random()*800;else if(diff==='hard')d=150+Math.random()*200;else d=aiFirstFastRef.current?300+Math.random()*300:1200+Math.random()*800;}
@@ -700,7 +628,7 @@ function App(){
   function aiPlay(rn){
     const dHand=dHR.current,cf=fieldR.current,cs=fieldSumR.current;
     if(!dHand.length)return;
-    const playable=dHand.filter(v=>canPlay(v,cs,cf));
+    const playable=dHand.filter(v=>canPlay(v,cs,cf.length));
     if(!playable.length){scheduleAi(rn);return;}
     const wins=playable.filter(v=>cs+v===10);
     const safe=playable.filter(v=>cs+v<10);
@@ -728,7 +656,7 @@ function App(){
   function playCard(idx){
     if(phaseR.current!=='playing'||countNumR.current>=0||lockR.current)return;
     const value=pH[idx];
-    if(!value||!canPlay(value,fieldSum,field))return;
+    if(!value||!canPlay(value,fieldSum,field.length))return;
     clearTimeout(aiRef.current);resumeAC();playTapSE();
     const newPH=pH.map((v,i)=>i===idx?null:v);
     setPH(newPH);pHR.current=newPH;
@@ -784,7 +712,7 @@ function App(){
 
   if(phase==='online_playing'){
     const role=onRoleR.current;
-    const isCardOff=(v)=>onCountNum>=0||onTimeLeft<=0||!canPlay(v,onFieldSum,onField);
+    const isCardOff=(v)=>onCountNum>=0||onTimeLeft<=0||!canPlay(v,onFieldSum,onField.length);
     return h('div',{style:{position:'fixed',inset:0,background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",overflow:'hidden'}},
       h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',backgroundImage:'repeating-linear-gradient(0deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px)'}}),
       // ── ローディング画面（1ラウンド目のみ）──
@@ -920,10 +848,10 @@ function App(){
     h('div',{style:{position:'fixed',top:'48vh',left:0,right:0,zIndex:50,background:PANEL,borderTop:'1.5px solid '+BORDER,padding:'8px 12px 12px',boxShadow:'0 -4px 16px #0001'}},
       h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'YOU — '+pH.filter(Boolean).length+'枚'),
       h('div',{style:{display:'flex',gap:4,justifyContent:'center',marginBottom:4,flexWrap:'wrap'}},
-        pH.slice(0,5).map((v,i)=>v===null?h('div',{key:i,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:i+'_'+v,value:v,onPlay:()=>playCard(i),disabled:countNum>=0||!canPlay(v,fieldSum,field),cardRole:'player',fieldBottom:fieldAreaRef.current?fieldAreaRef.current.getBoundingClientRect().bottom:null}))
+        pH.slice(0,5).map((v,i)=>v===null?h('div',{key:i,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:i+'_'+v,value:v,onPlay:()=>playCard(i),disabled:countNum>=0||!canPlay(v,fieldSum,field.length),cardRole:'player',fieldBottom:fieldAreaRef.current?fieldAreaRef.current.getBoundingClientRect().bottom:null}))
       ),
       h('div',{style:{display:'flex',gap:4,justifyContent:'center',flexWrap:'wrap'}},
-        pH.slice(5).map((v,i)=>v===null?h('div',{key:i+5,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:(i+5)+'_'+v,value:v,onPlay:()=>playCard(i+5),disabled:countNum>=0||!canPlay(v,fieldSum,field),cardRole:'player',fieldBottom:fieldAreaRef.current?fieldAreaRef.current.getBoundingClientRect().bottom:null}))
+        pH.slice(5).map((v,i)=>v===null?h('div',{key:i+5,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:(i+5)+'_'+v,value:v,onPlay:()=>playCard(i+5),disabled:countNum>=0||!canPlay(v,fieldSum,field.length),cardRole:'player',fieldBottom:fieldAreaRef.current?fieldAreaRef.current.getBoundingClientRect().bottom:null}))
       )
     ),
     h('div',{style:{position:'fixed',bottom:0,left:0,right:0,zIndex:49,padding:'6px 12px 8px',display:'flex',gap:5,flexWrap:'wrap',justifyContent:'center'}},
