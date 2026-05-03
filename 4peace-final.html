@@ -338,6 +338,8 @@ function App(){
   const[onRNum,setOnRNum]=useState(1);
   const[onTimeLeft,setOnTimeLeft]=useState(10);
   const[onCountNum,setOnCountNum]=useState(-1);
+  const[onLoadingPct,setOnLoadingPct]=useState(-1);
+  const[onShowReady,setOnShowReady]=useState(false);
   const[onFlashMsg,setOnFlashMsg]=useState(null);
   const[onBurstAnim,setOnBurstAnim]=useState(false);
   const[onResetFA,setOnResetFA]=useState(false);
@@ -405,6 +407,10 @@ function App(){
         setOnOpPt(role==='host'?msg.guestPt:msg.hostPt);
         setOnRNum(msg.rNum||1);
         setOnTimeLeft(msg.timeLeft||10);onTimeLeftR.current=msg.timeLeft||10;
+        // loading/readyフェーズ処理
+        if(msg.phase==='loading'){setOnLoadingPct(msg.loadingPct||0);setOnShowReady(false);}
+        else if(msg.phase==='ready'){setOnLoadingPct(100);setOnShowReady(true);}
+        else{setOnLoadingPct(-1);setOnShowReady(false);}
         const cd=msg.phase==='countdown'?msg.countdown:-1;
         const prevCd=onCountNumR.current;
         if(cd!==prevCd){onCountNumR.current=cd;setOnCountNum(cd);
@@ -530,7 +536,7 @@ function App(){
     endTimeRef.current=0;
     stopBGM();setPhase('menu');phaseR.current='menu';
     setOnMyHand([]);setOnField([]);setOnFieldColors([]);setOnFieldSum(0);setOnMyPt(0);setOnOpPt(0);
-    setOnCountNum(-1);onCountNumR.current=-1;setOnFlashMsg(null);setOnEndData(null);
+    setOnCountNum(-1);onCountNumR.current=-1;setOnFlashMsg(null);setOnEndData(null);setOnLoadingPct(-1);setOnShowReady(false);
   }
   function showOnlineMenu(){
     // ルーム作成/入室選択
@@ -713,6 +719,19 @@ function App(){
     const isCardOff=(v)=>onCountNum>=0||onTimeLeft<=0||!canPlay(v,onFieldSum,onField);
     return h('div',{style:{position:'fixed',inset:0,background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",overflow:'hidden'}},
       h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',backgroundImage:'repeating-linear-gradient(0deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px)'}}),
+      // ── ローディング画面（1ラウンド目のみ）──
+      onLoadingPct>=0&&!onShowReady&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'#0a0a1aee',pointerEvents:'none'}},
+        h('div',{style:{fontSize:22,fontWeight:900,color:'#00d4ff',letterSpacing:4,marginBottom:24,fontFamily:"'Fira Code',monospace"}},'LOADING...'),
+        h('div',{style:{width:260,height:14,background:'#1a1a3a',borderRadius:8,border:'1px solid #00d4ff44',overflow:'hidden'}},
+          h('div',{style:{height:'100%',width:onLoadingPct+'%',background:'linear-gradient(90deg,#00d4ff,#a050ff)',borderRadius:8,transition:'width 0.1s linear',boxShadow:'0 0 12px #00d4ff88'}})
+        ),
+        h('div',{style:{marginTop:12,fontSize:14,color:'#00d4ff88',fontFamily:"'Fira Code',monospace"}},onLoadingPct+'%')
+      ),
+      // ── Ready表示（loading完了後）──
+      onShowReady&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#0a0a1aee',pointerEvents:'none'}},
+        h('div',{style:{fontSize:72,fontWeight:900,color:'#00d4ff',animation:'countDown 0.4s ease both',textShadow:'0 0 40px #00d4ff',letterSpacing:8,fontFamily:"'Playfair Display',serif"}},'Ready')
+      ),
+      // ── カウントダウン ──
       onCountNum>=0&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#2a103066',pointerEvents:'none'}},
         h('div',{key:onCountNum,style:{fontSize:onCountNum===0?96:120,fontWeight:900,color:onCountNum===0?'#50e080':'#fff',animation:'countDown 0.65s ease both',textShadow:onCountNum===0?'0 0 60px #50e080':'0 0 30px #fff'}},onCountNum===0?'GO!!':onCountNum)
       ),
