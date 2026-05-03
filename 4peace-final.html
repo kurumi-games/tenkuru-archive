@@ -389,12 +389,8 @@ function App(){
   function onMsg(msg){
     switch(msg.type){
       case 'created':setRoomId(msg.roomId);setPhase('online_waiting');phaseR.current='online_waiting';break;
-      case 'joined':setRoomId(msg.roomId);stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';
-        setTimeout(()=>{if(wsR.current&&wsR.current.readyState===WebSocket.OPEN)wsR.current.send(JSON.stringify({type:'readyAck'}));},500);
-        break;
-      case 'guestJoined':stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';
-        setTimeout(()=>{if(wsR.current&&wsR.current.readyState===WebSocket.OPEN)wsR.current.send(JSON.stringify({type:'readyAck'}));},500);
-        break;
+      case 'joined':setRoomId(msg.roomId);stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';break;
+      case 'guestJoined':stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';break;
       case 'tick':{
         const role=onRoleR.current;
         setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];
