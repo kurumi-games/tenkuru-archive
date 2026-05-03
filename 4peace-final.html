@@ -85,6 +85,37 @@ function startBGM(){
   bgmAudio.play().catch(()=>{});
 }
 
+// ── サーバー時刻同期 ──
+// ping/pongで3回計測し平均オフセットを算出してからコールバックを呼ぶ
+function syncServerTime(ws, offsetRef, callback) {
+  let count = 0;
+  const offsets = [];
+  function doPing() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) { callback(); return; }
+    ws.send(JSON.stringify({ type: 'ping', clientTime: Date.now() }));
+  }
+  const origOnMessage = ws.onmessage;
+  ws.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'pong') {
+        const rtt = Date.now() - msg.clientTime;
+        offsets.push(msg.serverTime + (rtt / 2) - Date.now());
+        count++;
+        if (count < 3) { setTimeout(doPing, 50); }
+        else {
+          offsetRef.current = offsets.reduce((a, b) => a + b, 0) / offsets.length;
+          ws.onmessage = origOnMessage;
+          callback();
+        }
+        return;
+      }
+    } catch(e) {}
+    if (origOnMessage) origOnMessage(e);
+  };
+  doPing();
+}
+
 // SE用AudioContext（BGMとは独立）
 const AC=new(window.AudioContext||window.webkitAudioContext)();
 function resumeAC(){if(AC.state==='suspended')AC.resume();}
@@ -359,6 +390,7 @@ function App(){
   const onTimeLeftR=useRef(10);
   const playingStartAtR=useRef(null);
   const timerRAFR=useRef(null);
+  const serverTimeOffsetR=useRef(0); // サーバー時刻 - クライアント時刻
   const onCountNumR=useRef(-1);
   const onFieldAreaRef=useRef(null);
   const aiRef=useRef(null),timerRef=useRef(null),countRef=useRef(null);
@@ -389,8 +421,22 @@ function App(){
   function onMsg(msg){
     switch(msg.type){
       case 'created':setRoomId(msg.roomId);setPhase('online_waiting');phaseR.current='online_waiting';break;
-      case 'joined':setRoomId(msg.roomId);stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';break;
-      case 'guestJoined':stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';break;
+      case 'joined':setRoomId(msg.roomId);stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';
+        // ping3回送ってオフセット計算してからreadyAck
+        syncServerTime(wsR.current,serverTimeOffsetR,()=>{
+          if(wsR.current&&wsR.current.readyState===WebSocket.OPEN)wsR.current.send(JSON.stringify({type:'readyAck'}));
+        });
+        break;
+      case 'guestJoined':stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';
+        syncServerTime(wsR.current,serverTimeOffsetR,()=>{
+          if(wsR.current&&wsR.current.readyState===WebSocket.OPEN)wsR.current.send(JSON.stringify({type:'readyAck'}));
+        });
+        break;
+      case 'pong':{
+        const rtt=Date.now()-msg.clientTime;
+        serverTimeOffsetR.current=msg.serverTime+(rtt/2)-Date.now();
+        break;
+      }
       case 'tick':{
         const role=onRoleR.current;
         setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];
@@ -415,7 +461,8 @@ function App(){
             // RAFで滑らかにタイマー更新
             if(timerRAFR.current)cancelAnimationFrame(timerRAFR.current);
             function tickTimer(){
-              const elapsed=Date.now()-playingStartAtR.current;
+              const serverNow=Date.now()+serverTimeOffsetR.current;
+              const elapsed=serverNow-playingStartAtR.current;
               const left=Math.max(0,10-Math.floor(elapsed/1000));
               setOnTimeLeft(left);onTimeLeftR.current=left;
               if(left>0)timerRAFR.current=requestAnimationFrame(tickTimer);
