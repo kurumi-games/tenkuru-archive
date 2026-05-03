@@ -357,6 +357,8 @@ function App(){
   const onFieldR=useRef([]);
   const onFieldSumR=useRef(0);
   const onTimeLeftR=useRef(10);
+  const playingStartAtR=useRef(null);
+  const timerRAFR=useRef(null);
   const onCountNumR=useRef(-1);
   const onFieldAreaRef=useRef(null);
   const aiRef=useRef(null),timerRef=useRef(null),countRef=useRef(null);
@@ -406,7 +408,25 @@ function App(){
         setOnMyPt(role==='host'?msg.hostPt:msg.guestPt);
         setOnOpPt(role==='host'?msg.guestPt:msg.hostPt);
         setOnRNum(msg.rNum||1);
-        setOnTimeLeft(msg.timeLeft||10);onTimeLeftR.current=msg.timeLeft||10;
+        // playingStartAtを使ってリアルタイム計算
+        if(msg.phase==='playing'&&msg.playingStartAt){
+          if(playingStartAtR.current!==msg.playingStartAt){
+            playingStartAtR.current=msg.playingStartAt;
+            // RAFで滑らかにタイマー更新
+            if(timerRAFR.current)cancelAnimationFrame(timerRAFR.current);
+            function tickTimer(){
+              const elapsed=Date.now()-playingStartAtR.current;
+              const left=Math.max(0,10-Math.floor(elapsed/1000));
+              setOnTimeLeft(left);onTimeLeftR.current=left;
+              if(left>0)timerRAFR.current=requestAnimationFrame(tickTimer);
+            }
+            timerRAFR.current=requestAnimationFrame(tickTimer);
+          }
+        } else if(msg.phase!=='playing'){
+          if(timerRAFR.current){cancelAnimationFrame(timerRAFR.current);timerRAFR.current=null;}
+          playingStartAtR.current=null;
+          setOnTimeLeft(msg.timeLeft||10);onTimeLeftR.current=msg.timeLeft||10;
+        }
         // loading/readyフェーズ処理
         if(msg.phase==='loading'){setOnLoadingPct(msg.loadingPct||0);setOnShowReady(false);}
         else if(msg.phase==='ready'){setOnLoadingPct(100);setOnShowReady(true);}
@@ -537,6 +557,7 @@ function App(){
     stopBGM();setPhase('menu');phaseR.current='menu';
     setOnMyHand([]);setOnField([]);setOnFieldColors([]);setOnFieldSum(0);setOnMyPt(0);setOnOpPt(0);
     setOnCountNum(-1);onCountNumR.current=-1;setOnFlashMsg(null);setOnEndData(null);setOnLoadingPct(-1);setOnShowReady(false);
+    if(timerRAFR.current){cancelAnimationFrame(timerRAFR.current);timerRAFR.current=null;}playingStartAtR.current=null;
   }
   function showOnlineMenu(){
     // ルーム作成/入室選択
