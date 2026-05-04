@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PiCRuK</title>
+<title>PiCLuK</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <style>
@@ -276,13 +276,14 @@ function MenuScreen({onOnline,musicOn,toggleMusic}){
           h('div',{style:{fontSize:68,fontWeight:900,lineHeight:1,letterSpacing:3,
             background:'linear-gradient(135deg,#ffffff 0%,#e8d5ff 30%,#c084fc 60%,#f0abfc 100%)',
             WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
-            filter:'drop-shadow(0 2px 16px #c084fc88)'}},'PiCRuK'),
+            filter:'drop-shadow(0 2px 16px #c084fc88)'}},'PiCLuK'),
           h('div',{style:{position:'absolute',inset:0,fontSize:68,fontWeight:900,lineHeight:1,letterSpacing:3,
             background:'linear-gradient(135deg,#ffffff,#c084fc,#f0abfc)',
             WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
-            filter:'blur(10px)',opacity:0.4,pointerEvents:'none'}},'PiCRuK')
+            filter:'blur(10px)',opacity:0.4,pointerEvents:'none'}},'PiCLuK')
         ),
-        h('div',{style:{marginTop:10,height:1,background:'linear-gradient(90deg,transparent,#c084fc88,transparent)'}})
+        h('div',{style:{fontSize:11,color:'#c084fc99',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'ver. 01'),
+        h('div',{style:{marginTop:4,height:1,background:'linear-gradient(90deg,transparent,#c084fc88,transparent)'}})
       ),
       h('div',{style:{width:'100%',textAlign:'left'}},
         h('div',{style:{background:'#ffffff09',border:'1px solid #c084fc33',borderRadius:12,padding:'14px 16px',fontSize:11,color:'#e0d0ff',fontFamily:"'Fira Code',monospace",lineHeight:1.9}},
