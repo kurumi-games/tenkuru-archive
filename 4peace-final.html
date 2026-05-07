@@ -169,28 +169,27 @@ function playComboSfx(voice){
     setTimeout(()=>playSE({rate:2.5,vol:0.5,detune:1000}),500);
   }
 }
-// ── SlideCard（場まで持っていくと出せる）──
-function SlideCard({value,onPlay,disabled,cardRole,fieldBottom}){
-  const[dragY,setDragY]=useState(0);
-  const[isDragging,setIsDragging]=useState(false);
-  const startYR=useRef(0),startedR=useRef(false),curYR=useRef(0);
-  function onPointerDown(e){if(disabled)return;e.preventDefault();const t=e.touches?e.touches[0]:e;startYR.current=t.clientY;curYR.current=t.clientY;startedR.current=true;setIsDragging(true);setDragY(0);}
-  function onPointerMove(e){if(!startedR.current||disabled)return;e.preventDefault();const t=e.touches?e.touches[0]:e;curYR.current=t.clientY;const dy=t.clientY-startYR.current;if(dy<0)setDragY(dy);}
-  function onPointerUp(e){if(!startedR.current)return;startedR.current=false;setIsDragging(false);const dy=dragY;setDragY(0);if(disabled)return;if(fieldBottom!=null?curYR.current<fieldBottom:dy<-15)onPlay();}
-  const cardBg=cardRole==='player'?'#0a1e3d':'#3d0a0a';
-  const numColor=cardRole==='player'?'#4da8ff':'#ff6b6b';
-  const borderN=cardRole==='player'?'#1a4080':'#801a1a';
-  const reached=fieldBottom!=null&&isDragging&&curYR.current<fieldBottom;
+// ── TapCard（タップで出せる）──
+function SlideCard({value,onPlay,disabled,cardRole}){
+  const[pressed,setPressed]=useState(false);
+  const isBlue=cardRole==='player'||cardRole==='host';
+  const cardBg=disabled?'#111122':isBlue?'#0a1e3d':'#3d0a0a';
+  const numColor=disabled?'#333':isBlue?'#4da8ff':'#ff6b6b';
+  const borderN=disabled?'#333':isBlue?'#1a4080':'#801a1a';
   return h('div',{
-    style:{width:50,height:70,borderRadius:7,flexShrink:0,background:disabled?'#111122':cardBg,
-      border:disabled?'1.5px solid #333':(reached?'2px solid #50e080':'1.5px solid '+borderN),
+    style:{width:50,height:70,borderRadius:7,flexShrink:0,background:cardBg,
+      border:'1.5px solid '+borderN,
       display:'flex',alignItems:'center',justifyContent:'center',opacity:disabled?0.3:1,
-      animation:isDragging?'none':'dealIn 0.18s ease both',position:'relative',
-      userSelect:'none',WebkitUserSelect:'none',touchAction:'none',cursor:disabled?'default':'grab',
-      zIndex:isDragging?100:1,transform:isDragging?`translateY(${dragY}px) scale(1.1)`:'none',
-      transition:isDragging?'none':'transform 0.2s ease',
-      boxShadow:reached?'0 8px 24px #50e08099':'0 2px 8px #0004'},
-    onPointerDown,onPointerMove,onPointerUp,onPointerCancel:onPointerUp,
+      animation:'dealIn 0.18s ease both',position:'relative',
+      userSelect:'none',WebkitUserSelect:'none',touchAction:'manipulation',
+      cursor:disabled?'default':'pointer',
+      transform:pressed&&!disabled?'scale(0.93)':'scale(1)',
+      transition:'transform 0.1s ease',
+      boxShadow:disabled?'none':'0 2px 8px #0004'},
+    onPointerDown:()=>{if(!disabled)setPressed(true);},
+    onPointerUp:()=>{if(!disabled&&pressed){setPressed(false);onPlay();}},
+    onPointerCancel:()=>setPressed(false),
+    onPointerLeave:()=>setPressed(false),
   },
     h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Playfair Display',serif",lineHeight:1,pointerEvents:'none'}},value),
     h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900,pointerEvents:'none'}},value),
@@ -282,7 +281,7 @@ function MenuScreen({onOnline,musicOn,toggleMusic}){
             WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
             filter:'blur(10px)',opacity:0.4,pointerEvents:'none'}},'PiCLuK')
         ),
-        h('div',{style:{fontSize:11,color:'#c084fc99',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'ver. 03'),
+        h('div',{style:{fontSize:11,color:'#c084fc99',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'ver. 04'),
         h('div',{style:{marginTop:4,height:1,background:'linear-gradient(90deg,transparent,#c084fc88,transparent)'}})
       ),
       h('div',{style:{width:'100%',textAlign:'left'}},
@@ -822,9 +821,17 @@ function App(){
             h('div',{style:{fontSize:24,fontWeight:900,color:onTimeLeft<=5?'#fff':TEXT,lineHeight:1.1}},onTimeLeft)
           ),
           h('div',{style:{display:'flex',gap:10,alignItems:'center'}},
-            h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'YOU'),h('div',{style:{fontSize:22,fontWeight:900,color:role==='host'?PINK:RED_C}},onMyPt+'pt')),
+            h('div',{style:{textAlign:'center'}},
+              h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'YOU'),
+              h('div',{style:{fontSize:22,fontWeight:900,color:role==='host'?PINK:RED_C}},onMyPt+'pt'),
+              h('div',{style:{fontSize:9,color:'#ffffff88',fontFamily:"'Fira Code',monospace"}},onMyPt>=WIN_PT?'🏆':('あと'+(WIN_PT-onMyPt)+'pt'))
+            ),
             h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:10,color:DIM,fontFamily:"'Fira Code',monospace"}},'R'+onRNum)),
-            h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'相手'),h('div',{style:{fontSize:22,fontWeight:900,color:role==='host'?RED_C:PINK}},onOpPt+'pt'))
+            h('div',{style:{textAlign:'center'}},
+              h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'相手'),
+              h('div',{style:{fontSize:22,fontWeight:900,color:role==='host'?RED_C:PINK}},onOpPt+'pt'),
+              h('div',{style:{fontSize:9,color:'#ffffff88',fontFamily:"'Fira Code',monospace"}},onOpPt>=WIN_PT?'🏆':('あと'+(WIN_PT-onOpPt)+'pt'))
+            )
           ),
           h('div',{style:{display:'flex',flexDirection:'column',gap:4,alignItems:'flex-end'}},
             h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:10,padding:'2px 8px',textAlign:'center'}},
@@ -842,8 +849,9 @@ function App(){
       h('div',{style:{flexShrink:0,height:'clamp(80px,16dvh,130px)',zIndex:10,padding:'0 12px',display:'flex',flexDirection:'column',justifyContent:'center'}},
         h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:12,padding:'6px 10px',height:'100%',display:'flex',flexDirection:'column',justifyContent:'center'}},
           h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'👤 相手 — '+onOpHandCount+'枚'),
-          h('div',{style:{display:'flex',gap:3,flexWrap:'wrap',justifyContent:'center'}},
-            Array.from({length:Math.min(onOpHandCount,12)}).map((_,i)=>h('div',{key:i,style:{width:22,height:32,borderRadius:4,background:role==='host'?'linear-gradient(135deg,#3d0a0a,#200505)':'linear-gradient(135deg,#0a1e3d,#05101e)',border:'1px solid '+(role==='host'?'#801a1a':'#1a4080'),flexShrink:0}}))
+          h('div',{style:{display:'flex',gap:3,alignItems:'center',justifyContent:'center'}},
+            Array.from({length:Math.min(onOpHandCount,12)}).map((_,i)=>h('div',{key:i,style:{width:22,height:32,borderRadius:4,background:role==='host'?'linear-gradient(135deg,#3d0a0a,#200505)':'linear-gradient(135deg,#0a1e3d,#05101e)',border:'1px solid '+(role==='host'?'#801a1a':'#1a4080'),flexShrink:0}})),
+            onOpHandCount>0&&h('div',{style:{fontSize:13,fontWeight:700,color:role==='host'?RED_C:PINK,fontFamily:"'Fira Code',monospace",marginLeft:8,flexShrink:0}},onOpHandSum)
           )
         )
       ),
