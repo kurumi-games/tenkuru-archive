@@ -8,7 +8,7 @@
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%);min-height:100vh;overflow:hidden;position:fixed;width:100%;touch-action:none;}
+body{background:linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%);min-height:100dvh;overflow:hidden;position:fixed;width:100%;height:100dvh;touch-action:none;}
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Fira+Code:wght@400;600&display=swap');
 @keyframes dealIn{from{opacity:0;transform:translateY(-12px) scale(0.88);}to{opacity:1;transform:none;}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
@@ -786,9 +786,9 @@ function App(){
   if(phase==='online_playing'){
     const role=onRoleR.current;
     const isCardOff=(v)=>onCountNum>=0||onTimeLeft<=0||!canPlay(v,onFieldSum,onField);
-    return h('div',{style:{position:'fixed',inset:0,background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",overflow:'hidden'}},
-      h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',backgroundImage:'repeating-linear-gradient(0deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px)'}}),
-      // ── ローディング画面（1ラウンド目のみ）──
+    return h('div',{style:{height:'100dvh',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",position:'relative'}},
+      h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,backgroundImage:'repeating-linear-gradient(0deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px)'}}),
+      // ── オーバーレイ（ローディング/Ready/カウントダウン/フラッシュ）──
       onLoadingPct>=0&&!onShowReady&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'#0a0a1aee',pointerEvents:'none'}},
         h('div',{style:{fontSize:22,fontWeight:900,color:'#00d4ff',letterSpacing:4,marginBottom:24,fontFamily:"'Fira Code',monospace"}},'LOADING...'),
         h('div',{style:{width:260,height:14,background:'#1a1a3a',borderRadius:8,border:'1px solid #00d4ff44',overflow:'hidden'}},
@@ -796,11 +796,9 @@ function App(){
         ),
         h('div',{style:{marginTop:12,fontSize:14,color:'#00d4ff88',fontFamily:"'Fira Code',monospace"}},onLoadingPct+'%')
       ),
-      // ── Ready表示（loading完了後）──
       onShowReady&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#0a0a1aee',pointerEvents:'none'}},
         h('div',{style:{fontSize:72,fontWeight:900,color:'#00d4ff',animation:'countDown 0.4s ease both',textShadow:'0 0 40px #00d4ff',letterSpacing:8,fontFamily:"'Playfair Display',serif"}},'Ready')
       ),
-      // ── カウントダウン ──
       onCountNum>=0&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#2a103066',pointerEvents:'none'}},
         h('div',{key:onCountNum,style:{fontSize:onCountNum===0?96:120,fontWeight:900,color:onCountNum===0?'#50e080':'#fff',animation:'countDown 0.65s ease both',textShadow:onCountNum===0?'0 0 60px #50e080':'0 0 30px #fff'}},onCountNum===0?'GO!!':onCountNum)
       ),
@@ -813,8 +811,9 @@ function App(){
           h('div',{style:{fontSize:onComboShow.pts>=5?40:32,fontWeight:900,color:'#fff',textShadow:'0 0 20px '+onComboShow.color,marginTop:4,animation:'comboOut 0.8s 0.4s ease forwards'}},'+'+onComboShow.pts+'pt')
         )
       ),
-      h('div',{style:{position:'fixed',top:0,left:0,right:0,bottom:0,zIndex:10,display:'flex',flexDirection:'column',padding:'48px 12px 0',overflow:'hidden'}},
-        h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}},
+      // ── エリア1: ヘッダー（固定高さ）──
+      h('div',{style:{flexShrink:0,height:'clamp(50px,12dvh,80px)',zIndex:10,display:'flex',alignItems:'center',padding:'0 12px',paddingTop:'env(safe-area-inset-top,0px)'}},
+        h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%'}},
           h('div',{style:{background:onTimeLeft<=5?RED_C:PANEL,border:'1px solid '+(onTimeLeft<=5?RED_C:BORDER),borderRadius:10,padding:'4px 10px',textAlign:'center',minWidth:54,transition:'background 0.3s',animation:onTimeLeft<=5&&onTimeLeft>0?'pulse 0.5s infinite':'none'}},
             h('div',{style:{fontSize:8,color:onTimeLeft<=5?'#fff':DIM,fontFamily:"'Fira Code',monospace"}},'TIME'),
             h('div',{style:{fontSize:24,fontWeight:900,color:onTimeLeft<=5?'#fff':TEXT,lineHeight:1.1}},onTimeLeft)
@@ -824,26 +823,32 @@ function App(){
             h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:10,color:DIM,fontFamily:"'Fira Code',monospace"}},'R'+onRNum)),
             h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'相手'),h('div',{style:{fontSize:22,fontWeight:900,color:role==='host'?RED_C:PINK}},onOpPt+'pt'))
           ),
-          h('div',{style:{display:'flex',flexDirection:'column',gap:6,alignItems:'flex-end'}},
-            h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:10,padding:'4px 8px',textAlign:'center'}},
+          h('div',{style:{display:'flex',flexDirection:'column',gap:4,alignItems:'flex-end'}},
+            h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:10,padding:'2px 8px',textAlign:'center'}},
               h('div',{style:{fontSize:8,color:DIM,fontFamily:"'Fira Code',monospace"}},'GOAL'),
-              h('div',{style:{fontSize:16,fontWeight:900,color:'#ff9500'}},WIN_PT+'pt')
+              h('div',{style:{fontSize:14,fontWeight:900,color:'#ff9500'}},WIN_PT+'pt')
             ),
-            h('div',{style:{display:'flex',gap:8}},
-              h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 12px',color:DIM,fontSize:16,cursor:'pointer'}},musicEnabled?'🎵':'🔇'),
-              h('button',{onClick:goOnlineHome,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 10px',color:DIM,fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'🏠')
+            h('div',{style:{display:'flex',gap:6}},
+              h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:8,padding:'4px 8px',color:DIM,fontSize:14,cursor:'pointer'}},musicEnabled?'🎵':'🔇'),
+              h('button',{onClick:goOnlineHome,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:8,padding:'4px 8px',color:DIM,fontSize:12,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'🏠')
             )
           )
-        ),
-        h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:12,padding:'6px 10px',marginBottom:6}},
+        )
+      ),
+      // ── エリア2: 相手エリア（固定高さ）──
+      h('div',{style:{flexShrink:0,height:'clamp(80px,16dvh,130px)',zIndex:10,padding:'0 12px',display:'flex',flexDirection:'column',justifyContent:'center'}},
+        h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:12,padding:'6px 10px',height:'100%',display:'flex',flexDirection:'column',justifyContent:'center'}},
           h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'👤 相手 — '+onOpHandCount+'枚'),
           h('div',{style:{display:'flex',gap:3,flexWrap:'wrap',justifyContent:'center'}},
             Array.from({length:Math.min(onOpHandCount,12)}).map((_,i)=>h('div',{key:i,style:{width:22,height:32,borderRadius:4,background:role==='host'?'linear-gradient(135deg,#3d0a0a,#200505)':'linear-gradient(135deg,#0a1e3d,#05101e)',border:'1px solid '+(role==='host'?'#801a1a':'#1a4080'),flexShrink:0}}))
           )
-        ),
-        h('div',{ref:onFieldAreaRef,style:{flex:1,minHeight:0,background:PANEL,border:'2px solid '+(onFieldSum>=8?(onFieldColors[onFieldColors.length-1]==='player'?'#4da8ff':RED_C):onFieldSum>=5?'#e08020':BORDER),borderRadius:14,padding:'10px',textAlign:'center',transition:'border-color 0.25s',marginBottom:0,animation:onResetFA?'resetAnim 0.5s ease':onBurstAnim?'burst 0.5s ease':'none',display:'flex',flexDirection:'column',justifyContent:'center'}},
+        )
+      ),
+      // ── エリア3: 場（flex:1）──
+      h('div',{ref:onFieldAreaRef,style:{flex:1,minHeight:0,zIndex:10,padding:'6px 12px',display:'flex',flexDirection:'column'}},
+        h('div',{style:{flex:1,minHeight:0,background:PANEL,border:'2px solid '+(onFieldSum>=8?(onFieldColors[onFieldColors.length-1]==='player'?'#4da8ff':RED_C):onFieldSum>=5?'#e08020':BORDER),borderRadius:14,padding:'10px',textAlign:'center',transition:'border-color 0.25s',animation:onResetFA?'resetAnim 0.5s ease':onBurstAnim?'burst 0.5s ease':'none',display:'flex',flexDirection:'column',justifyContent:'center'}},
           h('div',{style:{fontSize:8,letterSpacing:4,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'── 場 ──'),
-          h('div',{style:{display:'flex',gap:5,justifyContent:'center',alignItems:'center',height:70}},
+          h('div',{style:{display:'flex',gap:5,justifyContent:'center',alignItems:'center'}},
             [0,1,2,3].map(i=>onField[i]?h(FieldCard,{key:i,value:onField[i],by:onFieldColors[i]||'player'}):h('div',{key:i,style:{width:50,height:70,flexShrink:0}}))
           ),
           h('div',{style:{marginTop:5,height:36,display:'flex',alignItems:'center',justifyContent:'center',gap:8,visibility:onFieldSum>0?'visible':'hidden'}},
@@ -851,16 +856,16 @@ function App(){
             h('span',{style:{fontSize:11,color:DIM,fontFamily:"'Fira Code',monospace"}},'/ 10　あと'+(10-onFieldSum))
           )
         )
-      ,
-        h('div',{style:{flexShrink:0,background:PANEL,borderTop:'1.5px solid '+BORDER,padding:'8px 12px 8px'}},
-        h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'YOU — '+onMyHand.filter(v=>v&&v!==0).length+'枚'),
+      ),
+      // ── エリア4: 手札（固定高さ）──
+      h('div',{style:{flexShrink:0,height:'clamp(160px,28dvh,220px)',zIndex:10,background:PANEL,borderTop:'1.5px solid '+BORDER,padding:'6px 12px',paddingBottom:'calc(6px + env(safe-area-inset-bottom,0px))',display:'flex',flexDirection:'column',justifyContent:'center'}},
+        h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'YOU — '+onMyHand.filter(v=>v&&v!==0).length+'枚'),
         h('div',{style:{display:'flex',gap:4,justifyContent:'center',marginBottom:4,flexWrap:'wrap'}},
           onMyHand.slice(0,5).map((v,i)=>(!v||v===0)?h('div',{key:i,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+i+'_'+v,value:v,onPlay:()=>onlinePlayCard(i,v),disabled:isCardOff(v),cardRole:onRoleR.current==='host'?'player':'dealer',fieldBottom:onFieldAreaRef.current?onFieldAreaRef.current.getBoundingClientRect().bottom:null}))
         ),
         h('div',{style:{display:'flex',gap:4,justifyContent:'center',flexWrap:'wrap'}},
           onMyHand.slice(5).map((v,i)=>(!v||v===0)?h('div',{key:i+5,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+(i+5)+'_'+v,value:v,onPlay:()=>onlinePlayCard(i+5,v),disabled:isCardOff(v),cardRole:onRoleR.current==='host'?'player':'dealer',fieldBottom:onFieldAreaRef.current?onFieldAreaRef.current.getBoundingClientRect().bottom:null}))
         )
-      )
       )
     );
   }
