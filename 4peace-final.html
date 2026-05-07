@@ -281,7 +281,7 @@ function MenuScreen({onOnline,musicOn,toggleMusic}){
             WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
             filter:'blur(10px)',opacity:0.4,pointerEvents:'none'}},'PiCLuK')
         ),
-        h('div',{style:{fontSize:11,color:'#c084fc99',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'ver. 04'),
+        h('div',{style:{fontSize:11,color:'#c084fc99',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'ver. 05'),
         h('div',{style:{marginTop:4,height:1,background:'linear-gradient(90deg,transparent,#c084fc88,transparent)'}})
       ),
       h('div',{style:{width:'100%',textAlign:'left'}},
@@ -349,8 +349,8 @@ function App(){
   const[resetFA,setResetFA]=useState(false);
   const[comboShow,setComboShow]=useState(null);
   const[gameEndData,setGameEndData]=useState(null);
-  const[musicEnabled,setMusicEnabled]=useState(false);
-  const musicEnabledR=useRef(false);
+  const[musicEnabled,setMusicEnabled]=useState(true);
+  const musicEnabledR=useRef(true);
   const[difficulty,setDifficulty]=useState('normal');
   const diffRef=useRef('normal');
   useEffect(()=>{diffRef.current=difficulty;},[difficulty]);
@@ -422,13 +422,13 @@ function App(){
   function onMsg(msg){
     switch(msg.type){
       case 'created':setRoomId(msg.roomId);setPhase('online_waiting');phaseR.current='online_waiting';break;
-      case 'joined':setRoomId(msg.roomId);stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';
+      case 'joined':setRoomId(msg.roomId);stopBGM();setPhase('online_playing');phaseR.current='online_playing';
         // ping3回送ってオフセット計算してからreadyAck
         syncServerTime(wsR.current,serverTimeOffsetR,()=>{
           if(wsR.current&&wsR.current.readyState===WebSocket.OPEN)wsR.current.send(JSON.stringify({type:'readyAck'}));
         });
         break;
-      case 'guestJoined':stopBGM();if(musicEnabledR.current){resumeAC();startBGM();}setPhase('online_playing');phaseR.current='online_playing';
+      case 'guestJoined':stopBGM();setPhase('online_playing');phaseR.current='online_playing';
         syncServerTime(wsR.current,serverTimeOffsetR,()=>{
           if(wsR.current&&wsR.current.readyState===WebSocket.OPEN)wsR.current.send(JSON.stringify({type:'readyAck'}));
         });
@@ -478,7 +478,7 @@ function App(){
         }
         // loading/readyフェーズ処理
         if(msg.phase==='loading'){setOnLoadingPct(msg.loadingPct||0);setOnShowReady(false);}
-        else if(msg.phase==='ready'){setOnLoadingPct(100);setOnShowReady(true);}
+        else if(msg.phase==='ready'){setOnLoadingPct(100);setOnShowReady(true);if(musicEnabledR.current){resumeAC();startBGM();}}
         else{setOnLoadingPct(-1);setOnShowReady(false);}
         const cd=msg.phase==='countdown'?msg.countdown:-1;
         const prevCd=onCountNumR.current;
@@ -571,7 +571,7 @@ function App(){
         if(msg.voice)playComboSfx(msg.voice);
         setOnResetFA(true);setOnComboShow(msg.combo);
         const isMy=msg.msg?.by===onRoleR.current;
-        setOnFlashMsg({text:(isMy?'🙋 YOU +':'👤 相手 +')+msg.combo.pts+'pt',who:msg.msg?.by});
+        setOnFlashMsg({text:(isMy?'🙋 自分 +':'👤 相手 +')+msg.combo.pts+'pt',who:msg.msg?.by});
         if(onRoleR.current==='host'){setOnMyPt(msg.hostPt);setOnOpPt(msg.guestPt);}else{setOnMyPt(msg.guestPt);setOnOpPt(msg.hostPt);}
         setTimeout(()=>setOnComboShow(null),1200);setTimeout(()=>{setOnResetFA(false);setOnFlashMsg(null);},1400);break;
       case 'comboEnd':setOnComboShow(null);break;
@@ -762,7 +762,7 @@ function App(){
       setResetFA(true);
       const color=who==='player'?PINK:RED_C;
       setComboShow({text:pts.voice||'10達成！',pts:pts.total,color});
-      setFlashMsg({text:(who==='player'?'🙋 YOU +':'💀 DEALER +')+pts.total+'pt　'+pts.label,color,who});
+      setFlashMsg({text:(who==='player'?'🙋 自分 +':'💀 DEALER +')+pts.total+'pt　'+pts.label,color,who});
       setTimeout(()=>setComboShow(null),1200);
       setTimeout(()=>{setResetFA(false);resetField();if(newPP>=WIN_PT||newDP>=WIN_PT){endGame(newPP,newDP);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,newPP,newDP,nr);},1400);
       return true;
@@ -807,12 +807,7 @@ function App(){
       onFlashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
         h('div',{style:{background:onFlashMsg.who==='host'?'#00203088':onFlashMsg.who==='guest'?'#3a001088':'#1a103088',backdropFilter:'blur(8px)',borderRadius:14,padding:'14px 26px',fontSize:18,fontWeight:900,color:onFlashMsg.who==='host'?'#00d4ff':onFlashMsg.who==='guest'?'#ff2d6e':'#ffffff',boxShadow:'0 4px 32px '+(onFlashMsg.who==='host'?'#00d4ff55':onFlashMsg.who==='guest'?'#ff2d6e55':'#ffffff33'),border:'2px solid '+(onFlashMsg.who==='host'?'#00d4ff':onFlashMsg.who==='guest'?'#ff2d6e':'#ffffff'),animation:'slideIn 0.2s ease',maxWidth:'88vw',textAlign:'center'}},onFlashMsg.text)
       ),
-      onComboShow&&h('div',{style:{position:'fixed',inset:0,zIndex:170,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
-        h('div',{style:{textAlign:'center',animation:'comboPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards'}},
-          h('div',{style:{fontSize:onComboShow.pts>=5?60:52,fontWeight:900,color:onComboShow.color,textShadow:'0 0 30px '+onComboShow.color,lineHeight:1,letterSpacing:2}},onComboShow.text),
-          h('div',{style:{fontSize:onComboShow.pts>=5?40:32,fontWeight:900,color:'#fff',textShadow:'0 0 20px '+onComboShow.color,marginTop:4,animation:'comboOut 0.8s 0.4s ease forwards'}},'+'+onComboShow.pts+'pt')
-        )
-      ),
+
       // ── エリア1: ヘッダー（固定高さ）──
       h('div',{style:{flexShrink:0,height:'clamp(50px,12dvh,80px)',zIndex:10,display:'flex',alignItems:'center',padding:'0 12px',paddingTop:'env(safe-area-inset-top,0px)'}},
         h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%'}},
@@ -834,10 +829,7 @@ function App(){
             )
           ),
           h('div',{style:{display:'flex',flexDirection:'column',gap:4,alignItems:'flex-end'}},
-            h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:10,padding:'2px 8px',textAlign:'center'}},
-              h('div',{style:{fontSize:8,color:DIM,fontFamily:"'Fira Code',monospace"}},'GOAL'),
-              h('div',{style:{fontSize:14,fontWeight:900,color:'#ff9500'}},WIN_PT+'pt')
-            ),
+
             h('div',{style:{display:'flex',gap:6}},
               h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:8,padding:'4px 8px',color:DIM,fontSize:14,cursor:'pointer'}},musicEnabled?'🎵':'🔇'),
               h('button',{onClick:goOnlineHome,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:8,padding:'4px 8px',color:DIM,fontSize:12,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'🏠')
@@ -851,7 +843,7 @@ function App(){
           h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'👤 相手 — '+onOpHandCount+'枚'),
           h('div',{style:{display:'flex',gap:3,alignItems:'center',justifyContent:'center'}},
             Array.from({length:Math.min(onOpHandCount,12)}).map((_,i)=>h('div',{key:i,style:{width:22,height:32,borderRadius:4,background:role==='host'?'linear-gradient(135deg,#3d0a0a,#200505)':'linear-gradient(135deg,#0a1e3d,#05101e)',border:'1px solid '+(role==='host'?'#801a1a':'#1a4080'),flexShrink:0}})),
-            onOpHandCount>0&&h('div',{style:{fontSize:13,fontWeight:700,color:role==='host'?RED_C:PINK,fontFamily:"'Fira Code',monospace",marginLeft:8,flexShrink:0}},onOpHandSum)
+            onOpHandCount>0&&h('div',{style:{fontSize:13,fontWeight:700,color:'#ffffff',fontFamily:"'Fira Code',monospace",marginLeft:8,flexShrink:0}},onOpHandSum)
           )
         )
       ),
@@ -869,7 +861,7 @@ function App(){
         )
       ),
       // ── エリア4: 手札（固定高さ）──
-      h('div',{style:{flexShrink:0,height:'clamp(160px,28dvh,220px)',zIndex:10,background:PANEL,borderTop:'1.5px solid '+BORDER,padding:'6px 12px',paddingBottom:'calc(6px + env(safe-area-inset-bottom,0px))',display:'flex',flexDirection:'column',justifyContent:'center'}},
+      h('div',{style:{flexShrink:0,height:'clamp(160px,28dvh,220px)',zIndex:10,background:PANEL,borderTop:'1.5px solid '+BORDER,padding:'6px 12px',paddingBottom:'calc(6px + env(safe-area-inset-bottom,0px))',display:'flex',flexDirection:'column',justifyContent:'center',visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}},
         h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'YOU — '+onMyHand.filter(v=>v&&v!==0).length+'枚'),
         h('div',{style:{display:'flex',gap:4,justifyContent:'center',marginBottom:4,flexWrap:'wrap'}},
           onMyHand.slice(0,5).map((v,i)=>(!v||v===0)?h('div',{key:i,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+i+'_'+v,value:v,onPlay:()=>onlinePlayCard(i,v),disabled:isCardOff(v),cardRole:onRoleR.current==='host'?'player':'dealer',fieldBottom:onFieldAreaRef.current?onFieldAreaRef.current.getBoundingClientRect().bottom:null}))
@@ -890,12 +882,7 @@ function App(){
     flashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
       h('div',{style:{background:flashMsg.who==='player'?'#00203088':'#3a001088',backdropFilter:'blur(8px)',borderRadius:14,padding:'14px 26px',fontSize:18,fontWeight:900,color:flashMsg.who==='player'?'#00d4ff':'#ff2d6e',boxShadow:'0 4px 32px '+(flashMsg.who==='player'?'#00d4ff55':'#ff2d6e55'),border:'2px solid '+(flashMsg.who==='player'?'#00d4ff':'#ff2d6e'),animation:'slideIn 0.2s ease',maxWidth:'88vw',textAlign:'center'}},flashMsg.text)
     ),
-    comboShow&&h('div',{style:{position:'fixed',inset:0,zIndex:170,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
-      h('div',{style:{textAlign:'center',animation:'comboPop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards'}},
-        h('div',{style:{fontSize:comboShow.pts>=7?72:comboShow.pts>=5?60:comboShow.pts>=3?52:40,fontWeight:900,color:comboShow.color,textShadow:'0 0 30px '+comboShow.color,lineHeight:1,letterSpacing:2}},comboShow.text),
-        h('div',{style:{fontSize:comboShow.pts>=7?48:comboShow.pts>=5?40:32,fontWeight:900,color:'#fff',textShadow:'0 0 20px '+comboShow.color,marginTop:4,animation:'comboOut 0.8s 0.4s ease forwards'}},'+'+comboShow.pts+'pt')
-      )
-    ),
+
     h('div',{style:{position:'fixed',top:0,left:0,right:0,zIndex:10,padding:'48px 12px 0'}},
       h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}},
         h('div',{style:{background:timeLeft<=5?RED_C:PANEL,border:'1px solid '+(timeLeft<=5?RED_C:BORDER),borderRadius:10,padding:'4px 10px',textAlign:'center',minWidth:54,transition:'background 0.3s',animation:timeLeft<=5?'pulse 0.5s infinite':'none'}},
@@ -908,10 +895,6 @@ function App(){
           h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'DEALER'),h('div',{style:{fontSize:22,fontWeight:900,color:RED_C}},dPt+'pt'))
         ),
         h('div',{style:{display:'flex',flexDirection:'column',gap:6,alignItems:'flex-end'}},
-          h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:10,padding:'4px 8px',textAlign:'center'}},
-            h('div',{style:{fontSize:8,color:DIM,fontFamily:"'Fira Code',monospace"}},'GOAL'),
-            h('div',{style:{fontSize:16,fontWeight:900,color:'#ff9500'}},WIN_PT+'pt')
-          ),
           h('div',{style:{display:'flex',gap:10}},
             h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 12px',color:DIM,fontSize:16,cursor:'pointer'}},musicEnabled?'🎵':'🔇'),
             h('button',{onClick:goHome,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 10px',color:DIM,fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'🏠')
