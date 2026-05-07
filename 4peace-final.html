@@ -362,6 +362,7 @@ function App(){
   const[onlineRole,setOnlineRole]=useState('');
   const[onMyHand,setOnMyHand]=useState([]);
   const[onOpHandCount,setOnOpHandCount]=useState(0);
+  const[onOpHandSum,setOnOpHandSum]=useState(0);
   const[onField,setOnField]=useState([]);
   const[onFieldColors,setOnFieldColors]=useState([]);
   const[onFieldSum,setOnFieldSum]=useState(0);
@@ -442,6 +443,7 @@ function App(){
         const role=onRoleR.current;
         setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];
         setOnOpHandCount(msg.opHandCount||0);
+        setOnOpHandSum(msg.opHandSum||0);
         const newField=msg.field||[];
         setOnField(newField);onFieldR.current=newField;
         setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
@@ -505,6 +507,7 @@ function App(){
         endTimeRef.current=0;
         setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];
         setOnOpHandCount(msg.opHandCount||0);
+        setOnOpHandSum(msg.opHandSum||0);
         setOnField(msg.field||[]);onFieldR.current=msg.field||[];setOnFieldColors([]);
         setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
         setOnMyPt(msg.myPt||0);setOnOpPt(msg.opPt||0);
