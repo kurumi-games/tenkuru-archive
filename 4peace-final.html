@@ -49,14 +49,14 @@ function createDeck(){
 function calcPts(cards){
   const s=[...cards].sort((a,b)=>a-b);
   if(cards.length===4&&s.join('')==='1234')return{total:5,label:'ストレート +5pt',voice:'ストレート'};
-  if(cards.length===2&&s[0]===5&&s[1]===5)return{total:1,label:'ノーボーナス +1pt',voice:'ノーボーナス'};
+  if(cards.length===2&&s[0]===5&&s[1]===5)return{total:1,label:'役なし +1pt',voice:'役なし'};
   const freq={};
   cards.forEach(v=>{freq[v]=(freq[v]||0)+1;});
   const counts=Object.values(freq);
   if(counts.some(c=>c>=3))return{total:4,label:'スリーカード +4pt',voice:'スリーカード'};
   if(counts.filter(c=>c===2).length>=2)return{total:3,label:'ツーペア +3pt',voice:'ツーペア'};
   if(counts.some(c=>c===2))return{total:2,label:'ワンペア +2pt',voice:'ワンペア'};
-  return{total:1,label:'ノーボーナス +1pt',voice:'ノーボーナス'};
+  return{total:1,label:'役なし +1pt',voice:'役なし'};
 }
 
 function canPlay(v,fieldSum,field){
@@ -146,7 +146,7 @@ function playBurstSE(){
   setTimeout(()=>playSE({rate:0.4,vol:0.7,detune:-800}),150);
 }
 function playComboSfx(voice){
-  if(voice==='ノーボーナス'){
+  if(voice==='役なし'){
     playSE({rate:1.0,vol:0.6});
   }else if(voice==='ワンペア'){
     playSE({rate:1.3,vol:0.75,detune:200});
@@ -281,7 +281,7 @@ function MenuScreen({onOnline,musicOn,toggleMusic}){
             WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
             filter:'blur(10px)',opacity:0.4,pointerEvents:'none'}},'PiCLuK')
         ),
-        h('div',{style:{fontSize:11,color:'#c084fc99',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'ver. 05'),
+        h('div',{style:{fontSize:11,color:'#c084fc99',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'ver. 06'),
         h('div',{style:{marginTop:4,height:1,background:'linear-gradient(90deg,transparent,#c084fc88,transparent)'}})
       ),
       h('div',{style:{width:'100%',textAlign:'left'}},
@@ -486,7 +486,10 @@ function App(){
           if(prevCd===0&&cd===-1){try{resumeAC();const t=AC.currentTime;[[523,0,0.08],[659,0.09,0.08],[784,0.18,0.08],[1047,0.27,0.25]].forEach(([f,d,dur])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0.2,t+d);g.gain.exponentialRampToValueAtTime(0.001,t+d+dur);o.connect(g);g.connect(AC.destination);o.start(t+d);o.stop(t+d+dur+0.02);});}catch(e){}}
         }
         if(msg.flashMsg){const fm=msg.flashMsg;const isMy=fm.by===role;
-          setOnFlashMsg({text:fm.text.replace('ホスト',isMy?'YOU':'相手').replace('ゲスト',isMy?'YOU':'相手'),who:fm.by});
+          const who2=isMy?'YOU':'相手';
+          const parts=fm.text.split('　');
+          const lbl=parts.length>1?parts.slice(1).join('　'):fm.text;
+          setOnFlashMsg({text:who2+'　'+lbl,who:fm.by});
           if(fm.voice&&!comboSEFiredR.current){comboSEFiredR.current=true;resumeAC();playComboSfx(fm.voice);}
         }else{setOnFlashMsg(null);comboSEFiredR.current=false;}
         if(msg.comboShow)setOnComboShow(msg.comboShow);else setOnComboShow(null);
@@ -571,7 +574,7 @@ function App(){
         if(msg.voice)playComboSfx(msg.voice);
         setOnResetFA(true);setOnComboShow(msg.combo);
         const isMy=msg.msg?.by===onRoleR.current;
-        setOnFlashMsg({text:(isMy?'🙋 自分 +':'👤 相手 +')+msg.combo.pts+'pt',who:msg.msg?.by});
+        setOnFlashMsg({text:(isMy?'自分 +':'相手 +')+msg.combo.pts+'pt',who:msg.msg?.by});
         if(onRoleR.current==='host'){setOnMyPt(msg.hostPt);setOnOpPt(msg.guestPt);}else{setOnMyPt(msg.guestPt);setOnOpPt(msg.hostPt);}
         setTimeout(()=>setOnComboShow(null),1200);setTimeout(()=>{setOnResetFA(false);setOnFlashMsg(null);},1400);break;
       case 'comboEnd':setOnComboShow(null);break;
@@ -758,11 +761,11 @@ function App(){
       const newPP=who==='player'?pPtR.current+pts.total:pPtR.current;
       const newDP=who==='dealer'?dPtR.current+pts.total:dPtR.current;
       setPPt(newPP);setDPt(newDP);pPtR.current=newPP;dPtR.current=newDP;
-      playComboSfx(pts.voice||'ノーボーナス');
+      playComboSfx(pts.voice||'役なし');
       setResetFA(true);
       const color=who==='player'?PINK:RED_C;
       setComboShow({text:pts.voice||'10達成！',pts:pts.total,color});
-      setFlashMsg({text:(who==='player'?'🙋 自分 +':'💀 DEALER +')+pts.total+'pt　'+pts.label,color,who});
+      setFlashMsg({text:(who==='player'?'自分 +':'DEALER +')+pts.total+'pt　'+pts.label,color,who});
       setTimeout(()=>setComboShow(null),1200);
       setTimeout(()=>{setResetFA(false);resetField();if(newPP>=WIN_PT||newDP>=WIN_PT){endGame(newPP,newDP);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,newPP,newDP,nr);},1400);
       return true;
@@ -809,7 +812,7 @@ function App(){
       ),
 
       // ── エリア1: ヘッダー（固定高さ）──
-      h('div',{style:{flexShrink:0,height:'clamp(50px,12dvh,80px)',zIndex:10,display:'flex',alignItems:'center',padding:'0 12px',paddingTop:'env(safe-area-inset-top,0px)'}},
+      h('div',{style:{flexShrink:0,height:'clamp(50px,12dvh,80px)',zIndex:10,display:'flex',alignItems:'center',padding:'0 12px',paddingTop:'env(safe-area-inset-top,0px)',visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}},
         h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%'}},
           h('div',{style:{background:onTimeLeft<=5?RED_C:PANEL,border:'1px solid '+(onTimeLeft<=5?RED_C:BORDER),borderRadius:10,padding:'4px 10px',textAlign:'center',minWidth:54,transition:'background 0.3s',animation:onTimeLeft<=5&&onTimeLeft>0?'pulse 0.5s infinite':'none'}},
             h('div',{style:{fontSize:8,color:onTimeLeft<=5?'#fff':DIM,fontFamily:"'Fira Code',monospace"}},'TIME'),
@@ -838,9 +841,9 @@ function App(){
         )
       ),
       // ── エリア2: 相手エリア（固定高さ）──
-      h('div',{style:{flexShrink:0,height:'clamp(80px,16dvh,130px)',zIndex:10,padding:'0 12px',display:'flex',flexDirection:'column',justifyContent:'center'}},
+      h('div',{style:{flexShrink:0,height:'clamp(80px,16dvh,130px)',zIndex:10,padding:'0 12px',display:'flex',flexDirection:'column',justifyContent:'center',visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}},
         h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:12,padding:'6px 10px',height:'100%',display:'flex',flexDirection:'column',justifyContent:'center'}},
-          h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'👤 相手 — '+onOpHandCount+'枚'),
+          h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'相手 — '+onOpHandCount+'枚'),
           h('div',{style:{display:'flex',gap:3,alignItems:'center',justifyContent:'center'}},
             Array.from({length:Math.min(onOpHandCount,12)}).map((_,i)=>h('div',{key:i,style:{width:22,height:32,borderRadius:4,background:role==='host'?'linear-gradient(135deg,#3d0a0a,#200505)':'linear-gradient(135deg,#0a1e3d,#05101e)',border:'1px solid '+(role==='host'?'#801a1a':'#1a4080'),flexShrink:0}})),
             onOpHandCount>0&&h('div',{style:{fontSize:13,fontWeight:700,color:'#ffffff',fontFamily:"'Fira Code',monospace",marginLeft:8,flexShrink:0}},onOpHandSum)
@@ -848,7 +851,7 @@ function App(){
         )
       ),
       // ── エリア3: 場（flex:1）──
-      h('div',{ref:onFieldAreaRef,style:{flexShrink:0,height:'clamp(160px,32dvh,280px)',zIndex:10,padding:'4px 12px',display:'flex',flexDirection:'column'}},
+      h('div',{ref:onFieldAreaRef,style:{flexShrink:0,height:'clamp(160px,32dvh,280px)',zIndex:10,padding:'4px 12px',display:'flex',flexDirection:'column',visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}},
         h('div',{style:{flex:1,minHeight:0,background:PANEL,border:'2px solid '+(onFieldSum>=8?(onFieldColors[onFieldColors.length-1]==='player'?'#4da8ff':RED_C):onFieldSum>=5?'#e08020':BORDER),borderRadius:14,padding:'8px',textAlign:'center',transition:'border-color 0.25s',animation:onResetFA?'resetAnim 0.5s ease':onBurstAnim?'burst 0.5s ease':'none',display:'flex',flexDirection:'column',justifyContent:'center'}},
           h('div',{style:{fontSize:8,letterSpacing:4,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'── 場 ──'),
           h('div',{style:{display:'flex',gap:5,justifyContent:'center',alignItems:'center'}},
