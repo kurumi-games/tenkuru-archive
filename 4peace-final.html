@@ -10,7 +10,8 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%);min-height:100dvh;overflow:hidden;position:fixed;width:100%;height:100dvh;touch-action:none;}
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Fira+Code:wght@400;600&display=swap');
-@keyframes dealIn{from{opacity:0;transform:translateY(-12px) scale(0.88);}to{opacity:1;transform:none;}}
+@keyframes dealIn{0%{opacity:0;transform:translateY(-20px) scale(0.75) rotate(-6deg);}60%{transform:translateY(3px) scale(1.06) rotate(1deg);}100%{opacity:1;transform:none;}}
+@keyframes cardGlow{0%,100%{box-shadow:0 2px 8px #0006,0 0 0px transparent}50%{box-shadow:0 4px 16px #0008,0 0 18px currentColor}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
@@ -205,21 +206,21 @@ function CyberParticles({color,level,active}){
     canvas.height=window.innerHeight;
     const cx=canvas.width/2, cy=canvas.height/2;
     const particles=[];
-    const count=[0,12,22,35,55,90][level]||12;
+    const count=[0,30,55,85,130,200][level]||30;
     const col=color||'#00d4ff';
     // パーティクル生成
     for(let i=0;i<count;i++){
       const angle=Math.random()*Math.PI*2;
-      const speed=(1+Math.random()*[0,3,4,6,8,12][level])*1.5;
-      const size=Math.random()*([0,3,4,5,7,10][level]||3)+2;
-      const isLine=level>=3&&Math.random()<0.3;
+      const speed=(1+Math.random()*[0,5,7,10,13,18][level])*1.5;
+      const size=Math.random()*([0,4,5,7,9,12][level]||4)+2;
+      const isLine=level>=2&&Math.random()<(level>=4?0.5:0.35);
       particles.push({
         x:cx,y:cy,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
-        life:1,decay:0.012+Math.random()*0.018,
-        size,col:Math.random()<0.3?'#ffffff':col,
-        isLine,len:isLine?Math.random()*30+15:0,
+        life:1,decay:0.007+Math.random()*0.012,
+        size,col:Math.random()<0.35?'#ffffff':Math.random()<0.2?'#ffffffaa':col,
+        isLine,len:isLine?Math.random()*50+20:0,
         angle,rot:Math.random()*0.1-0.05,
-        glitch:level>=4&&Math.random()<0.4,
+        glitch:level>=3&&Math.random()<0.4,
       });
     }
     // level5専用：格子状スキャンライン
@@ -239,17 +240,17 @@ function CyberParticles({color,level,active}){
         ctx.restore();
       }
       // リングエフェクト
-      if(level>=2&&frame<30){
-        const rings=level>=5?3:level>=3?2:1;
+      if(level>=1&&frame<50){
+        const rings=level>=5?5:level>=4?4:level>=3?3:level>=2?2:1;
         for(let r=0;r<rings;r++){
-          const progress=(frame-r*8)/30;
+          const progress=(frame-r*7)/50;
           if(progress<=0||progress>1)continue;
           ctx.save();
-          ctx.globalAlpha=(1-progress)*0.5;
-          ctx.strokeStyle=r%2===0?col:'#ffffff';
-          ctx.lineWidth=level>=4?3:2;
+          ctx.globalAlpha=(1-progress)*0.7;
+          ctx.strokeStyle=r%3===0?col:r%3===1?'#ffffff':'#ff88ff';
+          ctx.lineWidth=level>=4?4:level>=2?3:2;
           ctx.beginPath();
-          ctx.arc(cx,cy,progress*Math.min(canvas.width,canvas.height)*0.35*(1+r*0.3),0,Math.PI*2);
+          ctx.arc(cx,cy,progress*Math.min(canvas.width,canvas.height)*0.45*(1+r*0.28),0,Math.PI*2);
           ctx.stroke();
           ctx.restore();
         }
@@ -310,14 +311,14 @@ function CyberComboDisplay({combo}){
   const[visible,setVisible]=useState(true);
   useEffect(()=>{
     setVisible(true);
-    const t=setTimeout(()=>setVisible(false),1100);
+    const t=setTimeout(()=>setVisible(false),2400);
     return()=>clearTimeout(t);
   },[combo]);
   if(!combo||!visible)return null;
   const level=getComboLevel(combo.text);
   const col=combo.color||'#00d4ff';
   // level別スタイル
-  const sizes=[0,32,38,46,58,72];
+  const sizes=[0,22,26,32,40,52];
   const glows=[0,'0 0 12px',`0 0 20px, 0 0 40px`,`0 0 30px, 0 0 60px, 0 0 90px`,`0 0 40px, 0 0 80px, 0 0 120px`,`0 0 60px, 0 0 120px, 0 0 200px`];
   const shadow=glows[level].replace(/0 0 \d+px/g,s=>s.replace('px',`px ${col}`));
   const anim=level>=3?'cyberIn 0.4s cubic-bezier(0.2,1.4,0.5,1) both':'comboPop 0.35s ease both';
@@ -351,12 +352,12 @@ function SlideCard({value,onPlay,disabled,cardRole}){
     style:{width:50,height:70,borderRadius:7,flexShrink:0,background:cardBg,
       border:'1.5px solid '+borderN,
       display:'flex',alignItems:'center',justifyContent:'center',opacity:disabled?0.3:1,
-      animation:'dealIn 0.18s ease both',position:'relative',
+      animation:'dealIn 0.22s cubic-bezier(0.2,1.3,0.5,1) both',position:'relative',
       userSelect:'none',WebkitUserSelect:'none',touchAction:'manipulation',
       cursor:disabled?'default':'pointer',
       transform:pressed&&!disabled?'scale(0.93)':'scale(1)',
       transition:'transform 0.1s ease',
-      boxShadow:disabled?'none':'0 2px 8px #0004'},
+      boxShadow:disabled?'none':pressed?`0 0 18px ${isBlue?'#4da8ffaa':'#ff6b6baa'}, 0 4px 12px #0006`:`0 2px 10px #0005, 0 0 8px ${isBlue?'#4da8ff44':'#ff6b6b44'}`,},
     onPointerDown:()=>{if(!disabled)setPressed(true);},
     onPointerUp:()=>{if(!disabled&&pressed){setPressed(false);onPlay();}},
     onPointerCancel:()=>setPressed(false),
@@ -372,7 +373,7 @@ function FieldCard({value,by}){
   const cardBg=isBlue?'#0a1e3d':'#3d0a0a';
   const numColor=isBlue?'#4da8ff':'#ff6b6b';
   const borderColor=isBlue?'#1a4080':'#801a1a';
-  return h('div',{style:{width:50,height:70,borderRadius:7,flexShrink:0,background:cardBg,border:'1.5px solid '+borderColor,display:'flex',alignItems:'center',justifyContent:'center',animation:'dealIn 0.18s ease both',position:'relative'}},
+  return h('div',{style:{width:50,height:70,borderRadius:7,flexShrink:0,background:cardBg,border:'1.5px solid '+borderColor,display:'flex',alignItems:'center',justifyContent:'center',animation:'dealIn 0.25s cubic-bezier(0.2,1.3,0.5,1) both',position:'relative',boxShadow:`0 3px 12px #0006, 0 0 12px ${isBlue?'#4da8ff66':'#ff6b6b66'}`}},
     h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Playfair Display',serif"}},value),
     h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900}},value),
     h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,transform:'rotate(180deg)'}},value)
