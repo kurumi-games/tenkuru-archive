@@ -766,7 +766,7 @@ function App(){
         if(msg.voice)playComboSfx(msg.voice);
         setOnResetFA(true);setOnComboShow(msg.combo);
         if(onRoleR.current==='host'){setOnMyPt(msg.hostPt);setOnOpPt(msg.guestPt);}else{setOnMyPt(msg.guestPt);setOnOpPt(msg.hostPt);}
-        setTimeout(()=>setOnComboShow(null),1200);setTimeout(()=>setOnResetFA(false),1400);break;
+        setTimeout(()=>setOnComboShow(null),5200);setTimeout(()=>setOnResetFA(false),1400);break;
       case 'comboEnd':setOnComboShow(null);break;
       case 'forceReset':setOnResetFA(true);setOnFlashMsg({text:'4枚！強制リセット',who:null});setTimeout(()=>{setOnResetFA(false);setOnFlashMsg(null);},900);break;
       case 'finish':
@@ -955,7 +955,7 @@ function App(){
       setResetFA(true);
       const color=who==='player'?PINK:RED_C;
       setComboShow({text:pts.voice||'10達成！',pts:pts.total,color});
-      setTimeout(()=>setComboShow(null),3200);
+      setTimeout(()=>setComboShow(null),5200);
       setTimeout(()=>{setResetFA(false);resetField();if(newPP>=WIN_PT||newDP>=WIN_PT){endGame(newPP,newDP);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,newPP,newDP,nr);},1400);
       return true;
     }
