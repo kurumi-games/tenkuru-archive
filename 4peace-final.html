@@ -833,7 +833,7 @@ function App(){
   function doCountdown(pHand,dHand,pp,dp,rn){
     setPhase('playing');phaseR.current='playing';
     setField([]);setFieldSum(0);fieldR.current=[];fieldSumR.current=0;
-    setFlashMsg(null);setTimeLeft(10);
+    setFlashMsg(null);setTimeLeft(10);setComboShow(null);
     let c=5;setCountNum(c);countNumR.current=c;
     function tick(){
       setCountNum(c);countNumR.current=c;
@@ -961,7 +961,7 @@ function App(){
       const color=who==='player'?PINK:RED_C;
       setComboShow({text:pts.voice||'10達成！',pts:pts.total,color});
       setFlashMsg({text:(who==='player'?'自分 +':'DEALER +')+pts.total+'pt　'+pts.label,color,who});
-      setTimeout(()=>setComboShow(null),1200);
+      setTimeout(()=>setComboShow(null),3200);
       setTimeout(()=>{setResetFA(false);resetField();if(newPP>=WIN_PT||newDP>=WIN_PT){endGame(newPP,newDP);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,newPP,newDP,nr);},1400);
       return true;
     }
@@ -1004,7 +1004,7 @@ function App(){
       onCountNum>=0&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#2a103066',pointerEvents:'none'}},
         h('div',{key:onCountNum,style:{fontSize:onCountNum===0?96:120,fontWeight:900,color:onCountNum===0?'#50e080':'#fff',animation:'countDown 0.65s ease both',textShadow:onCountNum===0?'0 0 60px #50e080':'0 0 30px #fff'}},onCountNum===0?'GO!!':onCountNum)
       ),
-      onFlashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
+      onFlashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:onComboShow?'flex-start':'center',justifyContent:'center',paddingTop:onComboShow?'clamp(90px,20vh,140px)':'0',pointerEvents:'none'}},
         h('div',{style:{background:onFlashMsg.who==='host'?'#00203088':onFlashMsg.who==='guest'?'#3a001088':'#1a103088',backdropFilter:'blur(8px)',borderRadius:14,padding:'14px 26px',fontSize:18,fontWeight:900,color:onFlashMsg.who==='host'?'#00d4ff':onFlashMsg.who==='guest'?'#ff2d6e':'#ffffff',boxShadow:'0 4px 32px '+(onFlashMsg.who==='host'?'#00d4ff55':onFlashMsg.who==='guest'?'#ff2d6e55':'#ffffff33'),border:'2px solid '+(onFlashMsg.who==='host'?'#00d4ff':onFlashMsg.who==='guest'?'#ff2d6e':'#ffffff'),animation:'slideIn 0.2s ease',maxWidth:'88vw',textAlign:'center'}},onFlashMsg.text)
       ),
 
@@ -1081,7 +1081,7 @@ function App(){
     countNum>=0&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#2a103066',pointerEvents:'none'}},
       h('div',{key:countNum,style:{fontSize:countNum===0?96:120,fontWeight:900,color:countNum===0?'#50e080':'#fff',animation:'countDown 0.65s ease both',textShadow:countNum===0?'0 0 60px #50e080':'0 0 30px #fff'}},countNum===0?'GO!!':countNum)
     ),
-    flashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
+    flashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:comboShow?'flex-start':'center',justifyContent:'center',paddingTop:comboShow?'clamp(90px,20vh,140px)':'0',pointerEvents:'none'}},
       h('div',{style:{background:flashMsg.who==='player'?'#00203088':'#3a001088',backdropFilter:'blur(8px)',borderRadius:14,padding:'14px 26px',fontSize:18,fontWeight:900,color:flashMsg.who==='player'?'#00d4ff':'#ff2d6e',boxShadow:'0 4px 32px '+(flashMsg.who==='player'?'#00d4ff55':'#ff2d6e55'),border:'2px solid '+(flashMsg.who==='player'?'#00d4ff':'#ff2d6e'),animation:'slideIn 0.2s ease',maxWidth:'88vw',textAlign:'center'}},flashMsg.text)
     ),
 
