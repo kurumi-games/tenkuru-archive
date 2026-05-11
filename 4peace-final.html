@@ -351,8 +351,11 @@ function CyberComboDisplay({combo}){
       // グリッチレイヤー（level4以上）
       level>=4&&h('div',{style:{position:'absolute',inset:0,color:'#ffffff',fontFamily:"'Fira Code',monospace",animation:'titleGlitch 0.6s step-end 1',pointerEvents:'none',userSelect:'none'}},combo.text)
     ),
-    // ポイント表示
-    h('div',{style:{fontSize:level>=4?36:level>=3?28:22,fontWeight:900,color:'#ffffff',fontFamily:"'Fira Code',monospace",textShadow:`0 0 20px ${col}, 0 0 40px ${col}`,animation:'ptFloat 1.2s ease forwards',marginTop:10,letterSpacing:2,background:'#00000055',borderRadius:8,padding:'3px 14px',backdropFilter:'blur(4px)'}},'+'+(combo.pts||1)+'pt'),
+    // ポイント表示（同じスタイルで遅延アニメーション）
+    h('div',{style:{position:'relative',fontSize:sizes[level],fontWeight:900,color:'#ffffff',fontFamily:"'Fira Code',monospace",letterSpacing:level>=4?8:level>=3?4:2,textShadow:shadow,animation:anim,animationDelay:'0.75s',animationFillMode:'both',zIndex:1,whiteSpace:'nowrap',background:'#00000066',borderRadius:12,padding:'6px 18px',backdropFilter:'blur(6px)',border:`1.5px solid ${col}66`,marginTop:10}},
+      '+'+(combo.pts||1)+'pt',
+      level>=4&&h('div',{style:{position:'absolute',inset:0,color:'#ffffff',fontFamily:"'Fira Code',monospace",animation:'titleGlitch 0.6s step-end 1',animationDelay:'0.75s',animationFillMode:'both',pointerEvents:'none',userSelect:'none'}},'+'+(combo.pts||1)+'pt')
+    ),
     // スキャンライン（level5のみ）
     level>=5&&h('div',{style:{position:'absolute',left:0,right:0,height:3,background:`linear-gradient(90deg,transparent,${col},#ffffff,${col},transparent)`,animation:'scanline 0.6s linear 1',pointerEvents:'none',boxShadow:`0 0 12px ${col}`}})
   );
@@ -768,10 +771,8 @@ function App(){
       case 'score':
         if(msg.voice)playComboSfx(msg.voice);
         setOnResetFA(true);setOnComboShow(msg.combo);
-        const isMy=msg.msg?.by===onRoleR.current;
-        setOnFlashMsg({text:(isMy?'自分 +':'相手 +')+msg.combo.pts+'pt',who:msg.msg?.by});
         if(onRoleR.current==='host'){setOnMyPt(msg.hostPt);setOnOpPt(msg.guestPt);}else{setOnMyPt(msg.guestPt);setOnOpPt(msg.hostPt);}
-        setTimeout(()=>setOnComboShow(null),1200);setTimeout(()=>{setOnResetFA(false);setOnFlashMsg(null);},1400);break;
+        setTimeout(()=>setOnComboShow(null),1200);setTimeout(()=>setOnResetFA(false),1400);break;
       case 'comboEnd':setOnComboShow(null);break;
       case 'forceReset':setOnResetFA(true);setOnFlashMsg({text:'4枚！強制リセット',who:null});setTimeout(()=>{setOnResetFA(false);setOnFlashMsg(null);},900);break;
       case 'finish':
@@ -960,7 +961,6 @@ function App(){
       setResetFA(true);
       const color=who==='player'?PINK:RED_C;
       setComboShow({text:pts.voice||'10達成！',pts:pts.total,color});
-      setFlashMsg({text:(who==='player'?'自分 +':'DEALER +')+pts.total+'pt　'+pts.label,color,who});
       setTimeout(()=>setComboShow(null),3200);
       setTimeout(()=>{setResetFA(false);resetField();if(newPP>=WIN_PT||newDP>=WIN_PT){endGame(newPP,newDP);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,newPP,newDP,nr);},1400);
       return true;
