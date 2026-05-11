@@ -379,6 +379,7 @@ function SlideCard({value,onPlay,disabled,cardRole}){
     onPointerUp:()=>{if(!disabled&&pressed){setPressed(false);onPlay();}},
     onPointerCancel:()=>setPressed(false),
     onPointerLeave:()=>setPressed(false),
+    onClick:()=>{if(!disabled)onPlay();},
   },
     h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Playfair Display',serif",lineHeight:1,pointerEvents:'none'}},value),
     h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900,pointerEvents:'none'}},value),
