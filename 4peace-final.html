@@ -7,9 +7,9 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Fira+Code:wght@400;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%);min-height:100dvh;overflow:hidden;position:fixed;width:100%;height:100dvh;touch-action:none;}
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Fira+Code:wght@400;600&display=swap');
 @keyframes dealIn{from{opacity:0;transform:translateY(-12px) scale(0.88);}to{opacity:1;transform:none;}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -32,10 +32,6 @@ body{background:linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c
 @keyframes hexSpin{0%{transform:translate(-50%,-50%) rotate(0deg) scale(0);opacity:0}20%{opacity:1}100%{transform:translate(-50%,-50%) rotate(180deg) scale(2.5);opacity:0}}
 @keyframes gridFlash{0%,100%{opacity:0}50%{opacity:0.25}}
 @keyframes titleGlitch{0%,90%,100%{transform:none;filter:none}92%{transform:translateX(-3px);filter:hue-rotate(90deg)}94%{transform:translateX(3px);filter:hue-rotate(-90deg)}96%{transform:none;filter:none}98%{transform:translateX(-1px);filter:brightness(2)}}
-@keyframes screenShake{0%,100%{transform:translate(0,0)}10%{transform:translate(-8px,4px)}20%{transform:translate(8px,-4px)}30%{transform:translate(-6px,6px)}40%{transform:translate(6px,-2px)}50%{transform:translate(-4px,4px)}60%{transform:translate(4px,-4px)}70%{transform:translate(-2px,2px)}80%{transform:translate(2px,-2px)}90%{transform:translate(-1px,1px)}}
-@keyframes timeupFlash{0%{opacity:0;transform:scale(0.5)}20%{opacity:1;transform:scale(1.15)}40%{transform:scale(0.95)}60%{transform:scale(1.05)}80%{transform:scale(1)}100%{opacity:0;transform:scale(1.2) translateY(-20px)}}
-@keyframes burstFlash{0%{opacity:0.8}100%{opacity:0}}
-@keyframes victoryPulse{0%,100%{text-shadow:0 0 40px #00d4ff,0 0 80px #00d4ff}50%{text-shadow:0 0 80px #a020f0,0 0 160px #a020f0,0 0 240px #00d4ff}}
 </style>
 </head>
 <body>
@@ -309,25 +305,6 @@ function CyberParticles({color,level,active}){
   return h('canvas',{ref:canvasRef,style:{position:'fixed',inset:0,zIndex:300,pointerEvents:'none',width:'100%',height:'100%'}});
 }
 
-// ── バーストフラッシュ ──
-function BurstFlashOverlay({active}){
-  if(!active)return null;
-  return h('div',{style:{position:'fixed',inset:0,zIndex:290,pointerEvents:'none',background:'radial-gradient(ellipse at center,#ff2d6e88 0%,#ff000044 40%,transparent 70%)',animation:'burstFlash 0.6s ease forwards'}});
-}
-
-// ── タイムアップ演出 ──
-function TimeupDisplay({active}){
-  const[visible,setVisible]=useState(false);
-  useEffect(()=>{
-    if(active){setVisible(true);const t=setTimeout(()=>setVisible(false),1400);return()=>clearTimeout(t);}
-  },[active]);
-  if(!visible)return null;
-  return h('div',{style:{position:'fixed',inset:0,zIndex:320,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
-    h('div',{style:{fontSize:64,fontWeight:900,color:'#ffaa00',fontFamily:"'Fira Code',monospace",letterSpacing:4,animation:'timeupFlash 1.4s ease forwards',textShadow:'0 0 40px #ffaa00, 0 0 80px #ff6600'}},'TIME UP'),
-    h('div',{style:{position:'absolute',inset:0,background:'radial-gradient(ellipse at center,#ffaa0022 0%,transparent 60%)',animation:'burstFlash 1.0s ease forwards'}})
-  );
-}
-
 // ── サイバーコンボ表示 ──
 function CyberComboDisplay({combo}){
   const[visible,setVisible]=useState(true);
@@ -385,9 +362,9 @@ function SlideCard({value,onPlay,disabled,cardRole}){
     onPointerCancel:()=>setPressed(false),
     onPointerLeave:()=>setPressed(false),
   },
-    h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Fira Code',monospace",lineHeight:1,pointerEvents:'none'}},value),
-    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900,fontFamily:"'Fira Code',monospace",pointerEvents:'none'}},value),
-    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,fontFamily:"'Fira Code',monospace",transform:'rotate(180deg)',pointerEvents:'none'}},value)
+    h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Playfair Display',serif",lineHeight:1,pointerEvents:'none'}},value),
+    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900,pointerEvents:'none'}},value),
+    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,transform:'rotate(180deg)',pointerEvents:'none'}},value)
   );
 }
 function FieldCard({value,by}){
@@ -396,45 +373,12 @@ function FieldCard({value,by}){
   const numColor=isBlue?'#4da8ff':'#ff6b6b';
   const borderColor=isBlue?'#1a4080':'#801a1a';
   return h('div',{style:{width:50,height:70,borderRadius:7,flexShrink:0,background:cardBg,border:'1.5px solid '+borderColor,display:'flex',alignItems:'center',justifyContent:'center',animation:'dealIn 0.18s ease both',position:'relative'}},
-    h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Fira Code',monospace"}},value),
-    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900,fontFamily:"'Fira Code',monospace"}},value),
-    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,fontFamily:"'Fira Code',monospace",transform:'rotate(180deg)'}},value)
+    h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Playfair Display',serif"}},value),
+    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900}},value),
+    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,transform:'rotate(180deg)'}},value)
   );
 }
 
-
-// ── オンライン入室画面 ──
-function OnlineMenuScreen({onCreateRoom,onJoinRoom,onCancel}){
-  const[inputCode,setInputCode]=React.useState('');
-  const[tab,setTab]=React.useState('select'); // 'select'|'join'
-  return h('div',{style:{position:'fixed',inset:0,zIndex:400,background:'#0a0a1af0',display:'flex',alignItems:'center',justifyContent:'center',padding:20}},
-    h('div',{style:{width:'100%',maxWidth:340,display:'flex',flexDirection:'column',alignItems:'center',gap:20,animation:'fadeUp 0.3s ease'}},
-      h('div',{style:{fontSize:11,letterSpacing:6,color:'#00d4ff',fontFamily:"'Fira Code',monospace",opacity:0.8}},'── ONLINE BATTLE ──'),
-      h('div',{style:{fontSize:42,fontWeight:900,background:'linear-gradient(135deg,#00d4ff,#a020f0)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',fontFamily:"'Playfair Display',serif",letterSpacing:2}},'PiCLuK'),
-      tab==='select'&&h('div',{style:{width:'100%',display:'flex',flexDirection:'column',gap:12}},
-        h('button',{onClick:onCreateRoom,style:{width:'100%',background:'linear-gradient(135deg,#0a3060,#2060c0)',border:'2px solid #00d4ff88',borderRadius:14,padding:'18px 0',color:'#00d4ff',fontSize:18,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:'pointer',letterSpacing:2,boxShadow:'0 0 24px #00d4ff33'}},'🏠 ルームを作る'),
-        h('button',{onClick:()=>setTab('join'),style:{width:'100%',background:'linear-gradient(135deg,#301060,#6020a0)',border:'2px solid #c084fc88',borderRadius:14,padding:'18px 0',color:'#c084fc',fontSize:18,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:'pointer',letterSpacing:2,boxShadow:'0 0 24px #c084fc33'}},'🚪 ルームに入る'),
-        h('button',{onClick:onCancel,style:{width:'100%',background:'transparent',border:'1.5px solid #ffffff33',borderRadius:12,padding:'12px 0',color:'#ffffff88',fontSize:14,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'キャンセル')
-      ),
-      tab==='join'&&h('div',{style:{width:'100%',display:'flex',flexDirection:'column',gap:12,alignItems:'center'}},
-        h('div',{style:{fontSize:12,color:'#c084fc',fontFamily:"'Fira Code',monospace",letterSpacing:2}},'ルームコードを入力'),
-        h('input',{
-          value:inputCode,
-          onChange:e=>setInputCode(e.target.value.replace(/\D/g,'').slice(0,4)),
-          placeholder:'0000',
-          maxLength:4,
-          style:{width:'100%',background:'#0a0a2a',border:'2px solid #c084fc',borderRadius:12,padding:'16px 0',color:'#fff',fontSize:42,fontFamily:"'Fira Code',monospace",fontWeight:900,textAlign:'center',letterSpacing:16,outline:'none',caretColor:'#c084fc'},
-          inputMode:'numeric'
-        }),
-        h('button',{
-          onClick:()=>{if(inputCode.length===4)onJoinRoom(inputCode);},
-          disabled:inputCode.length!==4,
-          style:{width:'100%',background:inputCode.length===4?'linear-gradient(135deg,#301060,#6020a0)':'#1a1a2a',border:'2px solid '+(inputCode.length===4?'#c084fc88':'#333'),borderRadius:14,padding:'16px 0',color:inputCode.length===4?'#c084fc':'#555',fontSize:18,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:inputCode.length===4?'pointer':'default',letterSpacing:2,transition:'all 0.2s'}},'入室する'),
-        h('button',{onClick:()=>setTab('select'),style:{background:'transparent',border:'none',color:'#ffffff55',fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer',padding:'4px 0'}},'← 戻る')
-      )
-    )
-  );
-}
 
 // ── オンライン対戦 ──
 function WaitingScreen({roomId,onCancel}){
@@ -588,7 +532,6 @@ function App(){
   useEffect(()=>{diffRef.current=difficulty;},[difficulty]);
 
   // オンライン対戦
-  const[showOnlineMenu,setShowOnlineMenu]=useState(false);
   const[onlinePhase,setOnlinePhase]=useState(''); // waiting|playing|end
   const[roomId,setRoomId]=useState('');
   const[onlineRole,setOnlineRole]=useState('');
@@ -845,9 +788,13 @@ function App(){
     setOnCountNum(-1);onCountNumR.current=-1;setOnFlashMsg(null);setOnEndData(null);setOnLoadingPct(-1);setOnShowReady(false);
     if(timerRAFR.current){cancelAnimationFrame(timerRAFR.current);timerRAFR.current=null;}playingStartAtR.current=null;
   }
-  function openOnlineMenu(){setShowOnlineMenu(true);}
-  function handleCreateRoom(){setShowOnlineMenu(false);createRoom();}
-  function handleJoinRoom(code){setShowOnlineMenu(false);joinRoom(code);}
+  function showOnlineMenu(){
+    // ルーム作成/入室選択
+    const code=window.prompt('ルームコードを入力（作る場合は空欄）');
+    if(code===null)return;
+    if(code.trim()===''){createRoom();}
+    else{joinRoom(code.trim());}
+  }
 
   function toggleMusic(){if(musicEnabledR.current){stopBGM();musicEnabledR.current=false;setMusicEnabled(false);}else{musicEnabledR.current=true;setMusicEnabled(true);resumeAC();if(phaseR.current==='playing'||phaseR.current==='online_playing')startBGM();}}
   function clearTimers(){clearTimeout(aiRef.current);clearInterval(timerRef.current);clearTimeout(countRef.current);}
@@ -1012,10 +959,7 @@ function App(){
   function endGame(pp,dp){stopBGM();setGameEndData({pPt:pp,dPt:dp,winner:pp>=WIN_PT?'player':'dealer',diff:diffRef.current});setPhase('gameEnd');}
   function goHome(){clearTimers();stopBGM();setPhase('menu');}
 
-  if(phase==='menu')return h('div',null,
-    h(MenuScreen,{onSolo:startGame,onOnline:openOnlineMenu,musicOn:musicEnabled,toggleMusic:toggleMusic}),
-    showOnlineMenu&&h(OnlineMenuScreen,{onCreateRoom:handleCreateRoom,onJoinRoom:handleJoinRoom,onCancel:()=>setShowOnlineMenu(false)})
-  );
+  if(phase==='menu')return h(MenuScreen,{onSolo:startGame,onOnline:showOnlineMenu,musicOn:musicEnabled,toggleMusic:toggleMusic});
   if(phase==='online_waiting')return h(WaitingScreen,{roomId,onCancel:goOnlineHome});
   if(phase==='online_end'&&onEndData)return h(OnlineEndScreen,{data:onEndData,onHome:goOnlineHome});
   if(phase==='gameEnd'&&gameEndData)return h(GameEndScreen,{data:gameEndData,onRestart:startGame,onHome:goHome});
@@ -1023,10 +967,8 @@ function App(){
   if(phase==='online_playing'){
     const role=onRoleR.current;
     const isCardOff=(v)=>onCountNum>=0||onTimeLeft<=0||!canPlay(v,onFieldSum,onField);
-    return h('div',{style:{height:'100dvh',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",position:'relative',justifyContent:'center',animation:onBurstAnim?'screenShake 0.5s ease':'none'}},
+    return h('div',{style:{height:'100dvh',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",position:'relative',justifyContent:'center'}},
       h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,backgroundImage:'repeating-linear-gradient(0deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px)'}}),
-      h(BurstFlashOverlay,{active:onBurstAnim}),
-      h(TimeupDisplay,{active:onFlashMsg&&onFlashMsg.text&&onFlashMsg.text.includes('時間切れ')}),
       onComboShow&&h(CyberParticles,{key:'op_'+onComboShow.text+Date.now(),color:onComboShow.color,level:getComboLevel(onComboShow.text),active:true}),
       onComboShow&&h(CyberComboDisplay,{key:'oc_'+onComboShow.text+Date.now(),combo:onComboShow}),
       // ── オーバーレイ（ローディング/Ready/カウントダウン/フラッシュ）──
@@ -1113,14 +1055,12 @@ function App(){
   }
 
 
-  return h('div',{style:{position:'fixed',inset:0,background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",overflow:'hidden',animation:burstAnim?'screenShake 0.5s ease':'none'}},
+  return h('div',{style:{position:'fixed',inset:0,background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",overflow:'hidden'}},
     h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',backgroundImage:'repeating-linear-gradient(0deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px)'}}),
-    h(BurstFlashOverlay,{active:burstAnim}),
-    h(TimeupDisplay,{active:flashMsg&&flashMsg.text&&flashMsg.text.includes('時間切れ')}),
     comboShow&&h(CyberParticles,{key:'p_'+comboShow.text+Date.now(),color:comboShow.color,level:getComboLevel(comboShow.text),active:true}),
     comboShow&&h(CyberComboDisplay,{key:'c_'+comboShow.text+Date.now(),combo:comboShow}),
     countNum>=0&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#2a103066',pointerEvents:'none'}},
-      h('div',{key:countNum,style:{fontSize:countNum===0?96:120,fontWeight:900,color:countNum===0?'#50e080':'#fff',fontFamily:"'Fira Code',monospace",animation:'countDown 0.65s ease both',textShadow:countNum===0?'0 0 60px #50e080':'0 0 30px #fff'}},countNum===0?'GO!!':countNum)
+      h('div',{key:countNum,style:{fontSize:countNum===0?96:120,fontWeight:900,color:countNum===0?'#50e080':'#fff',animation:'countDown 0.65s ease both',textShadow:countNum===0?'0 0 60px #50e080':'0 0 30px #fff'}},countNum===0?'GO!!':countNum)
     ),
     flashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
       h('div',{style:{background:flashMsg.who==='player'?'#00203088':'#3a001088',backdropFilter:'blur(8px)',borderRadius:14,padding:'14px 26px',fontSize:18,fontWeight:900,color:flashMsg.who==='player'?'#00d4ff':'#ff2d6e',boxShadow:'0 4px 32px '+(flashMsg.who==='player'?'#00d4ff55':'#ff2d6e55'),border:'2px solid '+(flashMsg.who==='player'?'#00d4ff':'#ff2d6e'),animation:'slideIn 0.2s ease',maxWidth:'88vw',textAlign:'center'}},flashMsg.text)
