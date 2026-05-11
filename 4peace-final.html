@@ -329,7 +329,7 @@ function CyberComboDisplay({combo}){
   useEffect(()=>{
     setPhase('name');
     const t1=setTimeout(()=>setPhase('pts'),1300);
-    const t2=setTimeout(()=>setPhase('done'),3200);
+    const t2=setTimeout(()=>setPhase('done'),5100);
     return()=>{clearTimeout(t1);clearTimeout(t2);};
   },[combo]);
   if(!combo||phase==='done')return null;
