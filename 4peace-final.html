@@ -385,9 +385,9 @@ function SlideCard({value,onPlay,disabled,cardRole}){
     onPointerCancel:()=>setPressed(false),
     onPointerLeave:()=>setPressed(false),
   },
-    h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Playfair Display',serif",lineHeight:1,pointerEvents:'none'}},value),
-    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900,pointerEvents:'none'}},value),
-    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,transform:'rotate(180deg)',pointerEvents:'none'}},value)
+    h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Fira Code',monospace",lineHeight:1,pointerEvents:'none'}},value),
+    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900,fontFamily:"'Fira Code',monospace",pointerEvents:'none'}},value),
+    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,fontFamily:"'Fira Code',monospace",transform:'rotate(180deg)',pointerEvents:'none'}},value)
   );
 }
 function FieldCard({value,by}){
@@ -396,9 +396,9 @@ function FieldCard({value,by}){
   const numColor=isBlue?'#4da8ff':'#ff6b6b';
   const borderColor=isBlue?'#1a4080':'#801a1a';
   return h('div',{style:{width:50,height:70,borderRadius:7,flexShrink:0,background:cardBg,border:'1.5px solid '+borderColor,display:'flex',alignItems:'center',justifyContent:'center',animation:'dealIn 0.18s ease both',position:'relative'}},
-    h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Playfair Display',serif"}},value),
-    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900}},value),
-    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,transform:'rotate(180deg)'}},value)
+    h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Fira Code',monospace"}},value),
+    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900,fontFamily:"'Fira Code',monospace"}},value),
+    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,fontFamily:"'Fira Code',monospace",transform:'rotate(180deg)'}},value)
   );
 }
 
@@ -1120,7 +1120,7 @@ function App(){
     comboShow&&h(CyberParticles,{key:'p_'+comboShow.text+Date.now(),color:comboShow.color,level:getComboLevel(comboShow.text),active:true}),
     comboShow&&h(CyberComboDisplay,{key:'c_'+comboShow.text+Date.now(),combo:comboShow}),
     countNum>=0&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#2a103066',pointerEvents:'none'}},
-      h('div',{key:countNum,style:{fontSize:countNum===0?96:120,fontWeight:900,color:countNum===0?'#50e080':'#fff',animation:'countDown 0.65s ease both',textShadow:countNum===0?'0 0 60px #50e080':'0 0 30px #fff'}},countNum===0?'GO!!':countNum)
+      h('div',{key:countNum,style:{fontSize:countNum===0?96:120,fontWeight:900,color:countNum===0?'#50e080':'#fff',fontFamily:"'Fira Code',monospace",animation:'countDown 0.65s ease both',textShadow:countNum===0?'0 0 60px #50e080':'0 0 30px #fff'}},countNum===0?'GO!!':countNum)
     ),
     flashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
       h('div',{style:{background:flashMsg.who==='player'?'#00203088':'#3a001088',backdropFilter:'blur(8px)',borderRadius:14,padding:'14px 26px',fontSize:18,fontWeight:900,color:flashMsg.who==='player'?'#00d4ff':'#ff2d6e',boxShadow:'0 4px 32px '+(flashMsg.who==='player'?'#00d4ff55':'#ff2d6e55'),border:'2px solid '+(flashMsg.who==='player'?'#00d4ff':'#ff2d6e'),animation:'slideIn 0.2s ease',maxWidth:'88vw',textAlign:'center'}},flashMsg.text)
