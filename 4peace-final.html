@@ -132,6 +132,8 @@ function syncServerTime(ws, offsetRef, callback) {
 // SE用AudioContext（BGMとは独立）
 const AC=new(window.AudioContext||window.webkitAudioContext)();
 function resumeAC(){if(AC.state==='suspended')AC.resume();}
+// PC Chrome対策：最初のタッチ/クリックでACを即座に起動
+document.addEventListener('pointerdown',()=>{resumeAC();},{once:true,capture:true});
 
 // ── se.mp3ベースのSEシステム ──
 let seBuffer=null;
