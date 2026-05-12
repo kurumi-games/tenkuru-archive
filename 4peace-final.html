@@ -141,17 +141,19 @@ fetch('se.mp3').then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab)).then(b
 
 function playSE({rate=1,vol=1,detune=0}){
   if(!seBuffer)return;
-  try{
-    resumeAC();
-    const src=AC.createBufferSource();
-    const g=AC.createGain();
-    src.buffer=seBuffer;
-    src.playbackRate.value=rate;
-    src.detune.value=detune;
-    g.gain.value=vol;
-    src.connect(g);g.connect(AC.destination);
-    src.start();
-  }catch(e){}
+  const play=()=>{
+    try{
+      const src=AC.createBufferSource();
+      const g=AC.createGain();
+      src.buffer=seBuffer;
+      src.playbackRate.value=rate;
+      src.detune.value=detune;
+      g.gain.value=vol;
+      src.connect(g);g.connect(AC.destination);
+      src.start();
+    }catch(e){}
+  };
+  if(AC.state==='suspended'){AC.resume().then(play);}else{play();}
 }
 
 function playTapSE(){playSE({rate:1.0,vol:0.9,detune:-300});}
