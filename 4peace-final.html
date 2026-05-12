@@ -144,7 +144,14 @@ function resumeAC(){if(AC.state==='suspended')AC.resume();}
 
 // ── se.mp3ベースのSEシステム ──
 let seBuffer=null;
-fetch('se.mp3').then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab)).then(buf=>{seBuffer=buf;}).catch(()=>{});
+(function loadSE(){
+  const xhr=new XMLHttpRequest();
+  xhr.open('GET','se.mp3',true);
+  xhr.responseType='arraybuffer';
+  xhr.onload=()=>{if(xhr.status===200||xhr.status===0)AC.decodeAudioData(xhr.response).then(buf=>{seBuffer=buf;}).catch(()=>{});};
+  xhr.onerror=()=>{fetch('se.mp3').then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab)).then(buf=>{seBuffer=buf;}).catch(()=>{});};
+  xhr.send();
+})();
 
 function playSE({rate=1,vol=1,detune=0}){
   if(!seBuffer)return;
@@ -478,6 +485,8 @@ function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
     const combo=demoList[idx];
     demoIdxRef.current=idx+1;
     setDemoCombo(combo);
+    resumeAC();
+    playComboSfx(combo.text);
     if(getComboLevel(combo.text)>=4){setShakeDemoState(true);setTimeout(()=>setShakeDemoState(false),500);}
     setTimeout(()=>setDemoCombo(null),5200);
   }
