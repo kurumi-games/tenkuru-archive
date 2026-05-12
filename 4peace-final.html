@@ -33,6 +33,15 @@ body{background:linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c
 @keyframes hexSpin{0%{transform:translate(-50%,-50%) rotate(0deg) scale(0);opacity:0}20%{opacity:1}100%{transform:translate(-50%,-50%) rotate(180deg) scale(2.5);opacity:0}}
 @keyframes gridFlash{0%,100%{opacity:0}50%{opacity:0.25}}
 @keyframes titleGlitch{0%,90%,100%{transform:none;filter:none}92%{transform:translateX(-3px);filter:hue-rotate(90deg)}94%{transform:translateX(3px);filter:hue-rotate(-90deg)}96%{transform:none;filter:none}98%{transform:translateX(-1px);filter:brightness(2)}}
+@keyframes roleNashiIn{from{opacity:0;transform:translateY(10px) scale(0.95)}to{opacity:1;transform:none}}
+@keyframes pairPop{0%{transform:scale(0.45);opacity:0}55%{transform:scale(1.13);opacity:1}75%{transform:scale(0.96)}100%{transform:scale(1);opacity:1}}
+@keyframes twoPairIn{0%{transform:scale(0.4) translateX(-16px);opacity:0}45%{transform:scale(1.12) translateX(3px);opacity:1}65%{transform:scale(0.97) translateX(-1px)}100%{transform:scale(1) translateX(0);opacity:1}}
+@keyframes twoPairEcho{0%{transform:scale(0.4) translateX(-16px);opacity:0}45%{transform:scale(1.12) translateX(3px);opacity:0.35}100%{transform:scale(1) translateX(0);opacity:0}}
+@keyframes threeCardSlam{0%{transform:scale(2.8) translateY(-24px);opacity:0;filter:blur(18px)}38%{transform:scale(0.87) translateY(5px);opacity:1;filter:blur(0)}58%{transform:scale(1.05) translateY(-2px)}78%{transform:scale(0.99)}100%{transform:scale(1) translateY(0)}}
+@keyframes slamRing{0%{transform:scale(0.3);opacity:0.9;border-width:4px}100%{transform:scale(2.8);opacity:0;border-width:1px}}
+@keyframes straightBoom{0%{transform:scale(4.5);opacity:0;filter:blur(28px) brightness(4)}32%{transform:scale(0.88);opacity:1;filter:blur(0) brightness(1.4)}55%{transform:scale(1.07)}75%{transform:scale(0.98)}100%{transform:scale(1);filter:none}}
+@keyframes whiteFlash{0%{opacity:0.92}40%{opacity:0.3}100%{opacity:0}}
+@keyframes screenShake{0%,100%{transform:none}12%{transform:translate(-9px,5px) rotate(-0.7deg)}25%{transform:translate(8px,-6px) rotate(0.6deg)}37%{transform:translate(-6px,6px) rotate(-0.4deg)}50%{transform:translate(6px,-4px)}62%{transform:translate(-4px,3px)}75%{transform:translate(3px,-2px)}87%{transform:translate(-2px,1px)}}
 </style>
 </head>
 <body>
@@ -325,7 +334,7 @@ function CyberParticles({color,level,active}){
 
 // ── サイバーコンボ表示 ──
 function CyberComboDisplay({combo}){
-  const[phase,setPhase]=useState('name'); // 'name' | 'pts' | 'done'
+  const[phase,setPhase]=useState('name');
   useEffect(()=>{
     setPhase('name');
     const t1=setTimeout(()=>setPhase('pts'),1300);
@@ -334,24 +343,49 @@ function CyberComboDisplay({combo}){
   },[combo]);
   if(!combo||phase==='done')return null;
   const level=getComboLevel(combo.text);
-  const col=combo.color||'#00d4ff';
-  const sizes=[0,22,26,32,40,52];
-  const glows=[0,'0 0 12px',`0 0 20px, 0 0 40px`,`0 0 30px, 0 0 60px, 0 0 90px`,`0 0 40px, 0 0 80px, 0 0 120px`,`0 0 60px, 0 0 120px, 0 0 200px`];
-  const shadow=glows[level].replace(/0 0 \d+px/g,s=>s.replace('px',`px ${col}`));
-  const anim=level>=3?'cyberIn 0.4s cubic-bezier(0.2,1.4,0.5,1) both':'comboPop 0.35s ease both';
-  const cardStyle={position:'relative',fontSize:sizes[level],fontWeight:900,fontFamily:"'Fira Code',monospace",letterSpacing:level>=4?8:level>=3?4:2,textShadow:shadow,whiteSpace:'nowrap',background:'#00000066',borderRadius:12,padding:'6px 18px',backdropFilter:'blur(6px)',border:`1.5px solid ${col}66`,zIndex:1};
   const isName=phase==='name';
   const text=isName?combo.text:'+'+(combo.pts||1)+'pt';
-  const textCol=isName?col:'#ffffff';
-  return h('div',{style:{position:'fixed',inset:0,zIndex:320,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
-    level>=4&&h('div',{style:{position:'absolute',inset:0,background:`radial-gradient(ellipse at center, ${col}22 0%, transparent 65%)`,animation:'gridFlash 0.4s ease'}}),
-    level>=3&&isName&&h('div',{style:{position:'absolute',fontSize:sizes[level]+8,fontWeight:900,color:'#ff003388',fontFamily:"'Fira Code',monospace",letterSpacing:level>=4?8:4,animation:'chromaRed 0.3s ease infinite',pointerEvents:'none',userSelect:'none'}},text),
-    level>=3&&isName&&h('div',{style:{position:'absolute',fontSize:sizes[level]+8,fontWeight:900,color:'#0033ff44',fontFamily:"'Fira Code',monospace",letterSpacing:level>=4?8:4,animation:'chromaBlue 0.3s ease infinite',pointerEvents:'none',userSelect:'none'}},text),
-    h('div',{key:phase,style:{...cardStyle,color:textCol,animation:anim}},
-      text,
-      level>=4&&h('div',{style:{position:'absolute',inset:0,color:'#ffffff',fontFamily:"'Fira Code',monospace",animation:'titleGlitch 0.6s step-end 1',pointerEvents:'none',userSelect:'none'}},text)
-    ),
-    level>=5&&h('div',{style:{position:'absolute',left:0,right:0,height:3,background:`linear-gradient(90deg,transparent,${col},#ffffff,${col},transparent)`,animation:'scanline 0.6s linear 1',pointerEvents:'none',boxShadow:`0 0 12px ${col}`}})
+
+  // lv1: 役なし — シンプル・スタイリッシュ
+  if(level===1)return h('div',{style:{position:'fixed',inset:0,zIndex:320,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
+    h('div',{key:phase,style:{fontSize:20,fontWeight:700,fontFamily:"'Fira Code',monospace",color:'#aaaacc',letterSpacing:3,background:'#00000060',borderRadius:8,padding:'5px 16px',border:'1px solid #aaaacc33',animation:'roleNashiIn 0.28s ease both',opacity:0.88}},text)
+  );
+
+  // lv2: ワンペア — 青・スパッと
+  if(level===2)return h('div',{style:{position:'fixed',inset:0,zIndex:320,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
+    h('div',{key:phase,style:{fontSize:30,fontWeight:900,fontFamily:"'Fira Code',monospace",color:'#00d4ff',letterSpacing:4,textShadow:'0 0 18px #00d4ff, 0 0 36px #00d4ff66',background:'#00000070',borderRadius:10,padding:'7px 22px',border:'1.5px solid #00d4ff44',animation:'pairPop 0.3s cubic-bezier(0.15,1.6,0.4,1) both'}},text)
+  );
+
+  // lv3: ツーペア — ゴールド・ダブルエコー
+  if(level===3)return h('div',{style:{position:'fixed',inset:0,zIndex:320,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
+    h('div',{style:{position:'relative'}},
+      isName&&h('div',{key:'echo',style:{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:36,fontWeight:900,fontFamily:"'Fira Code',monospace",color:'#ffcc0055',letterSpacing:5,animation:'twoPairEcho 0.5s cubic-bezier(0.15,1.4,0.4,1) 0.07s both',pointerEvents:'none',whiteSpace:'nowrap'}},text),
+      h('div',{key:phase,style:{position:'relative',fontSize:36,fontWeight:900,fontFamily:"'Fira Code',monospace",color:'#ffcc00',letterSpacing:5,textShadow:'0 0 22px #ffcc00, 0 0 50px #ffaa0077',background:'#00000078',borderRadius:12,padding:'8px 26px',border:'2px solid #ffcc0055',animation:'twoPairIn 0.4s cubic-bezier(0.15,1.4,0.4,1) both',whiteSpace:'nowrap'}},text)
+    )
+  );
+
+  // lv4: スリーカード — マゼンタ・叩きつけ
+  if(level===4)return h('div',{style:{position:'fixed',inset:0,zIndex:320,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none',background:isName?'#00000028':'transparent',transition:'background 0.3s'}},
+    h('div',{style:{position:'relative'}},
+      isName&&h('div',{style:{position:'absolute',top:'50%',left:'50%',width:120,height:120,border:'3px solid #ff44aa88',borderRadius:'50%',transform:'translate(-50%,-50%)',animation:'slamRing 0.7s ease-out both',pointerEvents:'none'}}),
+      h('div',{key:phase,style:{position:'relative',fontSize:42,fontWeight:900,fontFamily:"'Fira Code',monospace",color:'#ff44aa',letterSpacing:6,textShadow:'0 0 28px #ff44aa, 0 0 60px #ff44aa77, 0 0 100px #ff44aa33',background:'#00000088',borderRadius:14,padding:'10px 30px',border:'2px solid #ff44aa66',backdropFilter:'blur(4px)',animation:isName?'threeCardSlam 0.45s cubic-bezier(0.1,1.5,0.35,1) both':'cyberIn 0.35s ease both',whiteSpace:'nowrap'}},text)
+    )
+  );
+
+  // lv5: ストレート — 白フラッシュ→レインボー・シェイク
+  return h('div',{style:{position:'fixed',inset:0,zIndex:320,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
+    isName&&h('div',{key:'flash',style:{position:'absolute',inset:0,background:'#ffffff',animation:'whiteFlash 0.55s ease-out both',pointerEvents:'none'}}),
+    isName&&h('div',{style:{position:'absolute',top:'50%',left:'50%',width:160,height:160,border:'4px solid #ffffff99',borderRadius:'50%',transform:'translate(-50%,-50%)',animation:'slamRing 0.9s ease-out both 0.05s',pointerEvents:'none'}}),
+    isName&&h('div',{style:{position:'absolute',top:'50%',left:'50%',width:240,height:240,border:'2px solid #ffffff55',borderRadius:'50%',transform:'translate(-50%,-50%)',animation:'slamRing 1.1s ease-out both 0.12s',pointerEvents:'none'}}),
+    h('div',{key:phase,style:{
+      position:'relative',zIndex:1,
+      fontSize:isName?54:46,fontWeight:900,fontFamily:"'Fira Code',monospace",letterSpacing:9,
+      background:'linear-gradient(135deg,#ffffff 0%,#00ffff 30%,#ff88ff 55%,#ffff00 75%,#ffffff 100%)',
+      WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
+      filter:'drop-shadow(0 0 18px #ffffff) drop-shadow(0 0 36px #00ffff88)',
+      animation:isName?'straightBoom 0.52s cubic-bezier(0.1,1.3,0.3,1) both':'cyberIn 0.4s ease both',
+      whiteSpace:'nowrap',
+    }},text)
   );
 }
 
@@ -543,6 +577,8 @@ function App(){
   const[gameEndData,setGameEndData]=useState(null);
   const[musicEnabled,setMusicEnabled]=useState(true);
   const musicEnabledR=useRef(true);
+  const[shakeAnim,setShakeAnim]=useState(false);
+  function triggerShake(){setShakeAnim(true);setTimeout(()=>setShakeAnim(false),500);}
   const[difficulty,setDifficulty]=useState('normal');
   const diffRef=useRef('normal');
   useEffect(()=>{diffRef.current=difficulty;},[difficulty]);
@@ -765,6 +801,7 @@ function App(){
       case 'score':
         if(msg.voice)playComboSfx(msg.voice);
         setOnResetFA(true);setOnComboShow(msg.combo);
+        if(msg.combo&&getComboLevel(msg.combo.text)>=4)triggerShake();
         if(onRoleR.current==='host'){setOnMyPt(msg.hostPt);setOnOpPt(msg.guestPt);}else{setOnMyPt(msg.guestPt);setOnOpPt(msg.hostPt);}
         setTimeout(()=>setOnComboShow(null),5200);setTimeout(()=>setOnResetFA(false),1400);break;
       case 'comboEnd':setOnComboShow(null);break;
@@ -953,6 +990,7 @@ function App(){
       setPPt(newPP);setDPt(newDP);pPtR.current=newPP;dPtR.current=newDP;
       playComboSfx(pts.voice||'役なし');
       setResetFA(true);
+      if(getComboLevel(pts.voice||'役なし')>=4)triggerShake();
       const color=who==='player'?PINK:RED_C;
       setComboShow({text:pts.voice||'10達成！',pts:pts.total,color});
       setTimeout(()=>setComboShow(null),5200);
@@ -980,7 +1018,7 @@ function App(){
   if(phase==='online_playing'){
     const role=onRoleR.current;
     const isCardOff=(v)=>onCountNum>=0||onTimeLeft<=0||!canPlay(v,onFieldSum,onField);
-    return h('div',{style:{height:'100dvh',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",position:'relative',justifyContent:'center'}},
+    return h('div',{style:{height:'100dvh',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",position:'relative',justifyContent:'center',animation:shakeAnim?'screenShake 0.5s ease both':'none'}},
       h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,backgroundImage:'repeating-linear-gradient(0deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px)'}}),
       onComboShow&&h(CyberParticles,{key:'op_'+onComboShow.text+Date.now(),color:onComboShow.color,level:getComboLevel(onComboShow.text),active:true}),
       onComboShow&&h(CyberComboDisplay,{key:'oc_'+onComboShow.text+Date.now(),combo:onComboShow}),
@@ -1068,7 +1106,7 @@ function App(){
   }
 
 
-  return h('div',{style:{position:'fixed',inset:0,background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",overflow:'hidden'}},
+  return h('div',{style:{position:'fixed',inset:0,background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",overflow:'hidden',animation:shakeAnim?'screenShake 0.5s ease both':'none'}},
     h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',backgroundImage:'repeating-linear-gradient(0deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px)'}}),
     comboShow&&h(CyberParticles,{key:'p_'+comboShow.text+Date.now(),color:comboShow.color,level:getComboLevel(comboShow.text),active:true}),
     comboShow&&h(CyberComboDisplay,{key:'c_'+comboShow.text+Date.now(),combo:comboShow}),
