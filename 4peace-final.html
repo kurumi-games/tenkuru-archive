@@ -463,7 +463,27 @@ function OnlineEndScreen({data,onHome}){
 // ── MenuScreen ──
 function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
   const[showRule,setShowRule]=useState(false);
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+  const[demoCombo,setDemoCombo]=useState(null);
+  const[shakeDemo,setShakeDemoState]=useState(false);
+  const demoList=[
+    {text:'役なし',pts:1,color:'#aaaacc'},
+    {text:'ワンペア',pts:2,color:'#00d4ff'},
+    {text:'ツーペア',pts:3,color:'#ffcc00'},
+    {text:'スリーカード',pts:4,color:'#ff44aa'},
+    {text:'ストレート',pts:5,color:'#ffffff'},
+  ];
+  const demoIdxRef=React.useRef(0);
+  function runDemo(){
+    const idx=demoIdxRef.current%demoList.length;
+    const combo=demoList[idx];
+    demoIdxRef.current=idx+1;
+    setDemoCombo(combo);
+    if(getComboLevel(combo.text)>=4){setShakeDemoState(true);setTimeout(()=>setShakeDemoState(false),500);}
+    setTimeout(()=>setDemoCombo(null),5200);
+  }
+  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16,animation:shakeDemo?'screenShake 0.5s ease both':'none'}},
+    demoCombo&&h(CyberParticles,{key:'dp_'+demoCombo.text+Date.now(),color:demoCombo.color,level:getComboLevel(demoCombo.text),active:true}),
+    demoCombo&&h(CyberComboDisplay,{key:'dc_'+demoCombo.text+Date.now(),combo:demoCombo}),
     showRule&&h('div',{style:{position:'fixed',inset:0,background:'#000000ee',zIndex:300,overflowY:'auto',padding:20},onClick:()=>setShowRule(false)},
       h('div',{style:{maxWidth:360,margin:'0 auto',color:'#fff'},onClick:e=>e.stopPropagation()},
         h('div',{style:{fontSize:10,letterSpacing:6,color:PINK,fontFamily:"'Fira Code',monospace",textAlign:'center',marginBottom:16}},'── ルール説明 ──'),
@@ -533,7 +553,8 @@ function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
         ),
         h('button',{onClick:()=>onOnline(),style:{width:'100%',background:'linear-gradient(135deg,#206080,#40a080)',border:'none',borderRadius:14,padding:'14px 0',color:'#fff',fontSize:18,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:'pointer',letterSpacing:2}},'🌐 オンライン対戦')
       ),
-      h('div',{style:{display:'flex',justifyContent:'flex-end',width:'100%'}},
+      h('div',{style:{display:'flex',justifyContent:'space-between',width:'100%',alignItems:'center'}},
+        h('button',{onClick:runDemo,style:{background:'#ffffff11',border:'1.5px solid #c084fc55',borderRadius:12,padding:'10px 16px',color:'#c084fc',fontSize:12,fontFamily:"'Fira Code',monospace",cursor:'pointer',letterSpacing:1}},'✨ 演出テスト'),
         h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:12,padding:'10px 14px',color:DIM,fontSize:14,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},musicOn?'🎵':'🔇')
       )
     )
