@@ -8,10 +8,9 @@
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%);min-height:100dvh;overflow:hidden;position:fixed;width:100%;height:100dvh;touch-action:none;}
+body{background:linear-gradient(180deg,#0a0020 0%,#150035 40%,#1a0040 70%,#200050 100%);min-height:100dvh;overflow:hidden;position:fixed;width:100%;height:100dvh;touch-action:none;}
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Fira+Code:wght@400;600&display=swap');
-@keyframes dealIn{0%{opacity:0;transform:translateY(-20px) scale(0.75) rotate(-6deg);}60%{transform:translateY(3px) scale(1.06) rotate(1deg);}100%{opacity:1;transform:none;}}
-@keyframes cardGlow{0%,100%{box-shadow:0 2px 8px #0006,0 0 0px transparent}50%{box-shadow:0 4px 16px #0008,0 0 18px currentColor}}
+@keyframes dealIn{from{opacity:0;transform:translateY(-12px) scale(0.88);}to{opacity:1;transform:none;}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
@@ -43,8 +42,8 @@ const h=React.createElement;
 const{useState,useEffect,useRef,useCallback}=React;
 
 // ── 定数 ──
-const PANEL='#7055b8',BORDER='#c0a0ff';
-const PINK='#00d4ff',PINK2='#80eeff',RED_C='#ff2d6e',BLUE_C='#ffaa00';
+const PANEL='#1a0a3a',BORDER='#ff00ff';
+const PINK='#00ffff',PINK2='#80ffff',RED_C='#ff2d6e',BLUE_C='#ff00ff';
 const TEXT='#ffffff',DIM='#e0d0ff';
 const CC={1:'#c0003a',2:'#c05800',3:'#0068a0',4:'#6010b0',5:'#007a40'};
 const WIN_PT=15;
@@ -132,8 +131,6 @@ function syncServerTime(ws, offsetRef, callback) {
 // SE用AudioContext（BGMとは独立）
 const AC=new(window.AudioContext||window.webkitAudioContext)();
 function resumeAC(){if(AC.state==='suspended')AC.resume();}
-// PC Chrome対策：最初のタッチ/クリックでACを即座に起動
-document.addEventListener('pointerdown',()=>{resumeAC();},{once:true,capture:true});
 
 // ── se.mp3ベースのSEシステム ──
 let seBuffer=null;
@@ -141,19 +138,17 @@ fetch('se.mp3').then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab)).then(b
 
 function playSE({rate=1,vol=1,detune=0}){
   if(!seBuffer)return;
-  const play=()=>{
-    try{
-      const src=AC.createBufferSource();
-      const g=AC.createGain();
-      src.buffer=seBuffer;
-      src.playbackRate.value=rate;
-      src.detune.value=detune;
-      g.gain.value=vol;
-      src.connect(g);g.connect(AC.destination);
-      src.start();
-    }catch(e){}
-  };
-  if(AC.state==='suspended'){AC.resume().then(play);}else{play();}
+  try{
+    resumeAC();
+    const src=AC.createBufferSource();
+    const g=AC.createGain();
+    src.buffer=seBuffer;
+    src.playbackRate.value=rate;
+    src.detune.value=detune;
+    g.gain.value=vol;
+    src.connect(g);g.connect(AC.destination);
+    src.start();
+  }catch(e){}
 }
 
 function playTapSE(){playSE({rate:1.0,vol:0.9,detune:-300});}
@@ -197,7 +192,7 @@ function getComboLevel(voice){
   return 1;
 }
 
-// ── 花火パーティクルエフェクト ──
+// ── Canvasパーティクルエフェクト ──
 function CyberParticles({color,level,active}){
   const canvasRef=useRef(null);
   const rafRef=useRef(null);
@@ -208,120 +203,103 @@ function CyberParticles({color,level,active}){
     const ctx=canvas.getContext('2d');
     canvas.width=window.innerWidth;
     canvas.height=window.innerHeight;
-    const cx=canvas.width/2, cy=canvas.height*0.45;
-    const col=color||'#00d4ff';
-    const palettes={
-      1:[col,'#ffffff','#aaffff'],
-      2:[col,'#ffffff','#ffff88','#aaffff'],
-      3:[col,'#ffffff','#ffff44','#ff88ff','#44ffff'],
-      4:[col,'#ff88ff','#ffff44','#ffffff','#ff4488','#44ffff','#88ff44'],
-      5:[col,'#ff00ff','#ffff00','#ffffff','#00ffff','#ff4400','#44ff00','#ff0044'],
-    };
-    const pal=palettes[Math.min(level,5)]||palettes[1];
-    const rndCol=()=>pal[Math.floor(Math.random()*pal.length)];
+    const cx=canvas.width/2, cy=canvas.height/2;
     const particles=[];
-    function spawnBurst(bx,by,cnt,speedMult,sizeMult,gravMult,decayMult){
-      for(let i=0;i<cnt;i++){
-        const angle=Math.random()*Math.PI*2;
-        const speed=(3+Math.random()*[0,5,8,12,16,22][level])*speedMult;
-        const size=(Math.random()*[0,3,4,6,8,11][level]+2)*sizeMult;
-        const isStar=Math.random()<0.25;
-        const isTail=level>=2&&Math.random()<0.4;
-        particles.push({
-          x:bx,y:by,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
-          life:1,decay:(0.005+Math.random()*0.01)*decayMult,
-          size,col:rndCol(),
-          isStar,isTail,
-          gravity:0.10*gravMult+Math.random()*0.08,
-          px:bx,py:by,
-        });
-      }
+    const count=[0,12,22,35,55,90][level]||12;
+    const col=color||'#00d4ff';
+    // パーティクル生成
+    for(let i=0;i<count;i++){
+      const angle=Math.random()*Math.PI*2;
+      const speed=(1+Math.random()*[0,3,4,6,8,12][level])*1.5;
+      const size=Math.random()*([0,3,4,5,7,10][level]||3)+2;
+      const isLine=level>=3&&Math.random()<0.3;
+      particles.push({
+        x:cx,y:cy,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
+        life:1,decay:0.012+Math.random()*0.018,
+        size,col:Math.random()<0.3?'#ffffff':col,
+        isLine,len:isLine?Math.random()*30+15:0,
+        angle,rot:Math.random()*0.1-0.05,
+        glitch:level>=4&&Math.random()<0.4,
+      });
     }
-    const cnt=[0,25,45,70,100,150][level]||25;
-    spawnBurst(cx,cy,cnt,1,1,1,1);
-    // 第2波（遅延バースト）
-    const t2=setTimeout(()=>{
-      if(level>=2){
-        const n2=[0,0,15,30,50,80][level];
-        const offsets=level>=4?[[cx-80,cy-40],[cx+80,cy-40],[cx,cy+60]]:[[cx-60,cy-30],[cx+60,cy-30]];
-        offsets.forEach(([ox,oy])=>spawnBurst(ox,oy,Math.floor(n2/offsets.length),0.7,0.8,1.2,1.2));
-      }
-    },180);
-    // 第3波（level4以上）
-    const t3=setTimeout(()=>{
-      if(level>=4){
-        for(let i=0;i<4;i++){
-          const ox=cx+(Math.random()-0.5)*canvas.width*0.6;
-          const oy=cy+(Math.random()-0.5)*canvas.height*0.4;
-          spawnBurst(ox,oy,20,0.6,0.7,1.3,1.5);
-        }
-      }
-    },400);
+    // level5専用：格子状スキャンライン
+    let scanY=0;
     let frame=0;
-    function drawStar(ctx,x,y,r,col,alpha){
-      ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=col;
-      ctx.beginPath();
-      for(let i=0;i<10;i++){
-        const a=((i*Math.PI)/5)-Math.PI/2;
-        const rad=i%2===0?r:r*0.42;
-        i===0?ctx.moveTo(x+rad*Math.cos(a),y+rad*Math.sin(a)):ctx.lineTo(x+rad*Math.cos(a),y+rad*Math.sin(a));
-      }
-      ctx.closePath();ctx.fill();ctx.restore();
-    }
     function draw(){
       ctx.clearRect(0,0,canvas.width,canvas.height);
       frame++;
-      // 拡散リング
-      const rings=level>=5?6:level>=4?5:level>=3?4:level>=2?3:2;
-      for(let r=0;r<rings;r++){
-        const progress=(frame-r*6)/70;
-        if(progress<=0||progress>1)continue;
+      // level5：全画面グリッドフラッシュ
+      if(level>=5&&frame<20){
         ctx.save();
-        ctx.globalAlpha=(1-progress)*0.8;
-        ctx.strokeStyle=pal[r%pal.length];
-        ctx.lineWidth=level>=4?4:3;
-        ctx.shadowBlur=12;ctx.shadowColor=pal[r%pal.length];
-        ctx.beginPath();
-        ctx.arc(cx,cy,progress*Math.min(canvas.width,canvas.height)*0.5*(1+r*0.22),0,Math.PI*2);
-        ctx.stroke();ctx.restore();
-      }
-      // フラッシュ（第1フレームのみ）
-      if(frame<=3){
-        ctx.save();
-        ctx.globalAlpha=0.18*(1-frame/4);
-        const g=ctx.createRadialGradient(cx,cy,0,cx,cy,canvas.width*0.5);
-        g.addColorStop(0,'#ffffff');g.addColorStop(0.3,col);g.addColorStop(1,'transparent');
-        ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.globalAlpha=0.08*(1-frame/20);
+        ctx.strokeStyle=col;
+        ctx.lineWidth=1;
+        for(let x=0;x<canvas.width;x+=24){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke();}
+        for(let y=0;y<canvas.height;y+=24){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
         ctx.restore();
       }
+      // リングエフェクト
+      if(level>=2&&frame<30){
+        const rings=level>=5?3:level>=3?2:1;
+        for(let r=0;r<rings;r++){
+          const progress=(frame-r*8)/30;
+          if(progress<=0||progress>1)continue;
+          ctx.save();
+          ctx.globalAlpha=(1-progress)*0.5;
+          ctx.strokeStyle=r%2===0?col:'#ffffff';
+          ctx.lineWidth=level>=4?3:2;
+          ctx.beginPath();
+          ctx.arc(cx,cy,progress*Math.min(canvas.width,canvas.height)*0.35*(1+r*0.3),0,Math.PI*2);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
       particles.forEach(p=>{
-        p.px=p.x; p.py=p.y;
         p.x+=p.vx; p.y+=p.vy;
-        p.vx*=0.95; p.vy=p.vy*0.95+p.gravity;
+        p.vx*=0.94; p.vy*=0.94;
         p.life-=p.decay;
         if(p.life<=0)return;
-        const a=Math.max(0,p.life);
-        if(p.isTail){
-          ctx.save();ctx.globalAlpha=a*0.7;
-          ctx.strokeStyle=p.col;ctx.lineWidth=p.size*0.6;
-          ctx.shadowBlur=8;ctx.shadowColor=p.col;
-          ctx.beginPath();ctx.moveTo(p.px,p.py);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore();
-        }
-        if(p.isStar){
-          drawStar(ctx,p.x,p.y,p.size*p.life*1.5,p.col,a);
+        ctx.save();
+        ctx.globalAlpha=Math.max(0,p.life);
+        if(p.isLine){
+          ctx.strokeStyle=p.col;
+          ctx.lineWidth=p.glitch?2:1;
+          ctx.beginPath();
+          const ex=p.x+Math.cos(p.angle)*p.len*p.life;
+          const ey=p.y+Math.sin(p.angle)*p.len*p.life;
+          ctx.moveTo(p.x,p.y); ctx.lineTo(ex,ey);
+          ctx.stroke();
+          // グリッチ：ずれた複製
+          if(p.glitch&&p.life>0.5){
+            ctx.globalAlpha=p.life*0.4;
+            ctx.strokeStyle='#ff00ff';
+            ctx.beginPath();
+            ctx.moveTo(p.x-3,p.y); ctx.lineTo(ex-3,ey);
+            ctx.stroke();
+          }
         } else {
-          ctx.save();ctx.globalAlpha=a;
           ctx.fillStyle=p.col;
-          ctx.shadowBlur=level>=3?10:6;ctx.shadowColor=p.col;
-          ctx.beginPath();ctx.arc(p.x,p.y,Math.max(0.5,p.size*p.life),0,Math.PI*2);ctx.fill();ctx.restore();
+          if(level>=4&&Math.random()<0.1){
+            // ランダムグリッチ矩形
+            ctx.fillStyle=p.glitch?'#ff00ff':p.col;
+            ctx.fillRect(p.x-p.size/2,p.y-p.size/2,p.size*(0.5+Math.random()),p.size*(0.3+Math.random()*0.5));
+          } else {
+            ctx.beginPath();
+            ctx.arc(p.x,p.y,p.size*p.life,0,Math.PI*2);
+            ctx.fill();
+          }
         }
+        ctx.restore();
       });
       const alive=particles.filter(p=>p.life>0);
-      if(alive.length>0||frame<80){rafRef.current=requestAnimationFrame(draw);}
-      else{ctx.clearRect(0,0,canvas.width,canvas.height);}
+      if(alive.length>0||frame<40){
+        rafRef.current=requestAnimationFrame(draw);
+      } else {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+      }
     }
     draw();
-    return()=>{cancelAnimationFrame(rafRef.current);clearTimeout(t2);clearTimeout(t3);};
+    return()=>{cancelAnimationFrame(rafRef.current);};
   },[active,color,level]);
   if(!active)return null;
   return h('canvas',{ref:canvasRef,style:{position:'fixed',inset:0,zIndex:300,pointerEvents:'none',width:'100%',height:'100%'}});
@@ -329,32 +307,35 @@ function CyberParticles({color,level,active}){
 
 // ── サイバーコンボ表示 ──
 function CyberComboDisplay({combo}){
-  const[phase,setPhase]=useState('name'); // 'name' | 'pts' | 'done'
+  const[visible,setVisible]=useState(true);
   useEffect(()=>{
-    setPhase('name');
-    const t1=setTimeout(()=>setPhase('pts'),1300);
-    const t2=setTimeout(()=>setPhase('done'),5100);
-    return()=>{clearTimeout(t1);clearTimeout(t2);};
+    setVisible(true);
+    const t=setTimeout(()=>setVisible(false),1100);
+    return()=>clearTimeout(t);
   },[combo]);
-  if(!combo||phase==='done')return null;
+  if(!combo||!visible)return null;
   const level=getComboLevel(combo.text);
   const col=combo.color||'#00d4ff';
-  const sizes=[0,22,26,32,40,52];
+  // level別スタイル
+  const sizes=[0,32,38,46,58,72];
   const glows=[0,'0 0 12px',`0 0 20px, 0 0 40px`,`0 0 30px, 0 0 60px, 0 0 90px`,`0 0 40px, 0 0 80px, 0 0 120px`,`0 0 60px, 0 0 120px, 0 0 200px`];
   const shadow=glows[level].replace(/0 0 \d+px/g,s=>s.replace('px',`px ${col}`));
   const anim=level>=3?'cyberIn 0.4s cubic-bezier(0.2,1.4,0.5,1) both':'comboPop 0.35s ease both';
-  const cardStyle={position:'relative',fontSize:sizes[level],fontWeight:900,fontFamily:"'Fira Code',monospace",letterSpacing:level>=4?8:level>=3?4:2,textShadow:shadow,whiteSpace:'nowrap',background:'#00000066',borderRadius:12,padding:'6px 18px',backdropFilter:'blur(6px)',border:`1.5px solid ${col}66`,zIndex:1};
-  const isName=phase==='name';
-  const text=isName?combo.text:'+'+(combo.pts||1)+'pt';
-  const textCol=isName?col:'#ffffff';
-  return h('div',{style:{position:'fixed',inset:0,zIndex:320,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
+  return h('div',{style:{position:'fixed',inset:0,zIndex:310,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
+    // level4以上：フルスクリーンエッジ光
     level>=4&&h('div',{style:{position:'absolute',inset:0,background:`radial-gradient(ellipse at center, ${col}22 0%, transparent 65%)`,animation:'gridFlash 0.4s ease'}}),
-    level>=3&&isName&&h('div',{style:{position:'absolute',fontSize:sizes[level]+8,fontWeight:900,color:'#ff003388',fontFamily:"'Fira Code',monospace",letterSpacing:level>=4?8:4,animation:'chromaRed 0.3s ease infinite',pointerEvents:'none',userSelect:'none'}},text),
-    level>=3&&isName&&h('div',{style:{position:'absolute',fontSize:sizes[level]+8,fontWeight:900,color:'#0033ff44',fontFamily:"'Fira Code',monospace",letterSpacing:level>=4?8:4,animation:'chromaBlue 0.3s ease infinite',pointerEvents:'none',userSelect:'none'}},text),
-    h('div',{key:phase,style:{...cardStyle,color:textCol,animation:anim}},
-      text,
-      level>=4&&h('div',{style:{position:'absolute',inset:0,color:'#ffffff',fontFamily:"'Fira Code',monospace",animation:'titleGlitch 0.6s step-end 1',pointerEvents:'none',userSelect:'none'}},text)
+    // クロマティックアベレーション（level3以上）
+    level>=3&&h('div',{style:{position:'absolute',fontSize:sizes[level]+8,fontWeight:900,color:'#ff003388',fontFamily:"'Fira Code',monospace",letterSpacing:level>=4?8:4,animation:'chromaRed 0.3s ease infinite',pointerEvents:'none',userSelect:'none'}},combo.text),
+    level>=3&&h('div',{style:{position:'absolute',fontSize:sizes[level]+8,fontWeight:900,color:'#0033ff44',fontFamily:"'Fira Code',monospace",letterSpacing:level>=4?8:4,animation:'chromaBlue 0.3s ease infinite',pointerEvents:'none',userSelect:'none'}},combo.text),
+    // メインテキスト
+    h('div',{style:{position:'relative',fontSize:sizes[level],fontWeight:900,color:col,fontFamily:"'Fira Code',monospace",letterSpacing:level>=4?8:level>=3?4:2,textShadow:shadow,animation:anim,zIndex:1,whiteSpace:'nowrap'}},
+      combo.text,
+      // グリッチレイヤー（level4以上）
+      level>=4&&h('div',{style:{position:'absolute',inset:0,color:'#ffffff',fontFamily:"'Fira Code',monospace",animation:'titleGlitch 0.6s step-end 1',pointerEvents:'none',userSelect:'none'}},combo.text)
     ),
+    // ポイント表示
+    h('div',{style:{fontSize:level>=4?40:level>=3?32:24,fontWeight:900,color:'#ffffff',fontFamily:"'Fira Code',monospace",textShadow:`0 0 20px ${col}, 0 0 40px ${col}`,animation:'ptFloat 1.0s ease forwards',marginTop:8,letterSpacing:2}},'+'+(combo.pts||1)+'pt'),
+    // スキャンライン（level5のみ）
     level>=5&&h('div',{style:{position:'absolute',left:0,right:0,height:3,background:`linear-gradient(90deg,transparent,${col},#ffffff,${col},transparent)`,animation:'scanline 0.6s linear 1',pointerEvents:'none',boxShadow:`0 0 12px ${col}`}})
   );
 }
@@ -363,46 +344,47 @@ function CyberComboDisplay({combo}){
 function SlideCard({value,onPlay,disabled,cardRole}){
   const[pressed,setPressed]=useState(false);
   const isBlue=cardRole==='player'||cardRole==='host';
-  const cardBg=disabled?'#111122':isBlue?'#0a1e3d':'#3d0a0a';
-  const numColor=disabled?'#333':isBlue?'#4da8ff':'#ff6b6b';
-  const borderN=disabled?'#333':isBlue?'#1a4080':'#801a1a';
+  const cardBg=disabled?'#0a0020':isBlue?'linear-gradient(135deg,#0a0a2e,#1a0a3a)':'linear-gradient(135deg,#1a0020,#2a0030)';
+  const numColor=disabled?'#333':isBlue?'#00ffff':'#ff00ff';
+  const borderN=disabled?'#222':isBlue?'#00ffff':'#ff00ff';
+  const glowColor=disabled?'none':isBlue?'0 0 8px #00ffff88, 0 0 2px #00ffff':'0 0 8px #ff00ff88, 0 0 2px #ff00ff';
   return h('div',{
-    style:{width:50,height:70,borderRadius:7,flexShrink:0,background:cardBg,
+    style:{width:50,height:70,borderRadius:8,flexShrink:0,background:cardBg,
       border:'1.5px solid '+borderN,
       display:'flex',alignItems:'center',justifyContent:'center',opacity:disabled?0.3:1,
-      animation:'dealIn 0.22s cubic-bezier(0.2,1.3,0.5,1) both',position:'relative',
+      animation:'dealIn 0.18s ease both',position:'relative',
       userSelect:'none',WebkitUserSelect:'none',touchAction:'manipulation',
       cursor:disabled?'default':'pointer',
       transform:pressed&&!disabled?'scale(0.93)':'scale(1)',
       transition:'transform 0.1s ease',
-      boxShadow:disabled?'none':pressed?`0 0 18px ${isBlue?'#4da8ffaa':'#ff6b6baa'}, 0 4px 12px #0006`:`0 2px 10px #0005, 0 0 8px ${isBlue?'#4da8ff44':'#ff6b6b44'}`,},
+      boxShadow:glowColor},
     onPointerDown:()=>{if(!disabled)setPressed(true);},
     onPointerUp:()=>{if(!disabled&&pressed){setPressed(false);onPlay();}},
     onPointerCancel:()=>setPressed(false),
     onPointerLeave:()=>setPressed(false),
-    onClick:()=>{if(!disabled)onPlay();},
   },
-    h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Playfair Display',serif",lineHeight:1,pointerEvents:'none'}},value),
-    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900,pointerEvents:'none'}},value),
-    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,transform:'rotate(180deg)',pointerEvents:'none'}},value)
+    h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Fira Code',monospace",lineHeight:1,pointerEvents:'none',textShadow:`0 0 10px ${numColor}`}},value),
+    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900,pointerEvents:'none',textShadow:`0 0 6px ${numColor}`}},value),
+    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,transform:'rotate(180deg)',pointerEvents:'none',textShadow:`0 0 6px ${numColor}`}},value)
   );
 }
 function FieldCard({value,by}){
   const isBlue=by==='player'||by==='host';
-  const cardBg=isBlue?'#0a1e3d':'#3d0a0a';
-  const numColor=isBlue?'#4da8ff':'#ff6b6b';
-  const borderColor=isBlue?'#1a4080':'#801a1a';
-  return h('div',{style:{width:50,height:70,borderRadius:7,flexShrink:0,background:cardBg,border:'1.5px solid '+borderColor,display:'flex',alignItems:'center',justifyContent:'center',animation:'dealIn 0.25s cubic-bezier(0.2,1.3,0.5,1) both',position:'relative',boxShadow:`0 3px 12px #0006, 0 0 12px ${isBlue?'#4da8ff66':'#ff6b6b66'}`}},
-    h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Playfair Display',serif"}},value),
-    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900}},value),
-    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,transform:'rotate(180deg)'}},value)
+  const cardBg=isBlue?'linear-gradient(135deg,#0a0a2e,#1a0a3a)':'linear-gradient(135deg,#1a0020,#2a0030)';
+  const numColor=isBlue?'#00ffff':'#ff00ff';
+  const borderColor=isBlue?'#00ffff':'#ff00ff';
+  const glowColor=isBlue?'0 0 12px #00ffff88':'0 0 12px #ff00ff88';
+  return h('div',{style:{width:50,height:70,borderRadius:8,flexShrink:0,background:cardBg,border:'1.5px solid '+borderColor,display:'flex',alignItems:'center',justifyContent:'center',animation:'dealIn 0.18s ease both',position:'relative',boxShadow:glowColor}},
+    h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Fira Code',monospace",textShadow:`0 0 10px ${numColor}`}},value),
+    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900,textShadow:`0 0 6px ${numColor}`}},value),
+    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,transform:'rotate(180deg)',textShadow:`0 0 6px ${numColor}`}},value)
   );
 }
 
 
 // ── オンライン対戦 ──
 function WaitingScreen({roomId,onCancel}){
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#150035 40%,#1a0040 70%,#200050 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
     h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:20}},
       h('div',{style:{fontSize:48,animation:'float 1.5s ease-in-out infinite'}},'⏳'),
       h('div',{style:{fontSize:14,color:DIM,fontFamily:"'Fira Code',monospace"}},'友達の入室を待っています...'),
@@ -416,7 +398,7 @@ function WaitingScreen({roomId,onCancel}){
 }
 function OnlineEndScreen({data,onHome}){
   const win=data.winner==='me';
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#150035 40%,#1a0040 70%,#200050 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
     h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:18,width:'100%',maxWidth:320}},
       h('div',{style:{fontSize:70,animation:'float 2s ease-in-out infinite'}},win?'🏆':'💀'),
       h('div',{style:{fontSize:36,fontWeight:900,fontFamily:"'Playfair Display',serif",background:win?'linear-gradient(135deg,#00d4ff,#a020f0)':'linear-gradient(135deg,#ff2d6e,#a020f0)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}},win?'YOU WIN!':'YOU LOSE...'),
@@ -433,7 +415,7 @@ function OnlineEndScreen({data,onHome}){
 // ── MenuScreen ──
 function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
   const[showRule,setShowRule]=useState(false);
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#150035 40%,#1a0040 70%,#200050 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
     showRule&&h('div',{style:{position:'fixed',inset:0,background:'#000000ee',zIndex:300,overflowY:'auto',padding:20},onClick:()=>setShowRule(false)},
       h('div',{style:{maxWidth:360,margin:'0 auto',color:'#fff'},onClick:e=>e.stopPropagation()},
         h('div',{style:{fontSize:10,letterSpacing:6,color:PINK,fontFamily:"'Fira Code',monospace",textAlign:'center',marginBottom:16}},'── ルール説明 ──'),
@@ -512,7 +494,7 @@ function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
 // ── GameEndScreen ──
 function GameEndScreen({data,onRestart,onHome}){
   const win=data.winner==='player';
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#150035 40%,#1a0040 70%,#200050 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
     h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:18,animation:'fadeUp 0.5s ease'}},
       h('div',{style:{fontSize:70,animation:'float 2s ease-in-out infinite'}},win?'🏆':'💀'),
       h('div',{style:{fontSize:36,fontWeight:900,fontFamily:"'Playfair Display',serif",background:win?'linear-gradient(135deg,#00d4ff,#a020f0)':'linear-gradient(135deg,#ff2d6e,#a020f0)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}},win?'YOU WIN!':'DEALER WIN'),
@@ -769,8 +751,10 @@ function App(){
       case 'score':
         if(msg.voice)playComboSfx(msg.voice);
         setOnResetFA(true);setOnComboShow(msg.combo);
+        const isMy=msg.msg?.by===onRoleR.current;
+        setOnFlashMsg({text:(isMy?'自分 +':'相手 +')+msg.combo.pts+'pt',who:msg.msg?.by});
         if(onRoleR.current==='host'){setOnMyPt(msg.hostPt);setOnOpPt(msg.guestPt);}else{setOnMyPt(msg.guestPt);setOnOpPt(msg.hostPt);}
-        setTimeout(()=>setOnComboShow(null),5200);setTimeout(()=>setOnResetFA(false),1400);break;
+        setTimeout(()=>setOnComboShow(null),1200);setTimeout(()=>{setOnResetFA(false);setOnFlashMsg(null);},1400);break;
       case 'comboEnd':setOnComboShow(null);break;
       case 'forceReset':setOnResetFA(true);setOnFlashMsg({text:'4枚！強制リセット',who:null});setTimeout(()=>{setOnResetFA(false);setOnFlashMsg(null);},900);break;
       case 'finish':
@@ -832,7 +816,7 @@ function App(){
   function doCountdown(pHand,dHand,pp,dp,rn){
     setPhase('playing');phaseR.current='playing';
     setField([]);setFieldSum(0);fieldR.current=[];fieldSumR.current=0;
-    setFlashMsg(null);setTimeLeft(10);setComboShow(null);
+    setFlashMsg(null);setTimeLeft(10);
     let c=5;setCountNum(c);countNumR.current=c;
     function tick(){
       setCountNum(c);countNumR.current=c;
@@ -959,7 +943,8 @@ function App(){
       setResetFA(true);
       const color=who==='player'?PINK:RED_C;
       setComboShow({text:pts.voice||'10達成！',pts:pts.total,color});
-      setTimeout(()=>setComboShow(null),5200);
+      setFlashMsg({text:(who==='player'?'自分 +':'DEALER +')+pts.total+'pt　'+pts.label,color,who});
+      setTimeout(()=>setComboShow(null),1200);
       setTimeout(()=>{setResetFA(false);resetField();if(newPP>=WIN_PT||newDP>=WIN_PT){endGame(newPP,newDP);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,newPP,newDP,nr);},1400);
       return true;
     }
@@ -984,8 +969,8 @@ function App(){
   if(phase==='online_playing'){
     const role=onRoleR.current;
     const isCardOff=(v)=>onCountNum>=0||onTimeLeft<=0||!canPlay(v,onFieldSum,onField);
-    return h('div',{style:{height:'100dvh',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",position:'relative',justifyContent:'center'}},
-      h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,backgroundImage:'repeating-linear-gradient(0deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px)'}}),
+    return h('div',{style:{height:'100dvh',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg,#0a0020 0%,#150035 40%,#1a0040 70%,#200050 100%)',fontFamily:"'Playfair Display',serif",position:'relative',justifyContent:'center'}},
+      h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,backgroundImage:'repeating-linear-gradient(0deg,#ff00ff0a 0,#ff00ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#ff00ff0a 0,#ff00ff0a 1px,transparent 1px,transparent 20px)'}}),
       onComboShow&&h(CyberParticles,{key:'op_'+onComboShow.text+Date.now(),color:onComboShow.color,level:getComboLevel(onComboShow.text),active:true}),
       onComboShow&&h(CyberComboDisplay,{key:'oc_'+onComboShow.text+Date.now(),combo:onComboShow}),
       // ── オーバーレイ（ローディング/Ready/カウントダウン/フラッシュ）──
@@ -1002,8 +987,8 @@ function App(){
       onCountNum>=0&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#2a103066',pointerEvents:'none'}},
         h('div',{key:onCountNum,style:{fontSize:onCountNum===0?96:120,fontWeight:900,color:onCountNum===0?'#50e080':'#fff',animation:'countDown 0.65s ease both',textShadow:onCountNum===0?'0 0 60px #50e080':'0 0 30px #fff'}},onCountNum===0?'GO!!':onCountNum)
       ),
-      onFlashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:onComboShow?'flex-start':'center',justifyContent:'center',paddingTop:onComboShow?'clamp(90px,20vh,140px)':'0',pointerEvents:'none'}},
-        h('div',{style:{background:onFlashMsg.who==='host'?'#00203088':onFlashMsg.who==='guest'?'#3a001088':'#1a103088',backdropFilter:'blur(8px)',borderRadius:14,padding:'14px 26px',fontSize:18,fontWeight:900,color:onFlashMsg.who==='host'?'#00d4ff':onFlashMsg.who==='guest'?'#ff2d6e':'#ffffff',boxShadow:'0 4px 32px '+(onFlashMsg.who==='host'?'#00d4ff55':onFlashMsg.who==='guest'?'#ff2d6e55':'#ffffff33'),border:'2px solid '+(onFlashMsg.who==='host'?'#00d4ff':onFlashMsg.who==='guest'?'#ff2d6e':'#ffffff'),animation:'slideIn 0.2s ease',maxWidth:'88vw',textAlign:'center'}},onFlashMsg.text)
+      onFlashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
+        h('div',{style:{background:onFlashMsg.who==='host'?'#00203088':onFlashMsg.who==='guest'?'#3a001088':'#1a103088',backdropFilter:'blur(8px)',borderRadius:14,padding:'14px 26px',fontSize:18,fontWeight:900,color:onFlashMsg.who==='host'?'#00ffff':onFlashMsg.who==='guest'?'#ff2d6e':'#ffffff',boxShadow:'0 4px 32px '+(onFlashMsg.who==='host'?'#00ffff55':onFlashMsg.who==='guest'?'#ff2d6e55':'#ffffff33'),border:'2px solid '+(onFlashMsg.who==='host'?'#00ffff':onFlashMsg.who==='guest'?'#ff2d6e':'#ffffff'),animation:'slideIn 0.2s ease',maxWidth:'88vw',textAlign:'center'}},onFlashMsg.text)
       ),
 
       // ── エリア1: ヘッダー（固定高さ）──
@@ -1040,20 +1025,20 @@ function App(){
         h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:12,padding:'6px 10px',height:'100%',display:'flex',flexDirection:'column',justifyContent:'center'}},
           h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'相手 — '+onOpHandCount+'枚'),
           h('div',{style:{display:'flex',gap:3,alignItems:'center',justifyContent:'center'}},
-            Array.from({length:Math.min(onOpHandCount,12)}).map((_,i)=>h('div',{key:i,style:{width:22,height:32,borderRadius:4,background:role==='host'?'linear-gradient(135deg,#3d0a0a,#200505)':'linear-gradient(135deg,#0a1e3d,#05101e)',border:'1px solid '+(role==='host'?'#801a1a':'#1a4080'),flexShrink:0}})),
+            Array.from({length:Math.min(onOpHandCount,12)}).map((_,i)=>h('div',{key:i,style:{width:22,height:32,borderRadius:4,background:role==='host'?'linear-gradient(135deg,#2a0030,#150020)':'linear-gradient(135deg,#0a0a2e,#05051a)',border:'1px solid '+(role==='host'?'#ff00ff66':'#00ffff66'),flexShrink:0}})),
             onOpHandCount>0&&h('div',{style:{fontSize:13,fontWeight:700,color:'#ffffff',fontFamily:"'Fira Code',monospace",marginLeft:8,flexShrink:0}},onOpHandSum)
           )
         )
       ),
       // ── エリア3: 場（flex:1）──
       h('div',{ref:onFieldAreaRef,style:{flexShrink:0,height:'clamp(160px,32dvh,280px)',zIndex:10,padding:'4px 12px',display:'flex',flexDirection:'column',visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}},
-        h('div',{style:{flex:1,minHeight:0,background:PANEL,border:'2px solid '+(onFieldSum>=8?(onFieldColors[onFieldColors.length-1]==='player'?'#4da8ff':RED_C):onFieldSum>=5?'#e08020':BORDER),borderRadius:14,padding:'8px',textAlign:'center',transition:'border-color 0.25s',animation:onResetFA?'resetAnim 0.5s ease':onBurstAnim?'burst 0.5s ease':'none',display:'flex',flexDirection:'column',justifyContent:'center'}},
+        h('div',{style:{flex:1,minHeight:0,background:PANEL,border:'2px solid '+(onFieldSum>=8?(onFieldColors[onFieldColors.length-1]==='player'?'#00ffff':RED_C):onFieldSum>=5?'#ffcc00':BORDER),borderRadius:14,padding:'8px',textAlign:'center',transition:'border-color 0.25s',animation:onResetFA?'resetAnim 0.5s ease':onBurstAnim?'burst 0.5s ease':'none',display:'flex',flexDirection:'column',justifyContent:'center'}},
           h('div',{style:{fontSize:8,letterSpacing:4,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'── 場 ──'),
           h('div',{style:{display:'flex',gap:5,justifyContent:'center',alignItems:'center'}},
             [0,1,2,3].map(i=>onField[i]?h(FieldCard,{key:i,value:onField[i],by:onFieldColors[i]||'player'}):h('div',{key:i,style:{width:50,height:70,flexShrink:0}}))
           ),
           h('div',{style:{marginTop:5,height:36,display:'flex',alignItems:'center',justifyContent:'center',gap:8,visibility:onFieldSum>0?'visible':'hidden'}},
-            h('span',{style:{fontSize:28,fontWeight:900,color:onFieldSum>=8?(onFieldColors[onFieldColors.length-1]==='player'?'#4da8ff':RED_C):onFieldSum>=5?'#e08020':TEXT,transition:'color 0.25s'}},onFieldSum),
+            h('span',{style:{fontSize:28,fontWeight:900,color:onFieldSum>=8?(onFieldColors[onFieldColors.length-1]==='player'?'#00ffff':RED_C):onFieldSum>=5?'#ffcc00':TEXT,transition:'color 0.25s'}},onFieldSum),
             h('span',{style:{fontSize:11,color:DIM,fontFamily:"'Fira Code',monospace"}},'/ 10　あと'+(10-onFieldSum))
           )
         )
@@ -1072,15 +1057,15 @@ function App(){
   }
 
 
-  return h('div',{style:{position:'fixed',inset:0,background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",overflow:'hidden'}},
-    h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',backgroundImage:'repeating-linear-gradient(0deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px)'}}),
+  return h('div',{style:{position:'fixed',inset:0,background:'linear-gradient(180deg,#0a0020 0%,#150035 40%,#1a0040 70%,#200050 100%)',fontFamily:"'Playfair Display',serif",overflow:'hidden'}},
+    h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',backgroundImage:'repeating-linear-gradient(0deg,#ff00ff0a 0,#ff00ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#ff00ff0a 0,#ff00ff0a 1px,transparent 1px,transparent 20px)'}}),
     comboShow&&h(CyberParticles,{key:'p_'+comboShow.text+Date.now(),color:comboShow.color,level:getComboLevel(comboShow.text),active:true}),
     comboShow&&h(CyberComboDisplay,{key:'c_'+comboShow.text+Date.now(),combo:comboShow}),
     countNum>=0&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#2a103066',pointerEvents:'none'}},
       h('div',{key:countNum,style:{fontSize:countNum===0?96:120,fontWeight:900,color:countNum===0?'#50e080':'#fff',animation:'countDown 0.65s ease both',textShadow:countNum===0?'0 0 60px #50e080':'0 0 30px #fff'}},countNum===0?'GO!!':countNum)
     ),
-    flashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:comboShow?'flex-start':'center',justifyContent:'center',paddingTop:comboShow?'clamp(90px,20vh,140px)':'0',pointerEvents:'none'}},
-      h('div',{style:{background:flashMsg.who==='player'?'#00203088':'#3a001088',backdropFilter:'blur(8px)',borderRadius:14,padding:'14px 26px',fontSize:18,fontWeight:900,color:flashMsg.who==='player'?'#00d4ff':'#ff2d6e',boxShadow:'0 4px 32px '+(flashMsg.who==='player'?'#00d4ff55':'#ff2d6e55'),border:'2px solid '+(flashMsg.who==='player'?'#00d4ff':'#ff2d6e'),animation:'slideIn 0.2s ease',maxWidth:'88vw',textAlign:'center'}},flashMsg.text)
+    flashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
+      h('div',{style:{background:flashMsg.who==='player'?'#00203088':'#3a001088',backdropFilter:'blur(8px)',borderRadius:14,padding:'14px 26px',fontSize:18,fontWeight:900,color:flashMsg.who==='player'?'#00ffff':'#ff2d6e',boxShadow:'0 4px 32px '+(flashMsg.who==='player'?'#00ffff55':'#ff2d6e55'),border:'2px solid '+(flashMsg.who==='player'?'#00ffff':'#ff2d6e'),animation:'slideIn 0.2s ease',maxWidth:'88vw',textAlign:'center'}},flashMsg.text)
     ),
 
     h('div',{style:{position:'fixed',top:0,left:0,right:0,zIndex:10,padding:'48px 12px 0'}},
@@ -1104,16 +1089,16 @@ function App(){
       h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:12,padding:'6px 10px',marginBottom:6}},
         h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'💀 DEALER — '+dH.length+'枚'),
         h('div',{style:{display:'flex',gap:3,flexWrap:'wrap',justifyContent:'center'}},
-          dH.slice(0,12).map((_,i)=>h('div',{key:i,style:{width:22,height:32,borderRadius:4,background:'linear-gradient(135deg,#3d0a0a,#200505)',border:'1px solid #801a1a',flexShrink:0}}))
+          dH.slice(0,12).map((_,i)=>h('div',{key:i,style:{width:22,height:32,borderRadius:4,background:'linear-gradient(135deg,#2a0030,#150020)',border:'1px solid #ff00ff66',flexShrink:0}}))
         )
       ),
-      h('div',{ref:fieldAreaRef,style:{background:PANEL,border:'2px solid '+(fieldSum>=8?(fieldColors[fieldColors.length-1]==='player'?'#4da8ff':RED_C):fieldSum>=5?'#e08020':BORDER),borderRadius:14,padding:'10px',textAlign:'center',transition:'border-color 0.25s',marginBottom:6,animation:resetFA?'resetAnim 0.5s ease':burstAnim?'burst 0.5s ease':'none'}},
+      h('div',{ref:fieldAreaRef,style:{background:PANEL,border:'2px solid '+(fieldSum>=8?(fieldColors[fieldColors.length-1]==='player'?'#00ffff':RED_C):fieldSum>=5?'#ffcc00':BORDER),borderRadius:14,padding:'10px',textAlign:'center',transition:'border-color 0.25s',marginBottom:6,animation:resetFA?'resetAnim 0.5s ease':burstAnim?'burst 0.5s ease':'none'}},
         h('div',{style:{fontSize:8,letterSpacing:4,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'── 場 ──'),
         h('div',{style:{display:'flex',gap:5,justifyContent:'center',alignItems:'center',height:70}},
           [0,1,2,3].map(i=>field[i]?h(FieldCard,{key:i,value:field[i],by:fieldColors[i]}):h('div',{key:i,style:{width:50,height:70,flexShrink:0}}))
         ),
         h('div',{style:{marginTop:5,height:36,display:'flex',alignItems:'center',justifyContent:'center',gap:8,visibility:fieldSum>0?'visible':'hidden'}},
-          h('span',{style:{fontSize:28,fontWeight:900,color:fieldSum>=8?(fieldColors[fieldColors.length-1]==='player'?'#4da8ff':RED_C):fieldSum>=5?'#e08020':TEXT,transition:'color 0.25s'}},fieldSum),
+          h('span',{style:{fontSize:28,fontWeight:900,color:fieldSum>=8?(fieldColors[fieldColors.length-1]==='player'?'#00ffff':RED_C):fieldSum>=5?'#ffcc00':TEXT,transition:'color 0.25s'}},fieldSum),
           h('span',{style:{fontSize:11,color:DIM,fontFamily:"'Fira Code',monospace"}},'/ 10　あと'+(10-fieldSum))
         )
       )
