@@ -491,7 +491,7 @@ function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
         h('button',{onClick:()=>onOnline(),style:{width:'100%',background:'transparent',border:'1.5px solid #ffffff',borderRadius:14,padding:'14px 0',color:'#ffffff',fontSize:18,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:'pointer',letterSpacing:2}},'🌐 オンライン対戦')
       ),
       h('div',{style:{display:'flex',justifyContent:'flex-end',width:'100%'}},
-        h('button',{onClick:()=>nextBGM(),style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:12,padding:'10px 14px',color:DIM,fontSize:14,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'🔄'),
+        h('button',{onClick:()=>nextBGM(),style:{background:'transparent',border:'none',padding:'10px 14px',color:'#ffffff',fontSize:14,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'🔄'),
         h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:12,padding:'10px 14px',color:DIM,fontSize:14,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},musicOn?'🎵':'🔇')
       )
     ),
@@ -1025,7 +1025,7 @@ function App(){
           h('div',{style:{display:'flex',flexDirection:'column',gap:4,alignItems:'flex-end'}},
 
             h('div',{style:{display:'flex',gap:6}},
-              h('button',{onClick:()=>nextBGM(),style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:8,padding:'4px 8px',color:DIM,fontSize:14,cursor:'pointer'}},'🔄'),
+              h('button',{onClick:()=>nextBGM(),style:{background:'transparent',border:'none',padding:'4px 8px',color:'#ffffff',fontSize:14,cursor:'pointer'}},'🔄'),
               h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:8,padding:'4px 8px',color:DIM,fontSize:14,cursor:'pointer'}},musicEnabled?'🎵':'🔇'),
               h('button',{onClick:goOnlineHome,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:8,padding:'4px 8px',color:DIM,fontSize:12,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'🏠')
             )
@@ -1093,7 +1093,7 @@ function App(){
         ),
         h('div',{style:{display:'flex',flexDirection:'column',gap:6,alignItems:'flex-end'}},
           h('div',{style:{display:'flex',gap:10}},
-            h('button',{onClick:()=>nextBGM(),style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 12px',color:DIM,fontSize:16,cursor:'pointer'}},'🔄'),
+            h('button',{onClick:()=>nextBGM(),style:{background:'transparent',border:'none',padding:'6px 12px',color:'#ffffff',fontSize:16,cursor:'pointer'}},'🔄'),
             h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 12px',color:DIM,fontSize:16,cursor:'pointer'}},musicEnabled?'🎵':'🔇'),
             h('button',{onClick:goHome,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 10px',color:DIM,fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'🏠')
           )
