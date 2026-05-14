@@ -495,7 +495,7 @@ function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
         h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:12,padding:'10px 14px',color:DIM,fontSize:14,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},musicOn?'🎵':'🔇')
       )
     ),
-    showDiff&&h('div',{style:{position:'fixed',inset:0,zIndex:400,display:'flex',alignItems:'center',justifyContent:'center',background:'transparent'},onClick:()=>setShowDiff(false)},
+    showDiff&&h('div',{style:{position:'fixed',inset:0,zIndex:400,display:'flex',alignItems:'center',justifyContent:'center',background:'url(\'bg.jpg\') center center / cover no-repeat'},onClick:()=>setShowDiff(false)},
       h('div',{style:{display:'flex',flexDirection:'column',gap:14,width:280,position:'relative',zIndex:1},onClick:e=>e.stopPropagation()},
         h('div',{style:{fontSize:11,letterSpacing:4,color:'#ffffff88',fontFamily:"'Fira Code',monospace",textAlign:'center',marginBottom:4}},'── 難易度を選択 ──'),
         h('button',{onClick:()=>{setShowDiff(false);onSolo('easy');},style:{width:'100%',background:'transparent',border:'1.5px solid #ffffff',borderRadius:14,padding:'16px 0',color:'#ffffff',fontSize:16,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:2}},'EASY'),
