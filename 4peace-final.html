@@ -433,6 +433,7 @@ function OnlineEndScreen({data,onHome}){
 // ── MenuScreen ──
 function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
   const[showRule,setShowRule]=useState(false);
+  const[showDiff,setShowDiff]=useState(false);
   return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
     showRule&&h('div',{style:{position:'fixed',inset:0,background:'#000000ee',zIndex:300,overflowY:'auto',padding:20},onClick:()=>setShowRule(false)},
       h('div',{style:{maxWidth:360,margin:'0 auto',color:'#fff'},onClick:e=>e.stopPropagation()},
@@ -475,13 +476,17 @@ function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
         h('div',{style:{fontSize:11,color:'#c084fc99',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'ver. 06'),
         h('div',{style:{marginTop:4,height:1,background:'linear-gradient(90deg,transparent,#c084fc88,transparent)'}})
       ),
+      showDiff&&h('div',{style:{position:'fixed',inset:0,background:'#00000088',zIndex:300,display:'flex',alignItems:'center',justifyContent:'center'},onClick:()=>setShowDiff(false)},
+        h('div',{style:{display:'flex',flexDirection:'column',gap:14,width:280},onClick:e=>e.stopPropagation()},
+          h('div',{style:{fontSize:11,letterSpacing:4,color:'#ffffff88',fontFamily:"'Fira Code',monospace",textAlign:'center',marginBottom:4}},'── 難易度を選択 ──'),
+          h('button',{onClick:()=>{setShowDiff(false);onSolo('easy');},style:{width:'100%',background:'transparent',border:'1.5px solid #ffffff',borderRadius:14,padding:'16px 0',color:'#ffffff',fontSize:16,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:2}},'EASY'),
+          h('button',{onClick:()=>{setShowDiff(false);onSolo('normal');},style:{width:'100%',background:'transparent',border:'1.5px solid #ffffff',borderRadius:14,padding:'16px 0',color:'#ffffff',fontSize:16,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:2}},'NORMAL'),
+          h('button',{onClick:()=>{setShowDiff(false);onSolo('hard');},style:{width:'100%',background:'transparent',border:'1.5px solid #ffffff',borderRadius:14,padding:'16px 0',color:'#ffffff',fontSize:16,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:2}},'HARD')
+        )
+      ),
       h('div',{style:{display:'flex',flexDirection:'column',gap:12,width:'100%'}},
-        h('div',{style:{display:'flex',gap:8}},
-          h('button',{onClick:()=>onSolo('easy'),style:{flex:1,background:'linear-gradient(135deg,#0a3a20,#1a6040)',border:'1.5px solid #00ff8844',borderRadius:12,padding:'14px 0',color:'#00ff88',fontSize:13,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:1}},'EASY'),
-          h('button',{onClick:()=>onSolo('normal'),style:{flex:1,background:'linear-gradient(135deg,#1a1a50,#3030a0)',border:'1.5px solid #00d4ff66',borderRadius:12,padding:'14px 0',color:'#00d4ff',fontSize:13,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:1}},'NORMAL'),
-          h('button',{onClick:()=>onSolo('hard'),style:{flex:1,background:'linear-gradient(135deg,#3a0a0a,#801010)',border:'1.5px solid #ff2d6e66',borderRadius:12,padding:'14px 0',color:'#ff2d6e',fontSize:13,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:1}},'HARD')
-        ),
-        h('button',{onClick:()=>onOnline(),style:{width:'100%',background:'linear-gradient(135deg,#206080,#40a080)',border:'none',borderRadius:14,padding:'14px 0',color:'#fff',fontSize:18,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:'pointer',letterSpacing:2}},'🌐 オンライン対戦')
+        h('button',{onClick:()=>setShowDiff(true),style:{width:'100%',background:'transparent',border:'1.5px solid #ffffff',borderRadius:14,padding:'14px 0',color:'#ffffff',fontSize:18,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:'pointer',letterSpacing:2}},'練習モード'),
+        h('button',{onClick:()=>onOnline(),style:{width:'100%',background:'transparent',border:'1.5px solid #ffffff',borderRadius:14,padding:'14px 0',color:'#ffffff',fontSize:18,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:'pointer',letterSpacing:2}},'🌐 オンライン対戦')
       ),
       h('div',{style:{display:'flex',justifyContent:'flex-end',width:'100%'}},
         h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:12,padding:'10px 14px',color:DIM,fontSize:14,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},musicOn?'🎵':'🔇')
