@@ -475,26 +475,6 @@ function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
         h('div',{style:{fontSize:11,color:'#c084fc99',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'ver. 06'),
         h('div',{style:{marginTop:4,height:1,background:'linear-gradient(90deg,transparent,#c084fc88,transparent)'}})
       ),
-      h('div',{style:{width:'100%',textAlign:'left'}},
-        h('div',{style:{background:'#ffffff09',border:'1px solid #c084fc33',borderRadius:12,padding:'14px 16px',fontSize:11,color:'#e0d0ff',fontFamily:"'Fira Code',monospace",lineHeight:1.9}},
-          h('div',{style:{color:'#c084fc',fontWeight:700,fontSize:10,letterSpacing:3,marginBottom:6}},'BASIC'),
-          h('div',null,'手札1〜5のカードを交互に出し合う（手札10枚）'),
-          h('div',null,'盤面の合計をピッタリ 10 にしたプレイヤーがポイント獲得'),
-          h('div',null,'最後に出したカードのプレイヤーが得点者'),
-          h('div',null,'盤面は最大4枚 / 10超えは出した側が −2pt'),
-          h('div',null,'10秒以内に完成しなければ手札リセット'),
-          h('div',null,'先に 15pt 獲得したプレイヤーの勝ち'),
-          h('div',{style:{height:1,background:'#c084fc33',margin:'8px 0'}}),
-          h('div',{style:{color:'#c084fc',fontWeight:700,fontSize:10,letterSpacing:3,marginBottom:6}},'BONUS'),
-          h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'2px 12px'}},
-            h('div',null,'ストレート 1-2-3-4'),h('div',{style:{color:'#f0abfc',fontWeight:700}},'+5pt'),
-            h('div',null,'スリーカード 2-2-2-4'),h('div',{style:{color:'#f0abfc',fontWeight:700}},'+4pt'),
-            h('div',null,'ツーペア 2-2-3-3'),   h('div',{style:{color:'#f0abfc',fontWeight:700}},'+3pt'),
-            h('div',null,'ワンペア 4-4-2'),       h('div',{style:{color:'#f0abfc',fontWeight:700}},'+2pt'),
-            h('div',null,'その他 / 5-5'),       h('div',{style:{color:'#f0abfc',fontWeight:700}},'+1pt')
-          )
-        )
-      ),
       h('div',{style:{display:'flex',flexDirection:'column',gap:12,width:'100%'}},
         h('div',{style:{display:'flex',gap:8}},
           h('button',{onClick:()=>onSolo('easy'),style:{flex:1,background:'linear-gradient(135deg,#0a3a20,#1a6040)',border:'1.5px solid #00ff8844',borderRadius:12,padding:'14px 0',color:'#00ff88',fontSize:13,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:1}},'EASY'),
