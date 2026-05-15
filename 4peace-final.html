@@ -8,7 +8,7 @@
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%);min-height:100dvh;overflow:hidden;position:fixed;width:100%;height:100dvh;touch-action:none;}
+body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a0035 100%);min-height:100dvh;overflow:hidden;position:fixed;width:100%;height:100dvh;touch-action:none;}
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Fira+Code:wght@400;600&display=swap');
 @keyframes dealIn{0%{opacity:0;transform:translateY(-20px) scale(0.75) rotate(-6deg);}60%{transform:translateY(3px) scale(1.06) rotate(1deg);}100%{opacity:1;transform:none;}}
 @keyframes cardGlow{0%,100%{box-shadow:0 2px 8px #0006,0 0 0px transparent}50%{box-shadow:0 4px 16px #0008,0 0 18px currentColor}}
@@ -43,7 +43,7 @@ const h=React.createElement;
 const{useState,useEffect,useRef,useCallback}=React;
 
 // ── 定数 ──
-const PANEL='#7055b8',BORDER='#c0a0ff';
+const PANEL='#1a0a3a',BORDER='#4a2a8a';
 const PINK='#00d4ff',PINK2='#80eeff',RED_C='#ff2d6e',BLUE_C='#ffaa00';
 const TEXT='#ffffff',DIM='#e0d0ff';
 const CC={1:'#c0003a',2:'#c05800',3:'#0068a0',4:'#6010b0',5:'#007a40'};
@@ -369,7 +369,7 @@ function SlideCard({value,onPlay,disabled,cardRole}){
   const cardBg=disabled?'#0a0a1a':isBlue?'linear-gradient(135deg,#050518,#0a0a2e)':'linear-gradient(135deg,#18050a,#2a0015)';
   return h('div',{
     style:{width:50,height:70,borderRadius:7,flexShrink:0,background:cardBg,
-      border:'1.5px solid '+borderN,
+      border:`1.5px solid ${col}`,
       display:'flex',alignItems:'center',justifyContent:'center',opacity:disabled?0.3:1,
       animation:'dealIn 0.22s cubic-bezier(0.2,1.3,0.5,1) both',position:'relative',
       userSelect:'none',WebkitUserSelect:'none',touchAction:'manipulation',
@@ -390,9 +390,8 @@ function SlideCard({value,onPlay,disabled,cardRole}){
 }
 function FieldCard({value,by}){
   const isBlue=by==='player'||by==='host';
-  const col='#ff00ff';
-  const cardBg='linear-gradient(135deg,#18050a,#2a0015)';
-  const borderColor=isBlue?'#1a4080':'#801a1a';
+  const col=isBlue?'#00ffff':'#ff00ff';
+  const cardBg=isBlue?'linear-gradient(135deg,#050518,#0a0a2e)':'linear-gradient(135deg,#18050a,#2a0015)';
   return h('div',{style:{width:50,height:70,borderRadius:8,flexShrink:0,background:cardBg,border:`1.5px solid ${col}`,display:'flex',alignItems:'center',justifyContent:'center',animation:'dealIn 0.25s cubic-bezier(0.2,1.3,0.5,1) both',position:'relative',boxShadow:`0 0 12px ${col}88,0 0 2px ${col}`}},
     h('span',{style:{fontSize:26,fontWeight:900,color:col,fontFamily:"'Fira Code',monospace",textShadow:`0 0 10px ${col}`}},value),
     h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:col,fontWeight:900,textShadow:`0 0 6px ${col}`}},value),
@@ -403,7 +402,7 @@ function FieldCard({value,by}){
 
 // ── オンライン対戦 ──
 function WaitingScreen({roomId,onCancel}){
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a0035 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
     h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:20}},
       h('div',{style:{fontSize:48,animation:'float 1.5s ease-in-out infinite'}},'⏳'),
       h('div',{style:{fontSize:14,color:DIM,fontFamily:"'Fira Code',monospace"}},'友達の入室を待っています...'),
@@ -417,7 +416,7 @@ function WaitingScreen({roomId,onCancel}){
 }
 function OnlineEndScreen({data,onHome}){
   const win=data.winner==='me';
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a0035 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
     h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:18,width:'100%',maxWidth:320}},
       h('div',{style:{fontSize:70,animation:'float 2s ease-in-out infinite'}},win?'🏆':'💀'),
       h('div',{style:{fontSize:36,fontWeight:900,fontFamily:"'Playfair Display',serif",background:win?'linear-gradient(135deg,#00d4ff,#a020f0)':'linear-gradient(135deg,#ff2d6e,#a020f0)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}},win?'YOU WIN!':'YOU LOSE...'),
@@ -503,7 +502,7 @@ function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
 // ── GameEndScreen ──
 function GameEndScreen({data,onRestart,onHome}){
   const win=data.winner==='player';
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a0035 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
     h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:18,animation:'fadeUp 0.5s ease'}},
       h('div',{style:{fontSize:70,animation:'float 2s ease-in-out infinite'}},win?'🏆':'💀'),
       h('div',{style:{fontSize:36,fontWeight:900,fontFamily:"'Playfair Display',serif",background:win?'linear-gradient(135deg,#00d4ff,#a020f0)':'linear-gradient(135deg,#ff2d6e,#a020f0)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}},win?'YOU WIN!':'DEALER WIN'),
@@ -975,8 +974,8 @@ function App(){
   if(phase==='online_playing'){
     const role=onRoleR.current;
     const isCardOff=(v)=>onCountNum>=0||onTimeLeft<=0||!canPlay(v,onFieldSum,onField);
-    return h('div',{style:{height:'100dvh',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",position:'relative',justifyContent:'center'}},
-      h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,backgroundImage:'repeating-linear-gradient(0deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px)'}}),
+    return h('div',{style:{height:'100dvh',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a0035 100%)',fontFamily:"'Playfair Display',serif",position:'relative',justifyContent:'center'}},
+      
       onComboShow&&h(CyberParticles,{key:'op_'+onComboShow.text+Date.now(),color:onComboShow.color,level:getComboLevel(onComboShow.text),active:true}),
       onComboShow&&h(CyberComboDisplay,{key:'oc_'+onComboShow.text+Date.now(),combo:onComboShow}),
       // ── オーバーレイ（ローディング/Ready/カウントダウン/フラッシュ）──
@@ -1063,8 +1062,8 @@ function App(){
   }
 
 
-  return h('div',{style:{position:'fixed',inset:0,background:'linear-gradient(180deg,#3a1a6e 0%,#6040a0 40%,#9060b8 70%,#c070c0 100%)',fontFamily:"'Playfair Display',serif",overflow:'hidden'}},
-    h('div',{style:{position:'fixed',inset:0,pointerEvents:'none',backgroundImage:'repeating-linear-gradient(0deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px),repeating-linear-gradient(90deg,#00d4ff0a 0,#00d4ff0a 1px,transparent 1px,transparent 20px)'}}),
+  return h('div',{style:{position:'fixed',inset:0,background:'linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a0035 100%)',fontFamily:"'Playfair Display',serif",overflow:'hidden'}},
+    
     comboShow&&h(CyberParticles,{key:'p_'+comboShow.text+Date.now(),color:comboShow.color,level:getComboLevel(comboShow.text),active:true}),
     comboShow&&h(CyberComboDisplay,{key:'c_'+comboShow.text+Date.now(),combo:comboShow}),
     countNum>=0&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#2a103066',pointerEvents:'none'}},
@@ -1095,7 +1094,7 @@ function App(){
       h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:12,padding:'6px 10px',marginBottom:6}},
         h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'💀 DEALER — '+dH.length+'枚'),
         h('div',{style:{display:'flex',gap:3,flexWrap:'wrap',justifyContent:'center'}},
-          dH.slice(0,12).map((_,i)=>h('div',{key:i,style:{width:22,height:32,borderRadius:4,background:'linear-gradient(135deg,#3d0a0a,#200505)',border:'1px solid #801a1a',flexShrink:0}}))
+          dH.slice(0,12).map((_,i)=>h('div',{key:i,style:{width:22,height:32,borderRadius:4,background:'linear-gradient(135deg,#1a0515,#0a0010)',border:'1px solid #3a0a2a',flexShrink:0}}))
         )
       ),
       h('div',{ref:fieldAreaRef,style:{background:PANEL,border:'2px solid '+(fieldSum>=8?(fieldColors[fieldColors.length-1]==='player'?'#4da8ff':RED_C):fieldSum>=5?'#e08020':BORDER),borderRadius:14,padding:'10px',textAlign:'center',transition:'border-color 0.25s',marginBottom:6,animation:resetFA?'resetAnim 0.5s ease':burstAnim?'burst 0.5s ease':'none'}},
