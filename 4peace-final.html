@@ -3,36 +3,478 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PiCLuK</title>
+<title>PiCLuK ver.13</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Fira+Code:wght@400;600&display=swap');
+
+/* ─────────────────────────────────────
+   BASE
+───────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a0035 100%);min-height:100dvh;overflow:hidden;position:fixed;width:100%;height:100dvh;touch-action:none;}
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Fira+Code:wght@400;600&display=swap');
-@keyframes dealIn{0%{opacity:0;transform:translateY(-20px) scale(0.75) rotate(-6deg);}60%{transform:translateY(3px) scale(1.06) rotate(1deg);}100%{opacity:1;transform:none;}}
-@keyframes cardGlow{0%,100%{box-shadow:0 2px 8px #0006,0 0 0px transparent}50%{box-shadow:0 4px 16px #0008,0 0 18px currentColor}}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+html,body{width:100%;height:100%;overflow:hidden;}
+body{
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -5%, #28005a 0%, transparent 58%),
+    radial-gradient(ellipse 55% 40% at 85% 85%, #001a50 0%, transparent 55%),
+    radial-gradient(ellipse 45% 45% at 15% 95%, #380038 0%, transparent 52%),
+    #05000f;
+  position:fixed;width:100%;height:100dvh;touch-action:none;
+  font-family:'Orbitron','Fira Code',monospace;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ─────────────────────────────────────
+   CSS VARIABLES
+   Layout is divided into 4 zones (top→bottom):
+     HUD:    --z-hud   (compact header)
+     DEALER: --z-dlr   (dealer strip, minimal)
+     FIELD:  --z-fld   (hero — takes most space)
+     HAND:   --z-hand  (fan cards + hint)
+───────────────────────────────────── */
+:root{
+  --cyan:   #00e5ff;
+  --pink:   #ff2d9b;
+  --violet: #8b20ff;
+  --gold:   #ffd040;
+  --dim:    #9070c0;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+
+  /* ── Zone heights ──────────────────────────────────────────
+     Target: Pixel 6/7 class  ≈ 844px usable height
+     HUD  :  48px  (≈ 5.7dvh)
+     DLR  :  36px  (≈ 4.3dvh)
+     FIELD:  1fr   → ≈ 310px  (≈ 37dvh)   ← trimmed from 38%+
+     HAND :  450px (≈ 53dvh)  ← big enough for 2 rows + hint
+     Total:  48+36+310+450 = 844 ✓
+  ─────────────────────────────────────────────────────────── */
+  --z-hud:  clamp(44px, 5.7dvh, 54px);
+  --z-dlr:  clamp(32px, 4.3dvh, 42px);
+  /* HAND = 2 × card-h + label + hint + padding, computed from card size */
+  /* We fix hand zone to exactly fit 2 fan rows */
+  --z-hand: calc(var(--hc-h) * 2 + 38px);
+
+  /* ── Field cards ────────────────────────────────────────────
+     Field zone ≈ 37dvh ≈ 312px.  Cards should be tall but leave
+     room for the "場" label and sum line (≈ 50px total).
+     So fc-h ≤ 312 - 50 = 262px — but 4 cards side-by-side need
+     width ≤ (screen_width - 32px margin - 3×gap) / 4
+     On 390px screen: (390-32-36)/4 ≈ 80px  → fc-w ≤ 80px
+     → fc-h = fc-w / 0.72 ≤ 111px
+  ─────────────────────────────────────────────────────────── */
+  --fc-w: clamp(58px, 19vw, 78px);
+  --fc-h: calc(var(--fc-w) / 0.72);   /* ≈ 81–108px */
+
+  /* ── Hand cards ─────────────────────────────────────────────
+     Must fit 5 cards side-by-side with minimal overlap on 390px.
+     At 88% spacing: 5 × (hc-w × 0.88) + hc-w ≤ 390px - 16px
+     → hc-w × (5×0.88 + 1) = hc-w × 5.4 ≤ 374
+     → hc-w ≤ 69px  (use 66px as safe upper bound)
+     hc-h = hc-w / 0.72 → max ≈ 92px
+     Two rows: 2 × 92 + 14px gap + 20px label + 18px hint ≈ 236px
+     → --z-hand ≈ 240px max
+  ─────────────────────────────────────────────────────────── */
+  --hc-w: clamp(52px, 16vw, 66px);
+  --hc-h: calc(var(--hc-w) / 0.72);   /* ≈ 72–92px */
+}
+
+/* ─────────────────────────────────────
+   KEYFRAMES
+───────────────────────────────────── */
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
-@keyframes burst{0%{transform:scale(1)}40%{transform:scale(1.3);opacity:0.7}100%{transform:scale(0.8);opacity:0}}
-@keyframes resetAnim{0%{transform:scale(1)}40%{transform:scale(1.08);filter:brightness(1.3)}100%{transform:scale(1);filter:none}}
-@keyframes countDown{0%{transform:scale(0.4);opacity:0}40%{transform:scale(1.2);opacity:1}70%{transform:scale(1);opacity:1}100%{transform:scale(0.8);opacity:0}}
-@keyframes slideIn{from{transform:translateY(-16px);opacity:0}to{transform:none;opacity:1}}
-@keyframes comboPop{0%{transform:scale(0.3) rotate(-8deg);opacity:0}50%{transform:scale(1.25) rotate(3deg);opacity:1}70%{transform:scale(0.95) rotate(-1deg)}100%{transform:scale(1) rotate(0deg);opacity:1}}
-@keyframes comboOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.4) translateY(-30px)}}
-@keyframes cyberIn{0%{transform:scale(0.2) skewX(20deg);opacity:0;filter:blur(12px)}40%{transform:scale(1.3) skewX(-4deg);opacity:1;filter:blur(0)}70%{transform:scale(0.97) skewX(1deg)}100%{transform:scale(1) skewX(0);opacity:1;filter:none}}
-@keyframes cyberOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.6) translateY(-40px);filter:blur(8px)}}
-@keyframes glitchShift{0%,100%{clip-path:inset(0 0 100% 0)}10%{clip-path:inset(10% 0 60% 0);transform:translateX(-4px)}20%{clip-path:inset(30% 0 40% 0);transform:translateX(4px)}30%{clip-path:inset(50% 0 20% 0);transform:translateX(-2px)}40%{clip-path:inset(70% 0 5% 0);transform:translateX(2px)}50%{clip-path:inset(0 0 0 0);transform:none}}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes countDown{0%{transform:scale(.35);opacity:0}40%{transform:scale(1.18);opacity:1}70%{transform:scale(1);opacity:1}100%{transform:scale(.75);opacity:0}}
+@keyframes slideIn{from{transform:translateY(-12px);opacity:0}to{transform:none;opacity:1}}
+@keyframes burst{0%{transform:scale(1)}40%{transform:scale(1.22);opacity:.7}100%{transform:scale(.88);opacity:0}}
+@keyframes resetAnim{0%{transform:scale(1)}40%{transform:scale(1.05);filter:brightness(1.5)}100%{transform:scale(1);filter:none}}
+@keyframes screenFlash{0%{opacity:.8}100%{opacity:0}}
+@keyframes cameraShake{0%,100%{transform:translate(0,0)}15%{transform:translate(-5px,-3px)}30%{transform:translate(5px,3px)}45%{transform:translate(-4px,4px)}60%{transform:translate(4px,-3px)}75%{transform:translate(-3px,3px)}90%{transform:translate(2px,-2px)}}
+@keyframes fieldDrop{
+  0%  {opacity:0;transform:scale(.4) translateY(-60px) rotate(-10deg);filter:blur(4px);}
+  45% {transform:scale(1.18) translateY(4px) rotate(.8deg);filter:blur(0);}
+  65% {transform:scale(.95) translateY(-2px) rotate(-.3deg);}
+  82% {transform:scale(1.03) translateY(0);}
+  100%{opacity:1;transform:scale(1) translateY(0) rotate(0);}
+}
+@keyframes winSpin{0%{transform:rotateY(0) scale(1)}30%{transform:rotateY(180deg) scale(1.2)}60%{transform:rotateY(360deg) scale(1.38)}100%{transform:rotateY(720deg) scale(1)}}
+/* Fan card deal — uses CSS var for its resting transform */
+@keyframes cardDeal{
+  0%  {opacity:0;transform:var(--ft) scale(.65) translateY(-20px);}
+  60% {transform:var(--ft) scale(1.06) translateY(2px);}
+  100%{opacity:1;transform:var(--ft);}
+}
+@keyframes comboPop{0%{transform:scale(.3) rotate(-8deg);opacity:0}50%{transform:scale(1.22) rotate(2deg);opacity:1}70%{transform:scale(.96) rotate(-1deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes cyberIn{0%{transform:scale(.2) skewX(18deg);opacity:0;filter:blur(10px)}40%{transform:scale(1.28) skewX(-3deg);opacity:1;filter:blur(0)}70%{transform:scale(.97) skewX(1deg)}100%{transform:scale(1) skewX(0);opacity:1;filter:none}}
+@keyframes chromaR{0%,100%{transform:translate(0,0)}50%{transform:translate(-3px,1px)}}
+@keyframes chromaB{0%,100%{transform:translate(0,0)}50%{transform:translate(3px,-1px)}}
+@keyframes gridFlash{0%,100%{opacity:0}50%{opacity:.2}}
+@keyframes titleGlitch{0%,90%,100%{transform:none;filter:none}92%{transform:translateX(-3px);filter:hue-rotate(90deg)}96%{transform:none}98%{transform:translateX(-1px);filter:brightness(2)}}
+@keyframes hexOpen{0%{transform:translate(-50%,-50%) scale(0) rotate(0);opacity:1}100%{transform:translate(-50%,-50%) scale(4) rotate(120deg);opacity:0}}
+@keyframes dualBeam{0%{transform:scaleX(0);opacity:1}60%{transform:scaleX(1);opacity:.8}100%{opacity:0}}
+@keyframes softRing{0%{transform:translate(-50%,-50%) scale(.2);opacity:.9}100%{transform:translate(-50%,-50%) scale(2.5);opacity:0}}
 @keyframes scanline{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
-@keyframes chromaRed{0%,100%{transform:translate(0,0)}50%{transform:translate(-3px,1px)}}
-@keyframes chromaBlue{0%,100%{transform:translate(0,0)}50%{transform:translate(3px,-1px)}}
-@keyframes ringExpand{0%{transform:translate(-50%,-50%) scale(0);opacity:0.9}100%{transform:translate(-50%,-50%) scale(3.5);opacity:0}}
-@keyframes ringExpand2{0%{transform:translate(-50%,-50%) scale(0);opacity:0.7}100%{transform:translate(-50%,-50%) scale(5);opacity:0}}
-@keyframes ptFloat{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-80px) scale(1.4);opacity:0}}
-@keyframes hexSpin{0%{transform:translate(-50%,-50%) rotate(0deg) scale(0);opacity:0}20%{opacity:1}100%{transform:translate(-50%,-50%) rotate(180deg) scale(2.5);opacity:0}}
-@keyframes gridFlash{0%,100%{opacity:0}50%{opacity:0.25}}
-@keyframes titleGlitch{0%,90%,100%{transform:none;filter:none}92%{transform:translateX(-3px);filter:hue-rotate(90deg)}94%{transform:translateX(3px);filter:hue-rotate(-90deg)}96%{transform:none;filter:none}98%{transform:translateX(-1px);filter:brightness(2)}}
+
+/* ─────────────────────────────────────
+   LAYOUT SHELL
+   4 fixed zones stacked, no scrolling
+───────────────────────────────────── */
+.game-shell{
+  position:fixed;inset:0;
+  display:grid;
+  grid-template-rows: var(--z-hud) var(--z-dlr) 1fr var(--z-hand);
+  grid-template-columns: 1fr;
+  overflow:hidden;
+}
+
+/* ─────────────────────────────────────
+   ZONE 1 — HUD (ultra-compact)
+───────────────────────────────────── */
+.hud{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:calc(var(--safe-t) + 4px) 10px 4px;
+  background:linear-gradient(180deg,rgba(5,0,15,.97) 70%,transparent);
+  z-index:20;gap:4px;
+}
+.hud-time{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-width:46px;padding:2px 7px;border-radius:8px;
+  border:1.5px solid rgba(100,50,200,.5);
+  background:rgba(12,3,36,.9);
+  transition:background .3s,border-color .3s;
+}
+.hud-time.danger{background:var(--pink);border-color:var(--pink);animation:pulse .5s infinite;}
+.hud-time .t-label{font-size:7px;letter-spacing:2px;color:var(--dim);font-family:'Fira Code',monospace;}
+.hud-time .t-val{font-size:20px;font-weight:900;color:#fff;line-height:1;}
+.hud-time.danger .t-label,.hud-time.danger .t-val{color:#fff;}
+.hud-scores{display:flex;gap:10px;align-items:center;}
+.hud-score{text-align:center;}
+.hud-score .s-lbl{font-size:7px;letter-spacing:2px;color:var(--dim);font-family:'Fira Code',monospace;}
+.hud-score .s-val{font-size:18px;font-weight:900;line-height:1.1;}
+.hud-mid{text-align:center;}
+.hud-mid .r-lbl{font-size:8px;color:var(--dim);font-family:'Fira Code',monospace;}
+.hud-mid .d-lbl{font-size:7px;font-weight:700;font-family:'Fira Code',monospace;letter-spacing:1px;}
+.hud-btns{display:flex;gap:4px;}
+.hud-btn{
+  background:transparent;border:1px solid rgba(255,255,255,.2);
+  border-radius:7px;padding:4px 8px;
+  color:rgba(255,255,255,.45);font-size:13px;cursor:pointer;
+}
+
+/* ─────────────────────────────────────
+   ZONE 2 — DEALER STRIP (very thin)
+───────────────────────────────────── */
+.dlr-strip{
+  display:flex;align-items:center;gap:6px;
+  padding:0 10px;
+  opacity:.65;   /* intentionally dimmed — not primary info */
+}
+.dlr-label{
+  font-size:8px;letter-spacing:2px;color:var(--dim);
+  font-family:'Fira Code',monospace;flex-shrink:0;white-space:nowrap;
+}
+.dlr-cards{display:flex;gap:2px;align-items:center;overflow:hidden;}
+.dlr-pip{
+  width:16px;height:22px;border-radius:3px;flex-shrink:0;
+  background:linear-gradient(135deg,#200640,#0e0020);
+  border:1px solid rgba(130,40,230,.35);
+  display:flex;align-items:center;justify-content:center;
+}
+.dlr-pip svg{width:8px;height:8px;opacity:.4;}
+
+/* ─────────────────────────────────────
+   ZONE 3 — FIELD (HERO)
+   Fills all remaining space between dealer and hand
+───────────────────────────────────── */
+.field-zone{
+  position:relative;
+  margin:0 8px;
+  border:2px solid var(--violet);
+  border-radius:18px;
+  background:rgba(10,1,28,.72);
+  backdrop-filter:blur(8px);
+  overflow:visible;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;   /* tighter — cards are bigger now */
+  transition:border-color .25s, box-shadow .3s;
+}
+/* corner accent lines */
+.field-zone::before,.field-zone::after{
+  content:'';position:absolute;border-radius:18px;pointer-events:none;
+}
+.field-zone::before{
+  inset:-1px;
+  background:linear-gradient(135deg,rgba(0,229,255,.12),transparent 40%,rgba(255,45,155,.1));
+  z-index:0;
+}
+.field-zone::after{
+  inset:0;
+  border-radius:16px;
+  background:radial-gradient(ellipse 70% 50% at 50% 50%, rgba(100,0,200,.08), transparent);
+  z-index:0;
+}
+.field-zone.sum-mid  {border-color:#ff7700;box-shadow:0 0 14px rgba(255,119,0,.3);}
+.field-zone.sum-high-p{border-color:var(--cyan);box-shadow:0 0 22px rgba(0,229,255,.4);}
+.field-zone.sum-high-d{border-color:var(--pink);box-shadow:0 0 22px rgba(255,45,155,.4);}
+.field-zone.burst-anim{animation:burst .5s ease;}
+.field-zone.reset-anim{animation:resetAnim .5s ease;}
+.field-zone.win-cyan{border-color:var(--cyan);box-shadow:0 0 36px var(--cyan), 0 0 80px rgba(0,229,255,.35);}
+.field-zone.win-pink{border-color:var(--pink);box-shadow:0 0 36px var(--pink), 0 0 80px rgba(255,45,155,.35);}
+
+.field-lbl{
+  font-size:7px;letter-spacing:5px;color:rgba(140,100,220,.4);
+  font-family:'Fira Code',monospace;
+  position:relative;z-index:1;
+}
+.field-cards{
+  display:flex;gap:clamp(6px,1.5vw,12px);justify-content:center;align-items:center;
+  position:relative;z-index:1;
+  /* shrink-wrap to actual cards, don't stretch */
+  flex-wrap:nowrap;
+}
+/* field card placeholder */
+.fc-slot{
+  width:var(--fc-w);height:var(--fc-h);flex-shrink:0;
+  border-radius:12px;
+  border:1.5px dashed rgba(120,50,220,.18);
+  background:rgba(255,255,255,.015);
+}
+/* field sum display — demoted to helper UI */
+.field-sum{
+  display:flex;align-items:baseline;gap:6px;
+  position:relative;z-index:1;
+  opacity:.85;
+}
+.field-sum .fs-num{
+  font-size:clamp(22px,4.5vw,32px);font-weight:900;line-height:1;
+  transition:color .25s;
+  text-shadow:0 0 10px currentColor;
+}
+.field-sum .fs-sub{
+  font-size:10px;color:var(--dim);font-family:'Fira Code',monospace;
+  opacity:.7;
+}
+
+/* ─────────────────────────────────────
+   FIELD CARD
+───────────────────────────────────── */
+.fc{
+  width:var(--fc-w);height:var(--fc-h);
+  border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+  animation:fieldDrop .38s cubic-bezier(.15,1.4,.4,1) both;
+}
+/* impact ring that fires on card land */
+.fc::after{
+  content:'';
+  position:absolute;inset:-4px;
+  border-radius:18px;
+  opacity:0;
+  pointer-events:none;
+}
+.fc.fc-cyan{
+  background:linear-gradient(155deg,#03101e,#050f22 60%,#020a14);
+  border:2.5px solid var(--cyan);
+  box-shadow:
+    0 0 0 1px rgba(0,229,255,.25),
+    0 0 20px rgba(0,229,255,.8),
+    0 0 6px  var(--cyan),
+    0 0 55px rgba(0,229,255,.25),
+    0 6px 24px rgba(0,0,0,.85);
+}
+.fc.fc-pink{
+  background:linear-gradient(155deg,#160208,#1e0010 60%,#100006);
+  border:2.5px solid var(--pink);
+  box-shadow:
+    0 0 0 1px rgba(255,45,155,.25),
+    0 0 20px rgba(255,45,155,.8),
+    0 0 6px  var(--pink),
+    0 0 55px rgba(255,45,155,.25),
+    0 6px 24px rgba(0,0,0,.85);
+}
+/* win state: maximum glow */
+.fc.fc-win{
+  animation:fieldDrop .38s cubic-bezier(.15,1.4,.4,1) both, winSpin 1.5s ease .1s both;
+}
+.fc.fc-cyan.fc-win{
+  box-shadow:
+    0 0 0 2px var(--cyan),
+    0 0 30px var(--cyan),
+    0 0 80px rgba(0,229,255,.6),
+    0 0 120px rgba(0,229,255,.25),
+    0 8px 28px rgba(0,0,0,.9);
+}
+.fc.fc-pink.fc-win{
+  box-shadow:
+    0 0 0 2px var(--pink),
+    0 0 30px var(--pink),
+    0 0 80px rgba(255,45,155,.6),
+    0 0 120px rgba(255,45,155,.25),
+    0 8px 28px rgba(0,0,0,.9);
+}
+/* number: fill most of the card height */
+.fc .fc-num{
+  font-size:calc(var(--fc-h) * 0.52);
+  font-weight:900;line-height:1;
+  pointer-events:none;
+  /* slight inner glow via text-shadow handled inline */
+}
+.fc .fc-corner{
+  position:absolute;font-size:clamp(9px,1.8vw,12px);font-weight:900;pointer-events:none;
+  font-family:'Orbitron',monospace;
+}
+.fc .fc-corner.tl{top:6px;left:7px;}
+.fc .fc-corner.br{bottom:6px;right:7px;transform:rotate(180deg);}
+
+/* ── impact shockwave keyframe (triggered via JS class toggle) ── */
+@keyframes impactRing{
+  0%  {box-shadow:0 0 0  0px rgba(255,255,255,.6),0 0 0  0px rgba(255,255,255,.3);}
+  40% {box-shadow:0 0 0 18px rgba(255,255,255,.2),0 0 0 36px rgba(255,255,255,.08);}
+  100%{box-shadow:0 0 0 36px rgba(255,255,255,0),  0 0 0 72px rgba(255,255,255,0);}
+}
+.fc.fc-impact{animation:fieldDrop .38s cubic-bezier(.15,1.4,.4,1) both, impactRing .45s ease .12s both;}
+
+/* ─────────────────────────────────────
+   ZONE 4 — HAND (fan layout, fixed bottom)
+───────────────────────────────────── */
+.hand-zone{
+  position:relative;
+  background:linear-gradient(0deg,rgba(5,0,15,.98) 55%,rgba(5,0,15,.6) 80%,transparent);
+  display:flex;flex-direction:column;
+  padding-bottom:calc(4px + var(--safe-b));
+  overflow:visible;
+  z-index:10;
+}
+.hand-lbl{
+  font-size:8px;letter-spacing:2px;color:var(--dim);opacity:.7;
+  font-family:'Fira Code',monospace;
+  text-align:center;padding-top:3px;flex-shrink:0;
+}
+/* fan-row: height = card height + a small buffer for arc lift */
+.fan-row{
+  position:relative;
+  display:flex;justify-content:center;
+  height:calc(var(--hc-h) + 14px);
+  flex-shrink:0;
+}
+/* second row sits just behind the first — small overlap only */
+.fan-row + .fan-row{ margin-top:-6px; }
+
+/* ─────────────────────────────────────
+   HAND CARD
+───────────────────────────────────── */
+.hc{
+  width:var(--hc-w);height:var(--hc-h);
+  border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  position:absolute;
+  bottom:0;
+  transform-origin:50% 115%;   /* pivot slightly below card = natural arc */
+  cursor:pointer;
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;
+  will-change:transform;
+  animation:cardDeal .28s cubic-bezier(.2,1.3,.5,1) both;
+  transition:box-shadow .12s, filter .12s;
+}
+.hc.hc-cyan{
+  background:linear-gradient(160deg,#020c1c,#040f24);
+  border:2px solid var(--cyan);
+  box-shadow:0 0 16px rgba(0,229,255,.6), 0 0 4px var(--cyan), 0 5px 18px rgba(0,0,0,.7);
+}
+.hc.hc-pink{
+  background:linear-gradient(160deg,#150208,#1e000e);
+  border:2px solid var(--pink);
+  box-shadow:0 0 16px rgba(255,45,155,.6), 0 0 4px var(--pink), 0 5px 18px rgba(0,0,0,.7);
+}
+/* Disabled: clearly dimmed */
+.hc.hc-disabled{
+  opacity:.2;cursor:default;filter:grayscale(.9) brightness(.5);
+  box-shadow:none !important;border-color:rgba(80,60,100,.4) !important;
+}
+/* Pressed: big brightness surge for instant feedback */
+.hc.hc-pressed{
+  box-shadow:0 0 36px rgba(0,229,255,.95), 0 0 12px var(--cyan), 0 2px 8px rgba(0,0,0,.5) !important;
+  filter:brightness(1.8);
+}
+.hc.hc-pressed.hc-pink{
+  box-shadow:0 0 36px rgba(255,45,155,.95), 0 0 12px var(--pink), 0 2px 8px rgba(0,0,0,.5) !important;
+}
+.hc .hc-num{
+  /* number fills ~50% of card height for maximum legibility */
+  font-size:calc(var(--hc-h) * 0.50);
+  font-weight:900;line-height:1;pointer-events:none;
+}
+.hc .hc-corner{
+  position:absolute;
+  font-size:calc(var(--hc-h) * 0.12);
+  font-weight:900;pointer-events:none;
+  font-family:'Orbitron',monospace;
+}
+.hc .hc-corner.tl{top:4px;left:5px;}
+.hc .hc-corner.br{bottom:4px;right:5px;transform:rotate(180deg);}
+
+/* ─────────────────────────────────────
+   HINT STRIP
+───────────────────────────────────── */
+.hint-strip{
+  display:flex;gap:3px;justify-content:center;flex-wrap:wrap;
+  padding:2px 8px 0;flex-shrink:0;
+}
+.hint-pip{
+  font-size:7.5px;color:rgba(160,120,255,.55);
+  font-family:'Fira Code',monospace;
+  background:rgba(255,255,255,.05);
+  border-radius:3px;padding:1px 4px;white-space:nowrap;
+}
+.hint-pip b{color:rgba(0,220,255,.7);font-weight:700;}
+
+/* ─────────────────────────────────────
+   OVERLAY / FLASH MSG
+───────────────────────────────────── */
+.ov-center{
+  position:fixed;inset:0;z-index:160;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+}
+.flash-box{
+  backdrop-filter:blur(10px);border-radius:14px;
+  padding:11px 20px;font-size:16px;font-weight:900;
+  border:2px solid;animation:slideIn .2s ease;
+  max-width:86vw;text-align:center;
+}
+.cd-num{font-weight:900;animation:countDown .65s ease both;text-shadow:0 0 28px #fff;}
+.cd-num.go{color:#50e080;text-shadow:0 0 55px #50e080;}
+
+/* ─────────────────────────────────────
+   MENU SCREEN
+───────────────────────────────────── */
+.menu-bg{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, #28005a 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 90%, #001845 0%, transparent 55%),
+    #05000f;
+}
+.menu-inner{
+  display:flex;flex-direction:column;align-items:center;
+  gap:18px;width:100%;max-width:320px;animation:fadeUp .5s ease;text-align:center;
+}
+.m-btn{
+  border-radius:12px;padding:12px 0;
+  font-family:'Orbitron',monospace;font-weight:700;font-size:13px;
+  cursor:pointer;letter-spacing:1px;transition:filter .18s,transform .1s;
+  touch-action:manipulation;
+}
+.m-btn:active{transform:scale(.97);}
+
+/* ─────────────────────────────────────
+   LOADING BAR
+───────────────────────────────────── */
+.load-bar-bg{width:240px;height:12px;background:#181830;border-radius:6px;border:1px solid rgba(0,200,255,.3);overflow:hidden;}
+.load-bar-fg{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--cyan),var(--violet));transition:width .1s;box-shadow:0 0 10px var(--cyan);}
 </style>
 </head>
 <body>
@@ -40,733 +482,623 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 <script>
 const WS_URL='wss://4peace-server-vw1ezw.fly.dev';
 const h=React.createElement;
-const{useState,useEffect,useRef,useCallback}=React;
+const{useState,useEffect,useRef}=React;
 
-// ── 定数 ──
-const PANEL='#1a0a3a',BORDER='#4a2a8a';
-const PINK='#00d4ff',PINK2='#80eeff',RED_C='#ff2d6e',BLUE_C='#ffaa00';
-const TEXT='#ffffff',DIM='#e0d0ff';
-const CC={1:'#c0003a',2:'#c05800',3:'#0068a0',4:'#6010b0',5:'#007a40'};
+/* ──────────────────────────────────────
+   CONSTANTS
+────────────────────────────────────── */
 const WIN_PT=15;
+const CYAN='#00e5ff', PINK='#ff2d9b', VIOLET='#8b20ff', GOLD='#ffd040', DIM='#9070c0';
 
-// ── ゲームロジック ──
+/* ──────────────────────────────────────
+   GAME LOGIC (unchanged)
+────────────────────────────────────── */
 function createDeck(){
   const d=[];
-  while(d.length<10){
-    const v=Math.floor(Math.random()*5)+1;
-    if(d.filter(x=>x===v).length<3)d.push(v);
-  }
-  return d.sort(()=>Math.random()-0.5);
+  while(d.length<10){const v=Math.floor(Math.random()*5)+1;if(d.filter(x=>x===v).length<3)d.push(v);}
+  return d.sort(()=>Math.random()-.5);
 }
-
 function calcPts(cards){
   const s=[...cards].sort((a,b)=>a-b);
-  if(cards.length===4&&s.join('')==='1234')return{total:5,label:'ストレート +5pt',voice:'ストレート'};
-  if(cards.length===2&&s[0]===5&&s[1]===5)return{total:1,label:'役なし +1pt',voice:'役なし'};
-  const freq={};
-  cards.forEach(v=>{freq[v]=(freq[v]||0)+1;});
+  if(cards.length===4&&s.join('')==='1234')return{total:5,voice:'ストレート'};
+  if(cards.length===2&&s[0]===5&&s[1]===5)return{total:1,voice:'役なし'};
+  const freq={};cards.forEach(v=>{freq[v]=(freq[v]||0)+1;});
   const counts=Object.values(freq);
-  if(counts.some(c=>c>=3))return{total:4,label:'スリーカード +4pt',voice:'スリーカード'};
-  if(counts.filter(c=>c===2).length>=2)return{total:3,label:'ツーペア +3pt',voice:'ツーペア'};
-  if(counts.some(c=>c===2))return{total:2,label:'ワンペア +2pt',voice:'ワンペア'};
-  return{total:1,label:'役なし +1pt',voice:'役なし'};
+  if(counts.some(c=>c>=3))return{total:4,voice:'スリーカード'};
+  if(counts.filter(c=>c===2).length>=2)return{total:3,voice:'ツーペア'};
+  if(counts.some(c=>c===2))return{total:2,voice:'ワンペア'};
+  return{total:1,voice:'役なし'};
 }
-
 function canPlay(v,fieldSum,field){
   if(field.filter(x=>x!==null).length>=4)return false;
-  const filled=field.filter(x=>x!==null).length+1;
-  const newSum=fieldSum+v;
-  if(filled===3&&newSum<5)return false;
-  if(filled===4&&newSum<10)return false;
+  const filled=field.filter(x=>x!==null).length+1,ns=fieldSum+v;
+  if(filled===3&&ns<5)return false;
+  if(filled===4&&ns<10)return false;
   return true;
 }
+function getComboLevel(voice){
+  if(voice==='ストレート')return 5;if(voice==='スリーカード')return 4;
+  if(voice==='ツーペア')return 3;if(voice==='ワンペア')return 2;return 1;
+}
 
-// ── BGM (Grit Sprint.mp3) ──
+/* ──────────────────────────────────────
+   BGM
+────────────────────────────────────── */
 let bgmRunning=false,bgmAudio=null;
-function stopBGM(){
-  bgmRunning=false;
-  if(bgmAudio){bgmAudio.pause();bgmAudio.currentTime=0;}
-}
+function stopBGM(){bgmRunning=false;if(bgmAudio){bgmAudio.pause();bgmAudio.currentTime=0;}}
 function startBGM(){
-  if(bgmRunning)return;
-  bgmRunning=true;
-  try{
-    if(!bgmAudio){
-      bgmAudio=new Audio('Grit_Sprint.mp3');
-      bgmAudio.loop=true;
-      bgmAudio.volume=0.45;
-    }
-    bgmAudio.play().catch(()=>{});
-  }catch(e){bgmRunning=false;}
+  if(bgmRunning)return;bgmRunning=true;
+  try{if(!bgmAudio){bgmAudio=new Audio('Grit_Sprint.mp3');bgmAudio.loop=true;bgmAudio.volume=.45;}bgmAudio.play().catch(()=>{});}
+  catch(e){bgmRunning=false;}
 }
 
-// ── サーバー時刻同期 ──
-// ping/pongで3回計測し平均オフセットを算出してからコールバックを呼ぶ
-function syncServerTime(ws, offsetRef, callback) {
-  let count = 0;
-  const offsets = [];
-  function doPing() {
-    if (!ws || ws.readyState !== WebSocket.OPEN) { callback(); return; }
-    ws.send(JSON.stringify({ type: 'ping', clientTime: Date.now() }));
-  }
-  const origOnMessage = ws.onmessage;
-  ws.onmessage = (e) => {
-    try {
-      const msg = JSON.parse(e.data);
-      if (msg.type === 'pong') {
-        const rtt = Date.now() - msg.clientTime;
-        offsets.push(msg.serverTime + (rtt / 2) - Date.now());
-        count++;
-        if (count < 3) { setTimeout(doPing, 50); }
-        else {
-          offsetRef.current = offsets.reduce((a, b) => a + b, 0) / offsets.length;
-          ws.onmessage = origOnMessage;
-          callback();
-        }
-        return;
-      }
-    } catch(e) {}
-    if (origOnMessage) origOnMessage(e);
+/* ──────────────────────────────────────
+   WS TIME SYNC
+────────────────────────────────────── */
+function syncServerTime(ws,offsetRef,cb){
+  let n=0;const offs=[];
+  function ping(){if(!ws||ws.readyState!==WebSocket.OPEN){cb();return;}ws.send(JSON.stringify({type:'ping',clientTime:Date.now()}));}
+  const orig=ws.onmessage;
+  ws.onmessage=(e)=>{
+    try{const m=JSON.parse(e.data);if(m.type==='pong'){const rtt=Date.now()-m.clientTime;offs.push(m.serverTime+(rtt/2)-Date.now());n++;if(n<3)setTimeout(ping,50);else{offsetRef.current=offs.reduce((a,b)=>a+b,0)/offs.length;ws.onmessage=orig;cb();}return;}}catch(e){}
+    if(orig)orig(e);
   };
-  doPing();
+  ping();
 }
 
-// SE用AudioContext（BGMとは独立）
+/* ──────────────────────────────────────
+   AUDIO
+────────────────────────────────────── */
 const AC=new(window.AudioContext||window.webkitAudioContext)();
 function resumeAC(){if(AC.state==='suspended')AC.resume();}
-// PC Chrome対策：最初のタッチ/クリックでACを即座に起動
-document.addEventListener('pointerdown',()=>{resumeAC();},{once:true,capture:true});
-
-// ── se.mp3ベースのSEシステム ──
+document.addEventListener('pointerdown',()=>resumeAC(),{once:true,capture:true});
 let seBuffer=null;
-fetch('se.mp3').then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab)).then(buf=>{seBuffer=buf;}).catch(()=>{});
-
+fetch('se.mp3').then(r=>r.arrayBuffer()).then(ab=>AC.decodeAudioData(ab)).then(b=>{seBuffer=b;}).catch(()=>{});
 function playSE({rate=1,vol=1,detune=0}){
   if(!seBuffer)return;
-  const play=()=>{
-    try{
-      const src=AC.createBufferSource();
-      const g=AC.createGain();
-      src.buffer=seBuffer;
-      src.playbackRate.value=rate;
-      src.detune.value=detune;
-      g.gain.value=vol;
-      src.connect(g);g.connect(AC.destination);
-      src.start();
-    }catch(e){}
-  };
-  if(AC.state==='suspended'){AC.resume().then(play);}else{play();}
+  const go=()=>{try{const s=AC.createBufferSource(),g=AC.createGain();s.buffer=seBuffer;s.playbackRate.value=rate;s.detune.value=detune;g.gain.value=vol;s.connect(g);g.connect(AC.destination);s.start();}catch(e){}};
+  AC.state==='suspended'?AC.resume().then(go):go();
+}
+const playTapSE  =()=>playSE({rate:1.0,vol:.9,detune:-300});
+const playMissSE =()=>playSE({rate:.6,vol:.8,detune:-400});
+const playBurstSE=()=>{playSE({rate:.5,vol:1,detune:-600});setTimeout(()=>playSE({rate:.4,vol:.7,detune:-800}),150);};
+function playComboSfx(v){
+  if(v==='役なし'){playSE({rate:1,vol:.6});}
+  else if(v==='ワンペア'){playSE({rate:1.3,vol:.75,detune:200});setTimeout(()=>playSE({rate:1.5,vol:.6,detune:400}),120);}
+  else if(v==='ツーペア'){playSE({rate:1.5,vol:.8,detune:400});setTimeout(()=>playSE({rate:1.7,vol:.7,detune:600}),100);setTimeout(()=>playSE({rate:2,vol:.6,detune:800}),220);}
+  else if(v==='スリーカード'){playSE({rate:1.8,vol:.85,detune:600});setTimeout(()=>playSE({rate:2,vol:.8,detune:800}),80);setTimeout(()=>playSE({rate:2.3,vol:.75,detune:1e3}),170);setTimeout(()=>playSE({rate:2.6,vol:.9,detune:1200}),280);}
+  else{playSE({rate:2,vol:.9,detune:800});setTimeout(()=>playSE({rate:2.3,vol:.85,detune:1e3}),70);setTimeout(()=>playSE({rate:2.6,vol:.85,detune:1200}),150);setTimeout(()=>playSE({rate:3,vol:.9,detune:1400}),230);setTimeout(()=>playSE({rate:3.5,vol:1,detune:1600}),320);setTimeout(()=>playSE({rate:2.5,vol:.5,detune:1e3}),500);}
 }
 
-function playTapSE(){playSE({rate:1.0,vol:0.9,detune:-300});}
-function playMissSE(){playSE({rate:0.6,vol:0.8,detune:-400});}
-function playBurstSE(){
-  playSE({rate:0.5,vol:1.0,detune:-600});
-  setTimeout(()=>playSE({rate:0.4,vol:0.7,detune:-800}),150);
+/* ──────────────────────────────────────
+   SCREEN EFFECTS
+────────────────────────────────────── */
+let shakeActive=false;
+function triggerShake(dur=500){
+  if(shakeActive)return;shakeActive=true;
+  const el=document.getElementById('root');
+  if(el)el.style.animation=`cameraShake ${dur}ms ease both`;
+  setTimeout(()=>{if(el)el.style.animation='';shakeActive=false;},dur);
 }
-function playComboSfx(voice){
-  if(voice==='役なし'){
-    playSE({rate:1.0,vol:0.6});
-  }else if(voice==='ワンペア'){
-    playSE({rate:1.3,vol:0.75,detune:200});
-    setTimeout(()=>playSE({rate:1.5,vol:0.6,detune:400}),120);
-  }else if(voice==='ツーペア'){
-    playSE({rate:1.5,vol:0.8,detune:400});
-    setTimeout(()=>playSE({rate:1.7,vol:0.7,detune:600}),100);
-    setTimeout(()=>playSE({rate:2.0,vol:0.6,detune:800}),220);
-  }else if(voice==='スリーカード'){
-    playSE({rate:1.8,vol:0.85,detune:600});
-    setTimeout(()=>playSE({rate:2.0,vol:0.8,detune:800}),80);
-    setTimeout(()=>playSE({rate:2.3,vol:0.75,detune:1000}),170);
-    setTimeout(()=>playSE({rate:2.6,vol:0.9,detune:1200}),280);
-  }else{
-    playSE({rate:2.0,vol:0.9,detune:800});
-    setTimeout(()=>playSE({rate:2.3,vol:0.85,detune:1000}),70);
-    setTimeout(()=>playSE({rate:2.6,vol:0.85,detune:1200}),150);
-    setTimeout(()=>playSE({rate:3.0,vol:0.9,detune:1400}),230);
-    setTimeout(()=>playSE({rate:3.5,vol:1.0,detune:1600}),320);
-    setTimeout(()=>playSE({rate:2.5,vol:0.5,detune:1000}),500);
-  }
+function triggerScreenFlash(color,dur=300){
+  const ov=document.createElement('div');
+  ov.style.cssText=`position:fixed;inset:0;background:${color};pointer-events:none;z-index:9999;animation:screenFlash ${dur}ms ease both;`;
+  document.body.appendChild(ov);setTimeout(()=>ov.remove(),dur+50);
 }
-// ── サイバー演出レベル定義 ──
-// 役ごとに演出の派手さを定義
-// level 1=役なし, 2=ワンペア, 3=ツーペア, 4=スリーカード, 5=ストレート
-function getComboLevel(voice){
-  if(voice==='ストレート')return 5;
-  if(voice==='スリーカード')return 4;
-  if(voice==='ツーペア')return 3;
-  if(voice==='ワンペア')return 2;
-  return 1;
+function playGoChime(){
+  try{resumeAC();const t=AC.currentTime;[[523,0,.08],[659,.09,.08],[784,.18,.08],[1047,.27,.25]].forEach(([f,d,dur])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.2,t+d);g.gain.exponentialRampToValueAtTime(.001,t+d+dur);o.connect(g);g.connect(AC.destination);o.start(t+d);o.stop(t+d+dur+.02);});}catch(e){}
 }
 
-// ── 花火パーティクルエフェクト ──
-function CyberParticles({color,level,active}){
-  const canvasRef=useRef(null);
-  const rafRef=useRef(null);
+/* ══════════════════════════════════════════
+   ★ FAN TRANSFORM  — playability first
+   Uses vw-based card width to match --hc-w: clamp(52px,16vw,66px)
+════════════════════════════════════════════ */
+function fanT(idx,count){
+  if(count<=0)return{rotate:0,tx:0,ty:0,z:1};
+
+  // Max ±7° for 5 cards
+  const halfSpread = Math.min(7, 1.8 * (count - 1));
+  const angle = count===1 ? 0 : -halfSpread + (halfSpread*2/(count-1))*idx;
+
+  // Nearly flat arc — max 4px drop at edges
+  const norm = count===1 ? 0 : (idx/(count-1))*2-1;
+  const ty   = 4 * norm*norm;
+
+  // Match --hc-w: clamp(52px, 16vw, 66px)
+  const cardW = Math.min(Math.max(window.innerWidth * 0.16, 52), 66);
+  // 88% spacing → cards slightly overlap, feel like a hand
+  const tx = (idx - (count-1)/2) * cardW * 0.88;
+
+  const z = Math.round(count - Math.abs(idx - (count-1)/2));
+  return {rotate:angle, tx, ty, z};
+}
+
+/* ══════════════════════════════════════════
+   ★ BlastEffect  (particle canvas)
+════════════════════════════════════════════ */
+function BlastEffect({voice,who,active}){
+  const cvRef=useRef(null);const rafRef=useRef(null);
+  const lv=getComboLevel(voice);
+  const mc=who==='player'?CYAN:PINK;
   useEffect(()=>{
     if(!active)return;
-    const canvas=canvasRef.current;
-    if(!canvas)return;
-    const ctx=canvas.getContext('2d');
-    canvas.width=window.innerWidth;
-    canvas.height=window.innerHeight;
-    const cx=canvas.width/2, cy=canvas.height*0.45;
-    const col=color||'#00d4ff';
-    const palettes={
-      1:[col,'#ffffff','#aaffff'],
-      2:[col,'#ffffff','#ffff88','#aaffff'],
-      3:[col,'#ffffff','#ffff44','#ff88ff','#44ffff'],
-      4:[col,'#ff88ff','#ffff44','#ffffff','#ff4488','#44ffff','#88ff44'],
-      5:[col,'#ff00ff','#ffff00','#ffffff','#00ffff','#ff4400','#44ff00','#ff0044'],
-    };
-    const pal=palettes[Math.min(level,5)]||palettes[1];
-    const rndCol=()=>pal[Math.floor(Math.random()*pal.length)];
-    const particles=[];
-    function spawnBurst(bx,by,cnt,speedMult,sizeMult,gravMult,decayMult){
-      for(let i=0;i<cnt;i++){
-        const angle=Math.random()*Math.PI*2;
-        const speed=(3+Math.random()*[0,5,8,12,16,22][level])*speedMult;
-        const size=(Math.random()*[0,3,4,6,8,11][level]+2)*sizeMult;
-        const isStar=Math.random()<0.25;
-        const isTail=level>=2&&Math.random()<0.4;
-        particles.push({
-          x:bx,y:by,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
-          life:1,decay:(0.005+Math.random()*0.01)*decayMult,
-          size,col:rndCol(),
-          isStar,isTail,
-          gravity:0.10*gravMult+Math.random()*0.08,
-          px:bx,py:by,
-        });
-      }
-    }
-    const cnt=[0,25,45,70,100,150][level]||25;
-    spawnBurst(cx,cy,cnt,1,1,1,1);
-    // 第2波（遅延バースト）
-    const t2=setTimeout(()=>{
-      if(level>=2){
-        const n2=[0,0,15,30,50,80][level];
-        const offsets=level>=4?[[cx-80,cy-40],[cx+80,cy-40],[cx,cy+60]]:[[cx-60,cy-30],[cx+60,cy-30]];
-        offsets.forEach(([ox,oy])=>spawnBurst(ox,oy,Math.floor(n2/offsets.length),0.7,0.8,1.2,1.2));
-      }
-    },180);
-    // 第3波（level4以上）
-    const t3=setTimeout(()=>{
-      if(level>=4){
-        for(let i=0;i<4;i++){
-          const ox=cx+(Math.random()-0.5)*canvas.width*0.6;
-          const oy=cy+(Math.random()-0.5)*canvas.height*0.4;
-          spawnBurst(ox,oy,20,0.6,0.7,1.3,1.5);
-        }
-      }
-    },400);
-    let frame=0;
-    function drawStar(ctx,x,y,r,col,alpha){
-      ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=col;
-      ctx.beginPath();
-      for(let i=0;i<10;i++){
-        const a=((i*Math.PI)/5)-Math.PI/2;
-        const rad=i%2===0?r:r*0.42;
-        i===0?ctx.moveTo(x+rad*Math.cos(a),y+rad*Math.sin(a)):ctx.lineTo(x+rad*Math.cos(a),y+rad*Math.sin(a));
-      }
-      ctx.closePath();ctx.fill();ctx.restore();
-    }
+    const cv=cvRef.current;if(!cv)return;
+    cv.width=window.innerWidth;cv.height=window.innerHeight;
+    const ctx=cv.getContext('2d');const cx=cv.width/2,cy=cv.height*.40;
+    const pals={1:[mc,'#fff','#aaffff'],2:[mc,'#fff','#ffe080'],3:[mc,'#ff88ff','#ffff66','#aaffff','#fff'],4:[mc,'#ff88ff','#ffff44','#fff','#ff4488','#44ffff'],5:['#ff00ff','#ffff00','#00ffff','#ff4400','#44ff00','#ff0044','#fff','#00ff88']};
+    const pal=pals[Math.min(lv,5)];const rc=()=>pal[Math.floor(Math.random()*pal.length)];
+    const pts=[];
+    function sp(bx,by,cnt,sm=1,sz=1,gm=1){for(let i=0;i<cnt;i++){const a=Math.random()*Math.PI*2,spd=(4+Math.random()*[0,7,10,16,22,32][lv])*sm,siz=(Math.random()*[0,3,4,6,9,13][lv]+2)*sz,sh=Math.random()<.3?'star':Math.random()<.4?'trail':'dot';pts.push({x:bx,y:by,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,life:1,decay:.004+Math.random()*.009,size:siz,col:rc(),sh,grav:.09*gm+Math.random()*.07,px:bx,py:by});}}
+    sp(cx,cy,[0,30,55,90,140,220][lv]);
+    const t2=setTimeout(()=>{if(lv>=2){const offs=lv>=4?[[cx-90,cy-50],[cx+90,cy-50],[cx,cy+60]]:[[cx-60,cy-30],[cx+60,cy-30]];offs.forEach(([ox,oy])=>sp(ox,oy,Math.floor([0,0,20,40,70,110][lv]/offs.length),.8,.85,1.1));}},160);
+    const t3=setTimeout(()=>{if(lv>=3)for(let i=0;i<(lv>=5?6:3);i++)sp(cx+(Math.random()-.5)*cv.width*.7,cy+(Math.random()-.5)*cv.height*.5,lv>=5?35:18,.65,.8,1.3);},340);
+    const t4=setTimeout(()=>{if(lv>=5)for(let i=0;i<8;i++)sp(cx+(Math.random()-.5)*cv.width*.9,cy+(Math.random()-.5)*cv.height*.7,25,.5,.7,1.5);},550);
+    function dStar(c,x,y,r,col,a){c.save();c.globalAlpha=a;c.fillStyle=col;c.shadowBlur=10;c.shadowColor=col;c.beginPath();for(let i=0;i<10;i++){const ag=(i*Math.PI/5)-Math.PI/2,rd=i%2===0?r:r*.42;i===0?c.moveTo(x+rd*Math.cos(ag),y+rd*Math.sin(ag)):c.lineTo(x+rd*Math.cos(ag),y+rd*Math.sin(ag));}c.closePath();c.fill();c.restore();}
+    let fr=0;
     function draw(){
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      frame++;
-      // 拡散リング
-      const rings=level>=5?6:level>=4?5:level>=3?4:level>=2?3:2;
-      for(let r=0;r<rings;r++){
-        const progress=(frame-r*6)/70;
-        if(progress<=0||progress>1)continue;
-        ctx.save();
-        ctx.globalAlpha=(1-progress)*0.8;
-        ctx.strokeStyle=pal[r%pal.length];
-        ctx.lineWidth=level>=4?4:3;
-        ctx.shadowBlur=12;ctx.shadowColor=pal[r%pal.length];
-        ctx.beginPath();
-        ctx.arc(cx,cy,progress*Math.min(canvas.width,canvas.height)*0.5*(1+r*0.22),0,Math.PI*2);
-        ctx.stroke();ctx.restore();
-      }
-      // フラッシュ（第1フレームのみ）
-      if(frame<=3){
-        ctx.save();
-        ctx.globalAlpha=0.18*(1-frame/4);
-        const g=ctx.createRadialGradient(cx,cy,0,cx,cy,canvas.width*0.5);
-        g.addColorStop(0,'#ffffff');g.addColorStop(0.3,col);g.addColorStop(1,'transparent');
-        ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.restore();
-      }
-      particles.forEach(p=>{
-        p.px=p.x; p.py=p.y;
-        p.x+=p.vx; p.y+=p.vy;
-        p.vx*=0.95; p.vy=p.vy*0.95+p.gravity;
-        p.life-=p.decay;
-        if(p.life<=0)return;
-        const a=Math.max(0,p.life);
-        if(p.isTail){
-          ctx.save();ctx.globalAlpha=a*0.7;
-          ctx.strokeStyle=p.col;ctx.lineWidth=p.size*0.6;
-          ctx.shadowBlur=8;ctx.shadowColor=p.col;
-          ctx.beginPath();ctx.moveTo(p.px,p.py);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore();
-        }
-        if(p.isStar){
-          drawStar(ctx,p.x,p.y,p.size*p.life*1.5,p.col,a);
-        } else {
-          ctx.save();ctx.globalAlpha=a;
-          ctx.fillStyle=p.col;
-          ctx.shadowBlur=level>=3?10:6;ctx.shadowColor=p.col;
-          ctx.beginPath();ctx.arc(p.x,p.y,Math.max(0.5,p.size*p.life),0,Math.PI*2);ctx.fill();ctx.restore();
-        }
-      });
-      const alive=particles.filter(p=>p.life>0);
-      if(alive.length>0||frame<80){rafRef.current=requestAnimationFrame(draw);}
-      else{ctx.clearRect(0,0,canvas.width,canvas.height);}
+      ctx.clearRect(0,0,cv.width,cv.height);fr++;
+      const rings=[0,2,3,5,7,10][lv];
+      for(let r=0;r<rings;r++){const p=(fr-r*5)/80;if(p<=0||p>1)continue;ctx.save();ctx.globalAlpha=(1-p)*.85;ctx.strokeStyle=pal[r%pal.length];ctx.lineWidth=lv>=4?5:3;ctx.shadowBlur=lv>=4?20:10;ctx.shadowColor=pal[r%pal.length];ctx.beginPath();ctx.arc(cx,cy,p*Math.min(cv.width,cv.height)*.52*(1+r*.2),0,Math.PI*2);ctx.stroke();ctx.restore();}
+      if(lv>=5&&fr>2&&fr<50){[0,45,90,135,180,225,270,315].forEach((deg,i)=>{const rd=deg*Math.PI/180,p=Math.min(1,(fr-2)/40),al=(1-p)*.8,bL=Math.max(cv.width,cv.height)*.8*p;ctx.save();ctx.globalAlpha=al;ctx.strokeStyle=pal[i%pal.length];ctx.lineWidth=3;ctx.shadowBlur=16;ctx.shadowColor=pal[i%pal.length];ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(rd)*bL,cy+Math.sin(rd)*bL);ctx.stroke();ctx.restore();});}
+      if(lv===4&&fr>2&&fr<40){[60,180,300].forEach((deg,i)=>{const rd=deg*Math.PI/180,p=Math.min(1,(fr-2)/30),al=(1-p)*.9,bL=Math.max(cv.width,cv.height)*.7*p;ctx.save();ctx.globalAlpha=al;ctx.strokeStyle=pal[i%pal.length];ctx.lineWidth=5;ctx.shadowBlur=20;ctx.shadowColor=pal[i%pal.length];ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(rd)*bL,cy+Math.sin(rd)*bL);ctx.stroke();ctx.restore();});}
+      if(fr<=4){ctx.save();ctx.globalAlpha=.2*(1-fr/5);const g=ctx.createRadialGradient(cx,cy,0,cx,cy,cv.width*.55);g.addColorStop(0,'#fff');g.addColorStop(.25,mc);g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(0,0,cv.width,cv.height);ctx.restore();}
+      pts.forEach(p=>{p.px=p.x;p.py=p.y;p.x+=p.vx;p.y+=p.vy;p.vx*=.94;p.vy=p.vy*.94+p.grav;p.life-=p.decay;if(p.life<=0)return;const a=Math.max(0,p.life);if(p.sh==='trail'){ctx.save();ctx.globalAlpha=a*.75;ctx.strokeStyle=p.col;ctx.lineWidth=p.size*.7;ctx.shadowBlur=10;ctx.shadowColor=p.col;ctx.beginPath();ctx.moveTo(p.px,p.py);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore();}else if(p.sh==='star'){dStar(ctx,p.x,p.y,p.size*p.life*1.5,p.col,a);}else{ctx.save();ctx.globalAlpha=a;ctx.fillStyle=p.col;ctx.shadowBlur=lv>=3?12:6;ctx.shadowColor=p.col;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(.5,p.size*p.life),0,Math.PI*2);ctx.fill();ctx.restore();}});
+      pts.filter(p=>p.life>0).length>0||fr<100?rafRef.current=requestAnimationFrame(draw):ctx.clearRect(0,0,cv.width,cv.height);
     }
     draw();
-    return()=>{cancelAnimationFrame(rafRef.current);clearTimeout(t2);clearTimeout(t3);};
-  },[active,color,level]);
+    return()=>{cancelAnimationFrame(rafRef.current);clearTimeout(t2);clearTimeout(t3);clearTimeout(t4);};
+  },[active]);
   if(!active)return null;
-  return h('canvas',{ref:canvasRef,style:{position:'fixed',inset:0,zIndex:300,pointerEvents:'none',width:'100%',height:'100%'}});
+  return h('canvas',{ref:cvRef,style:{position:'fixed',inset:0,zIndex:300,pointerEvents:'none',width:'100%',height:'100%'}});
 }
 
-// ── サイバーコンボ表示 ──
-function CyberComboDisplay({combo}){
-  const[phase,setPhase]=useState('name'); // 'name' | 'pts' | 'done'
+/* ══════════════════════════════════════════
+   ★ ComboFullEffect
+════════════════════════════════════════════ */
+function ComboFullEffect({voice,who,pts,active}){
+  const[ph,setPh]=useState('enter');
+  const lv=getComboLevel(voice);const mc=who==='player'?CYAN:PINK;
   useEffect(()=>{
-    setPhase('name');
-    const t1=setTimeout(()=>setPhase('pts'),1300);
-    const t2=setTimeout(()=>setPhase('done'),5100);
-    return()=>{clearTimeout(t1);clearTimeout(t2);};
-  },[combo]);
-  if(!combo||phase==='done')return null;
-  const level=getComboLevel(combo.text);
-  const col=combo.color||'#00d4ff';
-  const sizes=[0,22,26,32,40,52];
-  const glows=[0,'0 0 12px',`0 0 20px, 0 0 40px`,`0 0 30px, 0 0 60px, 0 0 90px`,`0 0 40px, 0 0 80px, 0 0 120px`,`0 0 60px, 0 0 120px, 0 0 200px`];
-  const shadow=glows[level].replace(/0 0 \d+px/g,s=>s.replace('px',`px ${col}`));
-  const anim=level>=3?'cyberIn 0.4s cubic-bezier(0.2,1.4,0.5,1) both':'comboPop 0.35s ease both';
-  const cardStyle={position:'relative',fontSize:sizes[level],fontWeight:900,fontFamily:"'Fira Code',monospace",letterSpacing:level>=4?8:level>=3?4:2,textShadow:shadow,whiteSpace:'nowrap',background:'#00000066',borderRadius:12,padding:'6px 18px',backdropFilter:'blur(6px)',border:`1.5px solid ${col}66`,zIndex:1};
-  const isName=phase==='name';
-  const text=isName?combo.text:'+'+(combo.pts||1)+'pt';
-  const textCol=isName?col:'#ffffff';
+    if(!active)return;setPh('enter');
+    const t1=setTimeout(()=>setPh('show'),400);
+    const t2=setTimeout(()=>setPh('pts'),1400);
+    const t3=setTimeout(()=>setPh('out'),4200);
+    return()=>{clearTimeout(t1);clearTimeout(t2);clearTimeout(t3);};
+  },[active,voice]);
+  if(!active||ph==='out')return null;
+  const sz=[0,20,26,34,44,58][Math.min(lv,5)];
+  const glow=`0 0 ${lv*18}px ${mc}, 0 0 ${lv*36}px ${mc}88`;
+  const isShow=ph==='show'||ph==='pts';
+  const txt=ph==='pts'?`+${pts}pt`:voice;
+  const tStyle=lv>=5
+    ?{background:'linear-gradient(135deg,#f0f,#ff0,#0ff,#f0f)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:`drop-shadow(0 0 28px ${mc})`}
+    :{color:mc,textShadow:glow};
   return h('div',{style:{position:'fixed',inset:0,zIndex:320,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',pointerEvents:'none'}},
-    level>=4&&h('div',{style:{position:'absolute',inset:0,background:`radial-gradient(ellipse at center, ${col}22 0%, transparent 65%)`,animation:'gridFlash 0.4s ease'}}),
-    level>=3&&isName&&h('div',{style:{position:'absolute',fontSize:sizes[level]+8,fontWeight:900,color:'#ff003388',fontFamily:"'Fira Code',monospace",letterSpacing:level>=4?8:4,animation:'chromaRed 0.3s ease infinite',pointerEvents:'none',userSelect:'none'}},text),
-    level>=3&&isName&&h('div',{style:{position:'absolute',fontSize:sizes[level]+8,fontWeight:900,color:'#0033ff44',fontFamily:"'Fira Code',monospace",letterSpacing:level>=4?8:4,animation:'chromaBlue 0.3s ease infinite',pointerEvents:'none',userSelect:'none'}},text),
-    h('div',{key:phase,style:{...cardStyle,color:textCol,animation:anim}},
-      text,
-      level>=4&&h('div',{style:{position:'absolute',inset:0,color:'#ffffff',fontFamily:"'Fira Code',monospace",animation:'titleGlitch 0.6s step-end 1',pointerEvents:'none',userSelect:'none'}},text)
+    lv>=3&&h('div',{style:{position:'absolute',inset:0,background:`radial-gradient(ellipse at 50% 40%,${mc}${lv>=5?'33':'1e'} 0%,transparent 58%)`,animation:isShow?'gridFlash .5s ease':''}}),
+    lv>=5&&ph==='enter'&&h('div',{style:{position:'absolute',inset:0,background:'linear-gradient(45deg,#f0f3,#ff03,#0ff3)',animation:'screenFlash 600ms ease both'}}),
+    lv>=3&&isShow&&ph!=='pts'&&[
+      h('div',{key:'r',style:{position:'absolute',fontSize:sz,fontWeight:900,fontFamily:"'Orbitron',monospace",letterSpacing:lv>=4?10:4,color:'#ff003355',animation:'chromaR .25s ease infinite',userSelect:'none'}},voice),
+      h('div',{key:'b',style:{position:'absolute',fontSize:sz,fontWeight:900,fontFamily:"'Orbitron',monospace",letterSpacing:lv>=4?10:4,color:'#0033ff44',animation:'chromaB .25s ease infinite',userSelect:'none'}},voice),
+    ],
+    h('div',{key:ph,style:{position:'relative',fontSize:sz,fontWeight:900,fontFamily:"'Orbitron',monospace",letterSpacing:lv>=4?10:lv>=3?6:3,...tStyle,padding:'8px 22px',borderRadius:12,backdropFilter:'blur(8px)',background:'#00000077',border:`2px solid ${mc}66`,animation:lv>=3?'cyberIn .35s cubic-bezier(.2,1.4,.5,1) both':'comboPop .3s ease both'}},
+      txt,
+      lv>=4&&ph!=='pts'&&h('div',{style:{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff4',fontFamily:"'Orbitron',monospace",fontSize:sz,fontWeight:900,letterSpacing:lv>=4?10:6,animation:'titleGlitch .5s step-end 1',pointerEvents:'none',userSelect:'none'}},voice)
     ),
-    level>=5&&h('div',{style:{position:'absolute',left:0,right:0,height:3,background:`linear-gradient(90deg,transparent,${col},#ffffff,${col},transparent)`,animation:'scanline 0.6s linear 1',pointerEvents:'none',boxShadow:`0 0 12px ${col}`}})
+    lv>=5&&isShow&&h('div',{style:{position:'absolute',left:0,right:0,height:4,background:'linear-gradient(90deg,transparent,#f0f,#ff0,#0ff,transparent)',animation:'scanline .5s linear 1',pointerEvents:'none',boxShadow:'0 0 14px #f0f'}}),
+    lv>=4&&ph==='enter'&&h('div',{style:{position:'absolute',width:200,height:200,left:'50%',top:'40%',border:`4px solid ${mc}`,clipPath:'polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)',animation:'hexOpen .8s ease both',pointerEvents:'none'}}),
+    lv===3&&ph==='enter'&&[
+      h('div',{key:'l',style:{position:'absolute',top:'40%',left:0,right:'50%',height:3,background:`linear-gradient(90deg,transparent,${mc})`,transformOrigin:'right',animation:'dualBeam .6s ease both'}}),
+      h('div',{key:'r',style:{position:'absolute',top:'40%',left:'50%',right:0,height:3,background:`linear-gradient(90deg,${mc},transparent)`,transformOrigin:'left',animation:'dualBeam .6s ease both'}}),
+    ],
+    lv===2&&ph==='enter'&&h('div',{style:{position:'absolute',width:160,height:160,left:'50%',top:'40%',border:`3px solid ${mc}88`,borderRadius:'50%',animation:'softRing .7s ease both'}})
   );
 }
 
-// ── TapCard（タップで出せる）──
-function SlideCard({value,onPlay,disabled,cardRole}){
+/* ══════════════════════════════════════════
+   ★ FieldCard
+════════════════════════════════════════════ */
+function FieldCard({value,by,isWin=false,winLv=1,isNewest=false}){
+  const isBlue=by==='player'||by==='host';
+  const col=isBlue?CYAN:PINK;
+  // win glow: override the CSS default via inline shadow only for win state
+  const winGlows=[
+    '',
+    `0 0 20px ${col}99`,
+    `0 0 28px ${col}, 0 0 60px ${col}88`,
+    `0 0 38px ${col}, 0 0 80px ${col}88, 0 0 14px #fff5`,
+    `0 0 50px ${col}, 0 0 100px ${col}88, 0 0 24px #fff7`,
+    `0 0 70px ${col}, 0 0 140px ${col}88, 0 0 36px #ffff0077, 0 0 10px #fff`,
+  ];
+  const extraShadow = isWin ? winGlows[Math.min(winLv,5)] : null;
+  const cls=`fc ${isBlue?'fc-cyan':'fc-pink'}${isWin?' fc-win':''}${isNewest&&!isWin?' fc-impact':''}`;
+  return h('div',{className:cls,style:extraShadow?{boxShadow:extraShadow}:undefined},
+    h('span',{className:'fc-num',style:{
+      color:col,
+      textShadow:`0 0 ${isWin?28:14}px ${col}, 0 0 ${isWin?8:3}px ${col}`,
+    }},value),
+    h('span',{className:'fc-corner tl',style:{color:col,opacity:.8}},value),
+    h('span',{className:'fc-corner br',style:{color:col,opacity:.8}},value)
+  );
+}
+
+/* ══════════════════════════════════════════
+   ★ HandCard  (absolutely positioned in fan-row)
+════════════════════════════════════════════ */
+function HandCard({value,onPlay,disabled,isBlue,fanIdx,fanCount}){
   const[pressed,setPressed]=useState(false);
-  const isBlue=cardRole==='player'||cardRole==='host';
-  const col=disabled?'#333':isBlue?'#00ffff':'#ff00ff';
-  const cardBg=disabled?'#0a0a1a':isBlue?'linear-gradient(135deg,#050518,#0a0a2e)':'linear-gradient(135deg,#18050a,#2a0015)';
+  const col=disabled?'#444':isBlue?CYAN:PINK;
+  const{rotate,tx,ty,z}=fanT(fanIdx,fanCount);
+  // ft = final resting transform (used by cardDeal animation too)
+  const ft=`rotate(${rotate}deg) translate(${tx}px, ${ty}px)`;
   return h('div',{
-    style:{width:50,height:70,borderRadius:7,flexShrink:0,background:cardBg,
-      border:`1.5px solid ${col}`,
-      display:'flex',alignItems:'center',justifyContent:'center',opacity:disabled?0.3:1,
-      animation:'dealIn 0.22s cubic-bezier(0.2,1.3,0.5,1) both',position:'relative',
-      userSelect:'none',WebkitUserSelect:'none',touchAction:'manipulation',
-      cursor:disabled?'default':'pointer',
-      transform:pressed&&!disabled?'scale(0.93)':'scale(1)',
-      transition:'transform 0.1s ease',
-      boxShadow:disabled?'none':pressed?`0 0 18px ${isBlue?'#4da8ffaa':'#ff6b6baa'}, 0 4px 12px #0006`:`0 2px 10px #0005, 0 0 8px ${isBlue?'#4da8ff44':'#ff6b6b44'}`,},
+    className:`hc ${isBlue?'hc-cyan':'hc-pink'}${disabled?' hc-disabled':''}${pressed&&!disabled?' hc-pressed':''}`,
+    style:{'--ft':ft,transform:ft,zIndex:z+5},
     onPointerDown:()=>{if(!disabled)setPressed(true);},
     onPointerUp:()=>{if(!disabled&&pressed){setPressed(false);onPlay();}},
     onPointerCancel:()=>setPressed(false),
     onPointerLeave:()=>setPressed(false),
     onClick:()=>{if(!disabled)onPlay();},
   },
-    h('span',{style:{fontSize:26,fontWeight:900,color:col,fontFamily:"'Fira Code',monospace",lineHeight:1,pointerEvents:'none',textShadow:`0 0 10px ${col}`}},value),
-    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:col,fontWeight:900,pointerEvents:'none',textShadow:`0 0 6px ${col}`}},value),
-    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:col,fontWeight:900,transform:'rotate(180deg)',pointerEvents:'none',textShadow:`0 0 6px ${col}`}},value)
-  );
-}
-function FieldCard({value,by}){
-  const isBlue=by==='player'||by==='host';
-  const col=isBlue?'#00ffff':'#ff00ff';
-  const cardBg=isBlue?'linear-gradient(135deg,#050518,#0a0a2e)':'linear-gradient(135deg,#18050a,#2a0015)';
-  return h('div',{style:{width:50,height:70,borderRadius:8,flexShrink:0,background:cardBg,border:`1.5px solid ${col}`,display:'flex',alignItems:'center',justifyContent:'center',animation:'dealIn 0.25s cubic-bezier(0.2,1.3,0.5,1) both',position:'relative',boxShadow:`0 0 12px ${col}88,0 0 2px ${col}`}},
-    h('span',{style:{fontSize:26,fontWeight:900,color:col,fontFamily:"'Fira Code',monospace",textShadow:`0 0 10px ${col}`}},value),
-    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:col,fontWeight:900,textShadow:`0 0 6px ${col}`}},value),
-    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:col,fontWeight:900,transform:'rotate(180deg)',textShadow:`0 0 6px ${col}`}},value)
+    h('span',{className:'hc-num',style:{color:col,textShadow:`0 0 10px ${col}`}},value),
+    h('span',{className:'hc-corner tl',style:{color:col}},value),
+    h('span',{className:'hc-corner br',style:{color:col}},value)
   );
 }
 
+/* ══════════════════════════════════════════
+   ★ FanRow  — renders up to 5 cards in an arc
+════════════════════════════════════════════ */
+function FanRow({cards,isBlue,disabledFn,onPlay}){
+  // cards = [{v, origIdx}]
+  const n=cards.length;
+  if(n===0)return null;
+  return h('div',{className:'fan-row'},
+    cards.map(({v,origIdx},fi)=>
+      h(HandCard,{key:`${origIdx}_${v}`,value:v,onPlay:()=>onPlay(origIdx),disabled:disabledFn(v),isBlue,fanIdx:fi,fanCount:n})
+    )
+  );
+}
 
-// ── オンライン対戦 ──
+/* ══════════════════════════════════════════
+   ★ FanHand  — split into row1(0-4) and row2(5-9)
+════════════════════════════════════════════ */
+function FanHand({hand,onPlay,disabledFn,isBlue}){
+  const row1=hand.slice(0,5).map((v,i)=>({v,origIdx:i})).filter(({v})=>v&&v!==0);
+  const row2=hand.slice(5).map((v,i)=>({v,origIdx:i+5})).filter(({v})=>v&&v!==0);
+  return h('div',{style:{position:'relative',overflow:'visible'}},
+    h(FanRow,{cards:row1,isBlue,disabledFn,onPlay}),
+    row2.length>0&&h(FanRow,{cards:row2,isBlue,disabledFn,onPlay})
+  );
+}
+
+/* ══════════════════════════════════════════
+   WaitingScreen
+════════════════════════════════════════════ */
 function WaitingScreen({roomId,onCancel}){
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a0035 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
-    h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:20}},
-      h('div',{style:{fontSize:48,animation:'float 1.5s ease-in-out infinite'}},'⏳'),
-      h('div',{style:{fontSize:14,color:DIM,fontFamily:"'Fira Code',monospace"}},'友達の入室を待っています...'),
-      h('div',{style:{background:PANEL,border:'2px solid '+PINK,borderRadius:16,padding:'20px 32px'}},
-        h('div',{style:{fontSize:11,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:8}},'ルームコード'),
-        h('div',{style:{fontSize:56,fontWeight:900,color:PINK,fontFamily:"'Fira Code',monospace",letterSpacing:8}},roomId)
+  return h('div',{className:'menu-bg'},
+    h('div',{className:'menu-inner'},
+      h('div',{style:{fontSize:46,animation:'float 1.5s ease-in-out infinite'}},'⏳'),
+      h('div',{style:{fontSize:13,color:DIM,fontFamily:"'Fira Code',monospace"}},'友達の入室を待っています...'),
+      h('div',{style:{background:'rgba(12,2,36,.9)',border:`2px solid ${CYAN}`,borderRadius:16,padding:'18px 28px',boxShadow:`0 0 22px ${CYAN}44`}},
+        h('div',{style:{fontSize:10,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:6,letterSpacing:3}},'ROOM CODE'),
+        h('div',{style:{fontSize:50,fontWeight:900,color:CYAN,fontFamily:"'Orbitron',monospace",letterSpacing:8,textShadow:`0 0 18px ${CYAN}`}},roomId)
       ),
-      h('button',{onClick:onCancel,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:12,padding:'10px 24px',color:DIM,fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'キャンセル')
-    )
-  );
-}
-function OnlineEndScreen({data,onHome}){
-  const win=data.winner==='me';
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a0035 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
-    h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:18,width:'100%',maxWidth:320}},
-      h('div',{style:{fontSize:70,animation:'float 2s ease-in-out infinite'}},win?'🏆':'💀'),
-      h('div',{style:{fontSize:36,fontWeight:900,fontFamily:"'Playfair Display',serif",background:win?'linear-gradient(135deg,#00d4ff,#a020f0)':'linear-gradient(135deg,#ff2d6e,#a020f0)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}},win?'YOU WIN!':'YOU LOSE...'),
-      h('div',{style:{display:'flex',gap:20,background:PANEL,border:'1px solid '+BORDER,borderRadius:14,padding:'14px 24px'}},
-        h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'YOU'),h('div',{style:{fontSize:38,fontWeight:900,color:PINK,fontFamily:"'Playfair Display',serif"}},data.myPt+'pt')),
-        h('div',{style:{fontSize:16,color:DIM,alignSelf:'center',fontFamily:"'Fira Code',monospace"}},'vs'),
-        h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'相手'),h('div',{style:{fontSize:38,fontWeight:900,color:RED_C,fontFamily:"'Playfair Display',serif"}},data.opPt+'pt'))
-      ),
-      h('button',{onClick:onHome,style:{background:'linear-gradient(135deg,'+PINK+','+BLUE_C+')',border:'none',borderRadius:14,padding:'13px 40px',color:'#fff',fontSize:17,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:'pointer',letterSpacing:2,width:'100%'}},'🏠 ホームに戻る')
+      h('button',{onClick:onCancel,className:'hud-btn',style:{padding:'10px 24px',fontSize:13}},'キャンセル')
     )
   );
 }
 
-// ── MenuScreen ──
+/* ══════════════════════════════════════════
+   OnlineEndScreen / GameEndScreen / MenuScreen
+════════════════════════════════════════════ */
+function EndScreen({win,pScore,dScore,onRestart,onHome,isOnline,diff}){
+  return h('div',{className:'menu-bg'},
+    h('div',{className:'menu-inner'},
+      h('div',{style:{fontSize:68,animation:'float 2s ease-in-out infinite'}},win?'🏆':'💀'),
+      h('div',{style:{fontSize:32,fontWeight:900,fontFamily:"'Orbitron',monospace",background:win?`linear-gradient(135deg,${CYAN},${VIOLET})`:`linear-gradient(135deg,${PINK},${VIOLET})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}},win?'YOU WIN!':isOnline?'YOU LOSE...':'DEALER WIN'),
+      h('div',{style:{display:'flex',gap:18,background:'rgba(12,2,36,.9)',border:'1px solid rgba(100,40,200,.5)',borderRadius:14,padding:'12px 22px'}},
+        h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:8,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:2}},'YOU'),h('div',{style:{fontSize:36,fontWeight:900,color:CYAN,fontFamily:"'Orbitron',monospace"}},pScore+'pt')),
+        h('div',{style:{fontSize:14,color:DIM,alignSelf:'center',fontFamily:"'Fira Code',monospace"}},'vs'),
+        h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:8,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:2}},isOnline?'相手':'DEALER'),h('div',{style:{fontSize:36,fontWeight:900,color:PINK,fontFamily:"'Orbitron',monospace"}},dScore+'pt'))
+      ),
+      !isOnline&&onRestart&&h('button',{onClick:()=>onRestart(diff),className:'m-btn',style:{width:'100%',background:`linear-gradient(135deg,${CYAN}44,${VIOLET}66)`,border:`1.5px solid ${CYAN}88`,color:'#fff',fontSize:14}},'もう一度'),
+      h('button',{onClick:onHome,className:'m-btn',style:{width:'100%',background:'transparent',border:'1px solid rgba(255,255,255,.18)',color:'rgba(255,255,255,.55)',fontSize:12}},'🏠 ホームに戻る')
+    )
+  );
+}
+
 function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
   const[showRule,setShowRule]=useState(false);
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#150035 40%,#1a0040 70%,#200050 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
+  return h('div',{className:'menu-bg'},
     showRule&&h('div',{style:{position:'fixed',inset:0,background:'#000000ee',zIndex:300,overflowY:'auto',padding:20},onClick:()=>setShowRule(false)},
       h('div',{style:{maxWidth:360,margin:'0 auto',color:'#fff'},onClick:e=>e.stopPropagation()},
-        h('div',{style:{fontSize:10,letterSpacing:6,color:PINK,fontFamily:"'Fira Code',monospace",textAlign:'center',marginBottom:16}},'── ルール説明 ──'),
-        h('div',{style:{background:'#ffffff11',borderRadius:10,padding:12,marginBottom:12}},
-          h('div',{style:{fontSize:13,color:PINK2,fontFamily:"'Fira Code',monospace",fontWeight:700,marginBottom:6}},'🎯 目的'),
-          h('div',{style:{fontSize:12,color:'#ddd',fontFamily:"'Fira Code',monospace",lineHeight:1.7}},'先に15ポイント取った方が勝ち！')
+        h('div',{style:{fontSize:10,letterSpacing:6,color:CYAN,fontFamily:"'Fira Code',monospace",textAlign:'center',marginBottom:14}},'── ルール説明 ──'),
+        h('div',{style:{background:'#ffffff11',borderRadius:10,padding:10,marginBottom:10}},
+          h('div',{style:{fontSize:12,color:CYAN,fontFamily:"'Fira Code',monospace",fontWeight:700,marginBottom:5}},'🎯 目的'),
+          h('div',{style:{fontSize:11,color:'#ddd',fontFamily:"'Fira Code',monospace",lineHeight:1.7}},'先に15ポイント取った方が勝ち！')
         ),
-        h('div',{style:{background:'#ffffff11',borderRadius:10,padding:12,marginBottom:12}},
-          h('div',{style:{fontSize:13,color:PINK2,fontFamily:"'Fira Code',monospace",fontWeight:700,marginBottom:6}},'🃏 遊び方'),
-          [
-            ['🃏 カード','1〜5の数字カードを使う。手札は10枚でスタート'],
-            ['⚡ 出し方','リアルタイムで自由にカードを出せる。どちらが先でもOK！'],
-            ['🎯 得点','場の合計がピッタリ10になった瞬間、最後に出した人がポイント獲得！'],
-            ['⏱ 制限時間','1回のラウンドは10秒。時間切れになると引き分け（±0pt）で場と手札がリセット'],
-            ['📋 カード制限','場に出せるカードは最大4枚。\n・3枚目：出した後の合計が5以上になるカードのみ\n・4枚目：出した後の合計が10以上になるカードのみ\n例）場が2-3なら3枚目は0以上のカードならOK'],
-            ['💥 バースト','合計が10を超えたら出した人が-2pt。場はリセット'],
-            ['♻️ 補充','手札が0になると自動で10枚補充される'],
-          ].map(([icon,tx],i)=>
-            h('div',{key:i,style:{display:'flex',gap:8,fontSize:12,color:'#ccc',fontFamily:"'Fira Code',monospace",padding:'8px 0',borderBottom:'1px solid #333',lineHeight:1.7,alignItems:'flex-start'}},
-              h('span',{style:{minWidth:24,fontSize:14,flexShrink:0}},icon),
-              h('span',{style:{whiteSpace:'pre-wrap'}},tx))
+        h('div',{style:{background:'#ffffff11',borderRadius:10,padding:10,marginBottom:10}},
+          h('div',{style:{fontSize:12,color:CYAN,fontFamily:"'Fira Code',monospace",fontWeight:700,marginBottom:5}},'🃏 遊び方'),
+          [['🃏','1〜5のカード。手札は10枚でスタート'],['⚡','リアルタイムで自由にカードを出せる'],['🎯','場の合計がピッタリ10→最後に出した人が得点'],['⏱','1ラウンド10秒。時間切れは引き分け（±0pt）'],['📋','場は最大4枚。3枚目は合計5以上、4枚目は10以上になるカードのみ'],['💥','合計10超え→出した人が-2pt']].map(([i,t],k)=>
+            h('div',{key:k,style:{display:'flex',gap:7,fontSize:11,color:'#ccc',fontFamily:"'Fira Code',monospace",padding:'6px 0',borderBottom:'1px solid #2a2a2a',lineHeight:1.6}},
+              h('span',{style:{minWidth:18,flexShrink:0}},i),h('span',null,t))
           )
         ),
-        h('div',{style:{background:'#ffffff11',borderRadius:10,padding:12,marginBottom:12}},
-          h('div',{style:{fontSize:13,color:PINK2,fontFamily:"'Fira Code',monospace",fontWeight:700,marginBottom:6}},'⭐ ポイント一覧'),
-          [['ストレート','1-2-3-4の4枚','5pt'],['スリーカード','同じ数字3枚含む','4pt'],['ツーペア','2枚ペア×2組','3pt'],['ワンペア','2枚ペア×1組','2pt'],['バラバラ / 5+5','役なし or 5と5','1pt'],['バースト','合計10超え','自身-2pt']].map(([k,desc,v])=>
-            h('div',{key:k,style:{display:'flex',alignItems:'center',fontSize:11,color:'#ccc',fontFamily:"'Fira Code',monospace",padding:'6px 0',borderBottom:'1px solid #333',gap:6}},
-              h('div',{style:{flex:1}},h('div',{style:{color:'#fff',fontWeight:700,fontSize:12}},k),h('div',{style:{color:'#ffffffaa',fontSize:10,marginTop:2}},desc)),
-              h('span',{style:{color:PINK,fontWeight:700,fontSize:13}},v))
+        h('div',{style:{background:'#ffffff11',borderRadius:10,padding:10,marginBottom:10}},
+          h('div',{style:{fontSize:12,color:CYAN,fontFamily:"'Fira Code',monospace",fontWeight:700,marginBottom:5}},'⭐ ポイント'),
+          [['ストレート','1-2-3-4','5pt'],['スリーカード','同数字×3','4pt'],['ツーペア','ペア×2','3pt'],['ワンペア','ペア×1','2pt'],['役なし / 5+5','—','1pt'],['バースト','10超え','自身-2pt']].map(([k,d,v])=>
+            h('div',{key:k,style:{display:'flex',alignItems:'center',fontSize:10,color:'#ccc',fontFamily:"'Fira Code',monospace",padding:'4px 0',borderBottom:'1px solid #2a2a2a',gap:5}},
+              h('div',{style:{flex:1}},h('span',{style:{color:'#fff',fontWeight:700}},k),h('span',{style:{color:'#ffffff66',marginLeft:5}},d)),
+              h('span',{style:{color:CYAN,fontWeight:700}},v))
           )
         ),
-        h('button',{onClick:()=>setShowRule(false),style:{width:'100%',background:'linear-gradient(135deg,'+PINK+','+BLUE_C+')',border:'none',borderRadius:12,padding:'12px 0',color:'#fff',fontSize:16,fontFamily:"'Fira Code',monospace",fontWeight:900,cursor:'pointer'}},'閉じる')
+        h('button',{onClick:()=>setShowRule(false),className:'m-btn',style:{width:'100%',background:`linear-gradient(135deg,${CYAN}44,${VIOLET}66)`,border:`1.5px solid ${CYAN}66`,color:'#fff',fontSize:14}},'閉じる')
       )
     ),
-    h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:20,width:'100%',maxWidth:320,animation:'fadeUp 0.5s ease'}},
-      h('div',{style:{textAlign:'center',width:'100%'}},
-        h('div',{style:{fontSize:9,letterSpacing:8,color:'#00ffff88',fontFamily:"'Fira Code',monospace",marginBottom:8,opacity:0.8}},'✦ CARD GAME ✦'),
+    h('div',{className:'menu-inner'},
+      h('div',{style:{width:'100%'}},
+        h('div',{style:{fontSize:9,letterSpacing:7,color:CYAN+'88',fontFamily:"'Fira Code',monospace",marginBottom:8}},'✦ CARD GAME ✦'),
         h('div',{style:{position:'relative',display:'inline-block'}},
-          h('div',{style:{fontSize:68,fontWeight:900,lineHeight:1,letterSpacing:3,
-            background:'linear-gradient(135deg,#ffffff 0%,#00ffff 50%,#ff00ff 100%)',
-            WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
-            filter:'drop-shadow(0 2px 24px #00ffff88)'}},'PiCLuK'),
-          h('div',{style:{position:'absolute',inset:0,fontSize:68,fontWeight:900,lineHeight:1,letterSpacing:3,
-            background:'linear-gradient(135deg,#00ffff,#ff00ff)',
-            WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
-            filter:'blur(12px)',opacity:0.5,pointerEvents:'none'}},'PiCLuK')
+          h('div',{style:{fontSize:'clamp(56px,14vw,72px)',fontWeight:900,lineHeight:1,letterSpacing:3,background:`linear-gradient(135deg,#fff 0%,${CYAN} 50%,${PINK} 100%)`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:`drop-shadow(0 2px 20px ${CYAN}88)`}},'PiCLuK'),
+          h('div',{style:{position:'absolute',inset:0,fontSize:'clamp(56px,14vw,72px)',fontWeight:900,lineHeight:1,letterSpacing:3,background:`linear-gradient(135deg,${CYAN},${PINK})`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'blur(12px)',opacity:.4,pointerEvents:'none'}},'PiCLuK')
         ),
-        h('div',{style:{fontSize:11,color:'#00ffff66',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'ver. 06'),
-        h('div',{style:{marginTop:4,height:1,background:'linear-gradient(90deg,transparent,#00ffff88,transparent)'}})
+        h('div',{style:{fontSize:9,color:CYAN+'55',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:6}},'ver. 09'),
+        h('div',{style:{height:1,background:`linear-gradient(90deg,transparent,${CYAN}88,transparent)`}})
       ),
-      h('div',{style:{display:'flex',flexDirection:'column',gap:12,width:'100%'}},
-        h('div',{style:{display:'flex',gap:8}},
-          h('button',{onClick:()=>onSolo('easy'),style:{flex:1,background:'linear-gradient(135deg,#0a2a10,#0a4020)',border:'1.5px solid #00ff8866',borderRadius:12,padding:'14px 0',color:'#00ff88',fontSize:13,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:1,boxShadow:'0 0 10px #00ff8833'}},'EASY'),
-          h('button',{onClick:()=>onSolo('normal'),style:{flex:1,background:'linear-gradient(135deg,#0a0a2e,#1a0a3a)',border:'1.5px solid #00ffff66',borderRadius:12,padding:'14px 0',color:'#00ffff',fontSize:13,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:1,boxShadow:'0 0 10px #00ffff33'}},'NORMAL'),
-          h('button',{onClick:()=>onSolo('hard'),style:{flex:1,background:'linear-gradient(135deg,#2a0010,#3a0020)',border:'1.5px solid #ff00ff66',borderRadius:12,padding:'14px 0',color:'#ff00ff',fontSize:13,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:1,boxShadow:'0 0 10px #ff00ff33'}},'HARD')
+      h('div',{style:{display:'flex',flexDirection:'column',gap:9,width:'100%'}},
+        h('div',{style:{display:'flex',gap:7}},
+          h('button',{onClick:()=>onSolo('easy'), className:'m-btn',style:{flex:1,background:'linear-gradient(135deg,#0a2a10,#0a4020)',border:'1.5px solid #00ff8866',color:'#00ff88'}},'EASY'),
+          h('button',{onClick:()=>onSolo('normal'),className:'m-btn',style:{flex:1,background:`linear-gradient(135deg,#08082a,#14083a)`,border:`1.5px solid ${CYAN}66`,color:CYAN}},'NORMAL'),
+          h('button',{onClick:()=>onSolo('hard'),  className:'m-btn',style:{flex:1,background:'linear-gradient(135deg,#2a0010,#3a0020)',border:`1.5px solid ${PINK}66`,color:PINK}},'HARD')
         ),
-        h('button',{onClick:()=>onOnline(),style:{width:'100%',background:'linear-gradient(135deg,#0a1a30,#0a3040)',border:'1.5px solid #00ffff44',borderRadius:14,padding:'14px 0',color:'#00ffff',fontSize:18,fontFamily:"'Fira Code',monospace",fontWeight:900,cursor:'pointer',letterSpacing:2,boxShadow:'0 0 16px #00ffff22'}},'🌐 オンライン対戦'),
-        h('button',{onClick:()=>setShowRule(true),style:{width:'100%',background:'transparent',border:'1.5px solid #ffffff33',borderRadius:12,padding:'10px 0',color:'#ffffff88',fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer',letterSpacing:2}},'📖 ルール説明')
+        h('button',{onClick:onOnline,className:'m-btn',style:{width:'100%',background:'linear-gradient(135deg,#08182a,#082838)',border:`1.5px solid ${CYAN}44`,color:CYAN,fontSize:16,letterSpacing:2}},'🌐 オンライン対戦'),
+        h('button',{onClick:()=>setShowRule(true),className:'m-btn',style:{width:'100%',background:'transparent',border:'1px solid rgba(255,255,255,.18)',color:'rgba(255,255,255,.5)',fontSize:11,letterSpacing:2}},'📖 ルール説明')
       ),
       h('div',{style:{display:'flex',justifyContent:'flex-end',width:'100%'}},
-        h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid #ffffff33',borderRadius:12,padding:'10px 14px',color:'#ffffff66',fontSize:14,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},musicOn?'🎵':'🔇')
+        h('button',{onClick:toggleMusic,className:'hud-btn'},musicOn?'🎵':'🔇')
       )
     )
   );
 }
-// ── GameEndScreen ──
-function GameEndScreen({data,onRestart,onHome}){
-  const win=data.winner==='player';
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a0035 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
-    h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:18,animation:'fadeUp 0.5s ease'}},
-      h('div',{style:{fontSize:70,animation:'float 2s ease-in-out infinite'}},win?'🏆':'💀'),
-      h('div',{style:{fontSize:36,fontWeight:900,fontFamily:"'Playfair Display',serif",background:win?'linear-gradient(135deg,#00d4ff,#a020f0)':'linear-gradient(135deg,#ff2d6e,#a020f0)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}},win?'YOU WIN!':'DEALER WIN'),
-      h('div',{style:{display:'flex',gap:20,background:PANEL,border:'1px solid '+BORDER,borderRadius:14,padding:'14px 24px'}},
-        h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'YOU'),h('div',{style:{fontSize:38,fontWeight:900,color:PINK,fontFamily:"'Playfair Display',serif"}},data.pPt+'pt')),
-        h('div',{style:{fontSize:16,color:DIM,alignSelf:'center',fontFamily:"'Fira Code',monospace"}},'vs'),
-        h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'DEALER'),h('div',{style:{fontSize:38,fontWeight:900,color:RED_C,fontFamily:"'Playfair Display',serif"}},data.dPt+'pt'))
+
+/* ══════════════════════════════════════════
+   ★ GAME SCREEN (solo + online)
+   Uses CSS grid game-shell for layout
+════════════════════════════════════════════ */
+function GameScreen({
+  /* common */
+  timeLeft,pPt,dPt,rNum,
+  flashMsg,burstAnim,resetFA,
+  comboEffect,winField,winFieldColors,winLv,
+  field,fieldColors,fieldSum,
+  hand,dealerCount,
+  musicEnabled,onToggleMusic,onGoHome,
+  onPlayCard,
+  /* solo-only */
+  difficulty,
+  /* online-only */
+  isOnline,role,
+  /* online overlays */
+  loadingPct,showReady,countNum,
+}){
+  const isHighTime=timeLeft<=5&&timeLeft>0;
+  const isBlue=!isOnline||role==='host';
+  const disabledFn=(v)=>countNum>=0||timeLeft<=0||!canPlay(v,fieldSum,field)||!!comboEffect;
+
+  // Field glow class
+  const lastBy=fieldColors[fieldColors.length-1];
+  let fClass='field-zone';
+  if(comboEffect)fClass+=' '+(comboEffect.who==='player'?'win-cyan':'win-pink');
+  else if(burstAnim)fClass+=' burst-anim';
+  else if(resetFA)fClass+=' reset-anim';
+  else if(fieldSum>=8)fClass+=' '+(lastBy==='player'?'sum-high-p':'sum-high-d');
+  else if(fieldSum>=5)fClass+=' sum-mid';
+
+  const showCards=comboEffect?winField:field;
+  const showColors=comboEffect?winFieldColors:fieldColors;
+  const showSum=comboEffect?10:fieldSum;
+  const sumCol=comboEffect?'#fff':(fieldSum>=8?(lastBy==='player'?CYAN:PINK):(fieldSum>=5?'#ff7700':'#fff'));
+  const diffCol=difficulty==='easy'?'#00ff88':difficulty==='hard'?PINK:CYAN;
+  const diffLbl=difficulty==='easy'?'EASY':difficulty==='hard'?'HARD':'NORMAL';
+
+  const hidden=(loadingPct>=0||showReady)?{visibility:'hidden'}:{};
+
+  return h('div',{className:'game-shell'},
+
+    /* ── Overlays (outside grid flow) ── */
+    comboEffect&&h(BlastEffect,{key:'blast'+Date.now(),voice:comboEffect.voice,who:comboEffect.who,active:true}),
+    comboEffect&&h(ComboFullEffect,{key:'cfx'+Date.now(),voice:comboEffect.voice,who:comboEffect.who,pts:comboEffect.pts,active:true}),
+
+    /* online loading */
+    isOnline&&loadingPct>=0&&!showReady&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'rgba(5,0,15,.96)',pointerEvents:'none'}},
+      h('div',{style:{fontSize:18,fontWeight:900,color:CYAN,letterSpacing:4,marginBottom:20,fontFamily:"'Orbitron',monospace"}},'LOADING...'),
+      h('div',{className:'load-bar-bg'},h('div',{className:'load-bar-fg',style:{width:loadingPct+'%'}})),
+      h('div',{style:{marginTop:9,fontSize:12,color:CYAN+'88',fontFamily:"'Fira Code',monospace"}},loadingPct+'%')
+    ),
+    isOnline&&showReady&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(5,0,15,.92)',pointerEvents:'none'}},
+      h('div',{style:{fontSize:64,fontWeight:900,color:CYAN,animation:'countDown .4s ease both',textShadow:`0 0 38px ${CYAN}`,letterSpacing:8,fontFamily:"'Orbitron',monospace"}},'Ready')
+    ),
+    countNum>=0&&h('div',{className:'ov-center',style:{zIndex:200,background:'rgba(5,0,15,.5)'}},
+      h('div',{key:countNum,className:`cd-num${countNum===0?' go':''}`,style:{fontSize:countNum===0?88:112}},countNum===0?'GO!!':countNum)
+    ),
+    flashMsg&&h('div',{className:'ov-center',style:{zIndex:150}},
+      h('div',{className:'flash-box',style:{
+        background:flashMsg.who==='player'?'rgba(0,28,44,.9)':flashMsg.who==='dealer'?'rgba(44,0,14,.9)':'rgba(14,4,36,.9)',
+        color:flashMsg.who==='player'?CYAN:flashMsg.who==='dealer'?PINK:'#fff',
+        borderColor:flashMsg.who==='player'?CYAN:flashMsg.who==='dealer'?PINK:'rgba(255,255,255,.3)',
+        boxShadow:`0 4px 24px ${flashMsg.who==='player'?CYAN+'44':flashMsg.who==='dealer'?PINK+'44':'transparent'}`,
+      }},flashMsg.text)
+    ),
+
+    /* ════ ZONE 1: HUD ════ */
+    h('div',{className:'hud',...hidden},
+      h('div',{className:`hud-time${isHighTime?' danger':''}`},
+        h('div',{className:'t-label'},'TIME'),
+        h('div',{className:'t-val'},timeLeft)
       ),
-      h('button',{onClick:()=>onRestart(data.diff),style:{background:'linear-gradient(135deg,'+PINK+','+BLUE_C+')',border:'none',borderRadius:14,padding:'13px 40px',color:'#fff',fontSize:17,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:'pointer',letterSpacing:2,width:'100%'}},'もう一度'),
-      h('button',{onClick:onHome,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:14,padding:'11px 40px',color:DIM,fontSize:14,fontFamily:"'Fira Code',monospace",cursor:'pointer',width:'100%'}},'🏠 ホームに戻る')
+      h('div',{className:'hud-scores'},
+        h('div',{className:'hud-score'},
+          h('div',{className:'s-lbl'},'YOU'),
+          h('div',{className:'s-val',style:{color:isOnline&&role!=='host'?PINK:CYAN}},pPt+'pt')
+        ),
+        h('div',{className:'hud-mid'},
+          h('div',{className:'r-lbl'},'R'+rNum),
+          !isOnline&&h('div',{className:'d-lbl',style:{color:diffCol}},diffLbl)
+        ),
+        h('div',{className:'hud-score'},
+          h('div',{className:'s-lbl'},isOnline?'相手':'DEALER'),
+          h('div',{className:'s-val',style:{color:isOnline&&role!=='host'?CYAN:PINK}},dPt+'pt')
+        )
+      ),
+      h('div',{className:'hud-btns'},
+        h('button',{className:'hud-btn',onClick:onToggleMusic},musicEnabled?'🎵':'🔇'),
+        h('button',{className:'hud-btn',onClick:onGoHome},'🏠')
+      )
+    ),
+
+    /* ════ ZONE 2: DEALER STRIP ════ */
+    h('div',{className:'dlr-strip',...hidden},
+      h('div',{className:'dlr-label'},isOnline?'相手':'💀 DEALER'),
+      h('div',{className:'dlr-cards'},
+        Array.from({length:Math.min(dealerCount,16)}).map((_,i)=>
+          h('div',{key:i,className:'dlr-pip'},
+            h('svg',{viewBox:'0 0 8 8',fill:'none'},
+              h('path',{d:'M4 1L7 4L4 7L1 4Z',stroke:isOnline?'rgba(255,45,155,.5)':'rgba(130,40,230,.5)',strokeWidth:.8,fill:'none'})
+            )
+          )
+        )
+      )
+    ),
+
+    /* ════ ZONE 3: FIELD (auto = fills remaining) ════ */
+    h('div',{className:fClass,...hidden},
+      h('div',{className:'field-lbl'},'── 場 ──'),
+
+      h('div',{className:'field-cards'},
+        [0,1,2,3].map(i=>{
+          const v=showCards[i],by=showColors[i];
+          const isNewest = !comboEffect && i===showCards.filter(Boolean).length-1 && !!v;
+          return v
+            ?h(FieldCard,{key:'fc'+i+(comboEffect?'w':''),value:v,by:by||'player',isWin:!!comboEffect,winLv,isNewest})
+            :h('div',{key:'e'+i,className:'fc-slot'});
+        })
+      ),
+
+      showSum>0&&h('div',{className:'field-sum'},
+        h('span',{className:'fs-num',style:{color:sumCol}},showSum),
+        !comboEffect&&h('span',{className:'fs-sub'},'/ 10 あと'+(10-fieldSum))
+      )
+    ),
+
+    /* ════ ZONE 4: HAND ════ */
+    h('div',{className:'hand-zone',...hidden},
+      h('div',{className:'hand-lbl'},'YOU — '+hand.filter(Boolean).length+'枚'),
+      h(FanHand,{hand,onPlay:onPlayCard,disabledFn,isBlue}),
+      h('div',{className:'hint-strip'},
+        [['ストレート','5'],['スリーカード','4'],['ツーペア','3'],['ワンペア','2'],['バースト','-2']].map(([k,v])=>
+          h('div',{key:k,className:'hint-pip'},h('b',null,k),':'+v+'pt')
+        )
+      )
     )
   );
 }
 
-// ── App ──
+/* ══════════════════════════════════════════
+   ★ App
+════════════════════════════════════════════ */
 function App(){
   const[phase,setPhase]=useState('menu');
-  const[pH,setPH]=useState([]);
-  const[dH,setDH]=useState([]);
-  const[field,setField]=useState([]);
-  const[fieldColors,setFieldColors]=useState([]);
+  const[pH,setPH]=useState([]);const[dH,setDH]=useState([]);
+  const[field,setField]=useState([]);const[fieldColors,setFieldColors]=useState([]);
   const[fieldSum,setFieldSum]=useState(0);
-  const[pPt,setPPt]=useState(0);
-  const[dPt,setDPt]=useState(0);
-  const[rNum,setRNum]=useState(1);
-  const[timeLeft,setTimeLeft]=useState(10);
-  const[countNum,setCountNum]=useState(5);
+  const[pPt,setPPt]=useState(0);const[dPt,setDPt]=useState(0);
+  const[rNum,setRNum]=useState(1);const[timeLeft,setTimeLeft]=useState(10);
+  const[countNum,setCountNum]=useState(-1);
   const[flashMsg,setFlashMsg]=useState(null);
-  const[burstAnim,setBurstAnim]=useState(false);
-  const[resetFA,setResetFA]=useState(false);
-  const[comboShow,setComboShow]=useState(null);
+  const[burstAnim,setBurstAnim]=useState(false);const[resetFA,setResetFA]=useState(false);
   const[gameEndData,setGameEndData]=useState(null);
-  const[musicEnabled,setMusicEnabled]=useState(true);
-  const musicEnabledR=useRef(true);
-  const[difficulty,setDifficulty]=useState('normal');
-  const diffRef=useRef('normal');
+  const[musicEnabled,setMusicEnabled]=useState(true);const musicEnabledR=useRef(true);
+  const[difficulty,setDifficulty]=useState('normal');const diffRef=useRef('normal');
   useEffect(()=>{diffRef.current=difficulty;},[difficulty]);
+  const[comboEffect,setComboEffect]=useState(null);
+  const[winField,setWinField]=useState([]);const[winFieldColors,setWinFieldColors]=useState([]);const[winLv,setWinLv]=useState(1);
 
-  // オンライン対戦
-  const[onlinePhase,setOnlinePhase]=useState(''); // waiting|playing|end
+  /* online */
   const[roomId,setRoomId]=useState('');
-  const[onlineRole,setOnlineRole]=useState('');
-  const[onMyHand,setOnMyHand]=useState([]);
-  const[onOpHandCount,setOnOpHandCount]=useState(0);
-  const[onOpHandSum,setOnOpHandSum]=useState(0);
-  const[onField,setOnField]=useState([]);
-  const[onFieldColors,setOnFieldColors]=useState([]);
-  const[onFieldSum,setOnFieldSum]=useState(0);
-  const[onMyPt,setOnMyPt]=useState(0);
-  const[onOpPt,setOnOpPt]=useState(0);
-  const[onRNum,setOnRNum]=useState(1);
-  const[onTimeLeft,setOnTimeLeft]=useState(10);
+  const[onMyHand,setOnMyHand]=useState([]);const[onOpCount,setOnOpCount]=useState(0);
+  const[onField,setOnField]=useState([]);const[onFieldColors,setOnFieldColors]=useState([]);const[onFieldSum,setOnFieldSum]=useState(0);
+  const[onMyPt,setOnMyPt]=useState(0);const[onOpPt,setOnOpPt]=useState(0);
+  const[onRNum,setOnRNum]=useState(1);const[onTimeLeft,setOnTimeLeft]=useState(10);
   const[onCountNum,setOnCountNum]=useState(-1);
-  const[onLoadingPct,setOnLoadingPct]=useState(-1);
-  const[onShowReady,setOnShowReady]=useState(false);
+  const[onLoadPct,setOnLoadPct]=useState(-1);const[onShowReady,setOnShowReady]=useState(false);
   const[onFlashMsg,setOnFlashMsg]=useState(null);
-  const[onBurstAnim,setOnBurstAnim]=useState(false);
-  const[onResetFA,setOnResetFA]=useState(false);
-  const[onComboShow,setOnComboShow]=useState(null);
-  const[onEndData,setOnEndData]=useState(null);
-  const wsR=useRef(null);
-  const onRoleR=useRef('');
-  const onBurstAnimR=useRef(false);
-  const timeupSEFiredR=useRef(false);
-  const comboSEFiredR=useRef(false);
-  const onCdIntervalR=useRef(null);
-  const onTimerIntervalR=useRef(null);
-  const endTimeRef=useRef(0);
-  const onMyHandR=useRef([]);
-  const onFieldR=useRef([]);
-  const onFieldSumR=useRef(0);
-  const onTimeLeftR=useRef(10);
-  const playingStartAtR=useRef(null);
-  const timerRAFR=useRef(null);
-  const serverTimeOffsetR=useRef(0); // サーバー時刻 - クライアント時刻
-  const onCountNumR=useRef(-1);
-  const onFieldAreaRef=useRef(null);
-  const aiRef=useRef(null),timerRef=useRef(null),countRef=useRef(null);
-  const pPtR=useRef(0),dPtR=useRef(0);
-  const pHR=useRef([]),dHR=useRef([]);
-  const fieldR=useRef([]),fieldSumR=useRef(0);
-  const fieldAreaRef=useRef(null);
-  const phaseR=useRef('menu'),countNumR=useRef(-1),lockR=useRef(false);
-  const aiFirstFastRef=useRef(true);
+  const[onBurstAnim,setOnBurstAnim]=useState(false);const[onResetFA,setOnResetFA]=useState(false);
+  const[onComboShow,setOnComboShow]=useState(null);const[onEndData,setOnEndData]=useState(null);
 
-  useEffect(()=>{pPtR.current=pPt;},[pPt]);
-  useEffect(()=>{dPtR.current=dPt;},[dPt]);
-  useEffect(()=>{pHR.current=pH;},[pH]);
-  useEffect(()=>{dHR.current=dH;},[dH]);
-  useEffect(()=>{fieldR.current=field;},[field]);
-  useEffect(()=>{fieldSumR.current=fieldSum;},[fieldSum]);
+  const wsR=useRef(null);const onRoleR=useRef('');const onBurstAnimR=useRef(false);
+  const timeupSEfiredR=useRef(false);const comboSEfiredR=useRef(false);
+  const onCdIvR=useRef(null);const onTmIvR=useRef(null);const endTimeR=useRef(0);
+  const onMyHandR=useRef([]);const onFieldR=useRef([]);const onFieldSumR=useRef(0);
+  const onTLR=useRef(10);const playStartR=useRef(null);const rafTmR=useRef(null);
+  const srvOffsetR=useRef(0);const onCdNumR=useRef(-1);
+  const aiR=useRef(null),tmR=useRef(null),cdR=useRef(null);
+  const pPtR=useRef(0),dPtR=useRef(0),pHR=useRef([]),dHR=useRef([]);
+  const fieldR=useRef([]),fieldSumR=useRef(0);
+  const phaseR=useRef('menu'),cdNumR=useRef(-1),lockR=useRef(false);
+  const aiFastR=useRef(true);
+  const fieldColorsR=useRef([]);
+
+  useEffect(()=>{pPtR.current=pPt;},[pPt]);useEffect(()=>{dPtR.current=dPt;},[dPt]);
+  useEffect(()=>{pHR.current=pH;},[pH]);useEffect(()=>{dHR.current=dH;},[dH]);
+  useEffect(()=>{fieldR.current=field;},[field]);useEffect(()=>{fieldSumR.current=fieldSum;},[fieldSum]);
+  useEffect(()=>{fieldColorsR.current=fieldColors;},[fieldColors]);
   useEffect(()=>{phaseR.current=phase;},[phase]);
 
-
-  // ── オンライン接続 ──
-  function onConnect(onOpen){
-    const ws=new WebSocket(WS_URL);
-    wsR.current=ws;
-    ws.onopen=()=>onOpen(ws);
-    ws.onmessage=(e)=>onMsg(JSON.parse(e.data));
-    ws.onclose=()=>{if(['online_waiting','online_playing'].includes(phaseR.current)){alert('接続が切れました');goOnlineHome();}};
-  }
+  /* ── Online ── */
+  function onConnect(cb){const ws=new WebSocket(WS_URL);wsR.current=ws;ws.onopen=()=>cb(ws);ws.onmessage=(e)=>onMsg(JSON.parse(e.data));ws.onclose=()=>{if(['online_waiting','online_playing'].includes(phaseR.current)){alert('接続が切れました');goOnlineHome();}};}
   function onMsg(msg){
     switch(msg.type){
       case 'created':setRoomId(msg.roomId);setPhase('online_waiting');phaseR.current='online_waiting';break;
-      case 'joined':setRoomId(msg.roomId);stopBGM();setPhase('online_playing');phaseR.current='online_playing';
-        // ping3回送ってオフセット計算してからreadyAck
-        syncServerTime(wsR.current,serverTimeOffsetR,()=>{
-          if(wsR.current&&wsR.current.readyState===WebSocket.OPEN)wsR.current.send(JSON.stringify({type:'readyAck'}));
-        });
-        break;
-      case 'guestJoined':stopBGM();setPhase('online_playing');phaseR.current='online_playing';
-        syncServerTime(wsR.current,serverTimeOffsetR,()=>{
-          if(wsR.current&&wsR.current.readyState===WebSocket.OPEN)wsR.current.send(JSON.stringify({type:'readyAck'}));
-        });
-        break;
-      case 'pong':{
-        const rtt=Date.now()-msg.clientTime;
-        serverTimeOffsetR.current=msg.serverTime+(rtt/2)-Date.now();
-        break;
-      }
+      case 'joined':setRoomId(msg.roomId);stopBGM();setPhase('online_playing');phaseR.current='online_playing';syncServerTime(wsR.current,srvOffsetR,()=>{if(wsR.current&&wsR.current.readyState===WebSocket.OPEN)wsR.current.send(JSON.stringify({type:'readyAck'}));});break;
+      case 'guestJoined':stopBGM();setPhase('online_playing');phaseR.current='online_playing';syncServerTime(wsR.current,srvOffsetR,()=>{if(wsR.current&&wsR.current.readyState===WebSocket.OPEN)wsR.current.send(JSON.stringify({type:'readyAck'}));});break;
+      case 'pong':{const rtt=Date.now()-msg.clientTime;srvOffsetR.current=msg.serverTime+(rtt/2)-Date.now();break;}
       case 'tick':{
-        const role=onRoleR.current;
-        setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];
-        setOnOpHandCount(msg.opHandCount||0);
-        setOnOpHandSum(msg.opHandSum||0);
-        const newField=msg.field||[];
-        setOnField(newField);onFieldR.current=newField;
-        setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
-        // サーバーから fieldOwners が届いた場合: host=青('player'), guest=赤('dealer') で固定
-        if(msg.fieldOwners){
-          const colors=msg.fieldOwners.map(o=>o==='host'?'player':'dealer');
-          setOnFieldColors(colors);
-        } else if(newField.length===0){
-          setOnFieldColors([]);
-        }
-        setOnMyPt(role==='host'?msg.hostPt:msg.guestPt);
-        setOnOpPt(role==='host'?msg.guestPt:msg.hostPt);
-        setOnRNum(msg.rNum||1);
-        // playingStartAtを使ってリアルタイム計算
-        if(msg.phase==='playing'&&msg.playingStartAt){
-          if(playingStartAtR.current!==msg.playingStartAt){
-            playingStartAtR.current=msg.playingStartAt;
-            // RAFで滑らかにタイマー更新
-            if(timerRAFR.current)cancelAnimationFrame(timerRAFR.current);
-            function tickTimer(){
-              const serverNow=Date.now()+serverTimeOffsetR.current;
-              const elapsed=serverNow-playingStartAtR.current;
-              const left=Math.max(0,10-Math.floor(elapsed/1000));
-              setOnTimeLeft(left);onTimeLeftR.current=left;
-              if(left>0)timerRAFR.current=requestAnimationFrame(tickTimer);
-            }
-            timerRAFR.current=requestAnimationFrame(tickTimer);
-          }
-        } else if(msg.phase!=='playing'){
-          if(timerRAFR.current){cancelAnimationFrame(timerRAFR.current);timerRAFR.current=null;}
-          playingStartAtR.current=null;
-          setOnTimeLeft(msg.timeLeft||10);onTimeLeftR.current=msg.timeLeft||10;
-        }
-        // loading/readyフェーズ処理
-        if(msg.phase==='loading'){setOnLoadingPct(msg.loadingPct||0);setOnShowReady(false);}
-        else if(msg.phase==='ready'){setOnLoadingPct(100);setOnShowReady(true);if(musicEnabledR.current){resumeAC();startBGM();}}
-        else{setOnLoadingPct(-1);setOnShowReady(false);}
-        const cd=msg.phase==='countdown'?msg.countdown:-1;
-        const prevCd=onCountNumR.current;
-        if(cd!==prevCd){onCountNumR.current=cd;setOnCountNum(cd);
-          if(prevCd===0&&cd===-1){try{resumeAC();const t=AC.currentTime;[[523,0,0.08],[659,0.09,0.08],[784,0.18,0.08],[1047,0.27,0.25]].forEach(([f,d,dur])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0.2,t+d);g.gain.exponentialRampToValueAtTime(0.001,t+d+dur);o.connect(g);g.connect(AC.destination);o.start(t+d);o.stop(t+d+dur+0.02);});}catch(e){}}
-        }
-        if(msg.flashMsg){const fm=msg.flashMsg;const isMy=fm.by===role;
-          const who2=isMy?'YOU':'相手';
-          const parts=fm.text.split('　');
-          const lbl=parts.length>1?parts.slice(1).join('　'):fm.text;
-          setOnFlashMsg({text:who2+'　'+lbl,who:fm.by});
-          if(fm.voice&&!comboSEFiredR.current){comboSEFiredR.current=true;resumeAC();playComboSfx(fm.voice);}
-        }else{setOnFlashMsg(null);comboSEFiredR.current=false;}
+        const role=onRoleR.current;setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];
+        setOnOpCount(msg.opHandCount||0);
+        const nf=msg.field||[];setOnField(nf);onFieldR.current=nf;setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
+        if(msg.fieldOwners)setOnFieldColors(msg.fieldOwners.map(o=>o==='host'?'player':'dealer'));else if(nf.length===0)setOnFieldColors([]);
+        setOnMyPt(role==='host'?msg.hostPt:msg.guestPt);setOnOpPt(role==='host'?msg.guestPt:msg.hostPt);setOnRNum(msg.rNum||1);
+        if(msg.phase==='playing'&&msg.playingStartAt){if(playStartR.current!==msg.playingStartAt){playStartR.current=msg.playingStartAt;if(rafTmR.current)cancelAnimationFrame(rafTmR.current);function tk(){const sn=Date.now()+srvOffsetR.current;const el=sn-playStartR.current;const left=Math.max(0,10-Math.floor(el/1000));setOnTimeLeft(left);onTLR.current=left;if(left>0)rafTmR.current=requestAnimationFrame(tk);}rafTmR.current=requestAnimationFrame(tk);}}
+        else if(msg.phase!=='playing'){if(rafTmR.current){cancelAnimationFrame(rafTmR.current);rafTmR.current=null;}playStartR.current=null;setOnTimeLeft(msg.timeLeft||10);onTLR.current=msg.timeLeft||10;}
+        if(msg.phase==='loading'){setOnLoadPct(msg.loadingPct||0);setOnShowReady(false);}else if(msg.phase==='ready'){setOnLoadPct(100);setOnShowReady(true);if(musicEnabledR.current){resumeAC();startBGM();}}else{setOnLoadPct(-1);setOnShowReady(false);}
+        const cd=msg.phase==='countdown'?msg.countdown:-1;const pcd=onCdNumR.current;if(cd!==pcd){onCdNumR.current=cd;setOnCountNum(cd);if(pcd===0&&cd===-1)playGoChime();}
+        if(msg.flashMsg){const fm=msg.flashMsg;const isMy=fm.by===role;const who2=isMy?'YOU':'相手';const parts=fm.text.split('　');const lbl=parts.length>1?parts.slice(1).join('　'):fm.text;setOnFlashMsg({text:who2+'　'+lbl,who:isMy?'player':'dealer'});if(fm.voice&&!comboSEfiredR.current){comboSEfiredR.current=true;resumeAC();playComboSfx(fm.voice);}}else{setOnFlashMsg(null);comboSEfiredR.current=false;}
         if(msg.comboShow)setOnComboShow(msg.comboShow);else setOnComboShow(null);
-        const prevBurst=onBurstAnimR.current;
-        const newBurst=!!msg.burstAnim&&msg.phase==='resolving';
-        if(newBurst&&!prevBurst){resumeAC();playBurstSE();}
-        if(newBurst!==prevBurst){setOnBurstAnim(newBurst);onBurstAnimR.current=newBurst;}
+        const pb=onBurstAnimR.current;const nb=!!msg.burstAnim&&msg.phase==='resolving';if(nb&&!pb){resumeAC();playBurstSE();}if(nb!==pb){setOnBurstAnim(nb);onBurstAnimR.current=nb;}
         setOnResetFA(!!msg.resetAnim);
-        if(msg.phase==='timeup'&&!timeupSEFiredR.current){timeupSEFiredR.current=true;playMissSE();}
-        if(msg.phase!=='timeup')timeupSEFiredR.current=false;
-        break;
+        if(msg.phase==='timeup'&&!timeupSEfiredR.current){timeupSEfiredR.current=true;playMissSE();}if(msg.phase!=='timeup')timeupSEfiredR.current=false;break;
       }
       case 'state':
-        // インターバルをクリアしてからリセット
-        if(onCdIntervalR.current){clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;}
-        if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
-        endTimeRef.current=0;
-        setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];
-        setOnOpHandCount(msg.opHandCount||0);
-        setOnOpHandSum(msg.opHandSum||0);
-        setOnField(msg.field||[]);onFieldR.current=msg.field||[];setOnFieldColors([]);
-        setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
-        setOnMyPt(msg.myPt||0);setOnOpPt(msg.opPt||0);
-        setOnRNum(msg.rNum||1);setOnTimeLeft(msg.timeLeft||10);onTimeLeftR.current=msg.timeLeft||10;
-        if(msg.countdownStartAt){
-          const startAt=msg.countdownStartAt;
-          const dur=msg.countdownDuration||5;
-          onCountNumR.current=dur;setOnCountNum(dur);
-          onCdIntervalR.current=setInterval(()=>{
-            const elapsed=Math.floor((Date.now()-startAt)/700);
-            const val=dur-elapsed;
-            if(val<=0){
-              clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;
-              onCountNumR.current=0;setOnCountNum(0);
-              try{resumeAC();const t=AC.currentTime;[[523,0,0.08],[659,0.09,0.08],[784,0.18,0.08],[1047,0.27,0.25]].forEach(([f,d,dur2])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0.2,t+d);g.gain.exponentialRampToValueAtTime(0.001,t+d+dur2);o.connect(g);g.connect(AC.destination);o.start(t+d);o.stop(t+d+dur2+0.02);});}catch(e){}
-            } else {
-              onCountNumR.current=val;setOnCountNum(val);
-            }
-          },100);
-        }
+        if(onCdIvR.current){clearInterval(onCdIvR.current);onCdIvR.current=null;}if(onTmIvR.current){clearInterval(onTmIvR.current);onTmIvR.current=null;}endTimeR.current=0;
+        setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];setOnOpCount(msg.opHandCount||0);
+        setOnField(msg.field||[]);onFieldR.current=msg.field||[];setOnFieldColors([]);setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
+        setOnMyPt(msg.myPt||0);setOnOpPt(msg.opPt||0);setOnRNum(msg.rNum||1);setOnTimeLeft(msg.timeLeft||10);onTLR.current=msg.timeLeft||10;
+        if(msg.countdownStartAt){const sa=msg.countdownStartAt,dur=msg.countdownDuration||5;onCdNumR.current=dur;setOnCountNum(dur);onCdIvR.current=setInterval(()=>{const el=Math.floor((Date.now()-sa)/700);const val=dur-el;if(val<=0){clearInterval(onCdIvR.current);onCdIvR.current=null;onCdNumR.current=0;setOnCountNum(0);setTimeout(()=>{onCdNumR.current=-1;setOnCountNum(-1);playGoChime();},650);}else{onCdNumR.current=val;setOnCountNum(val);}},100);}
         break;
       case 'gameStart':
-        if(onCdIntervalR.current){clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;}
-        if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
-        onCountNumR.current=-1;setOnCountNum(-1);
-        endTimeRef.current=msg.timerEndAt;
-        onTimerIntervalR.current=setInterval(()=>{
-          const remaining=Math.ceil((endTimeRef.current-Date.now())/1000);
-          if(remaining<=0){
-            clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;
-            setOnTimeLeft(0);onTimeLeftR.current=0;
-            playMissSE();
-          } else {
-            setOnTimeLeft(remaining);onTimeLeftR.current=remaining;
-          }
-        },200);
-        break;
-      case 'timeUp':
-        if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
-        setOnTimeLeft(0);onTimeLeftR.current=0;
-        setOnFlashMsg({text:'⏱ 時間切れ！引き分け（±0pt）',who:null});
-        setTimeout(()=>setOnFlashMsg(null),1600);
-        break;
-      case 'handUpdate':const nh=[...onMyHandR.current];nh[msg.idx]=0;setOnMyHand(nh);onMyHandR.current=nh;break;
+        if(onCdIvR.current){clearInterval(onCdIvR.current);onCdIvR.current=null;}if(onTmIvR.current){clearInterval(onTmIvR.current);onTmIvR.current=null;}
+        onCdNumR.current=-1;setOnCountNum(-1);endTimeR.current=msg.timerEndAt;
+        onTmIvR.current=setInterval(()=>{const r=Math.ceil((endTimeR.current-Date.now())/1000);if(r<=0){clearInterval(onTmIvR.current);onTmIvR.current=null;setOnTimeLeft(0);onTLR.current=0;playMissSE();}else{setOnTimeLeft(r);onTLR.current=r;}},200);break;
+      case 'timeUp':if(onTmIvR.current){clearInterval(onTmIvR.current);onTmIvR.current=null;}setOnTimeLeft(0);setOnFlashMsg({text:'⏱ 時間切れ！引き分け（±0pt）',who:null});setTimeout(()=>setOnFlashMsg(null),1600);break;
+      case 'handUpdate':{const nh=[...onMyHandR.current];nh[msg.idx]=0;setOnMyHand(nh);onMyHandR.current=nh;break;}
       case 'newHand':setOnMyHand(msg.hand);onMyHandR.current=msg.hand;break;
       case 'fieldUpdate':setOnField(msg.field);onFieldR.current=msg.field;setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;break;
-      case 'opPlay':
-        const newField=[...onFieldR.current,msg.value];
-        setOnField(newField);onFieldR.current=newField;
-        setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;
-        // ホストの相手=guest=赤('dealer'), ゲストの相手=host=青('player')
-        setOnFieldColors(prev=>[...prev,onRoleR.current==='host'?'dealer':'player']);
-        resumeAC();playTapSE();setOnOpHandCount(c=>Math.max(0,c-1));
-        break;
-      case 'burst':
-        resumeAC();playBurstSE();setOnBurstAnim(true);
-        const ib=msg.msg.by===onRoleR.current;
-        setOnFlashMsg({text:ib?'💥 バースト！あなた-2pt':'💥 相手バースト！相手-2pt',who:msg.msg.by});
-        if(onRoleR.current==='host'){setOnMyPt(msg.hostPt);setOnOpPt(msg.guestPt);}else{setOnMyPt(msg.guestPt);setOnOpPt(msg.hostPt);}
-        setTimeout(()=>{setOnBurstAnim(false);setOnFlashMsg(null);},1000);break;
-      case 'score':
-        if(msg.voice)playComboSfx(msg.voice);
-        setOnResetFA(true);setOnComboShow(msg.combo);
-        if(onRoleR.current==='host'){setOnMyPt(msg.hostPt);setOnOpPt(msg.guestPt);}else{setOnMyPt(msg.guestPt);setOnOpPt(msg.hostPt);}
-        setTimeout(()=>setOnComboShow(null),5200);setTimeout(()=>setOnResetFA(false),1400);break;
+      case 'opPlay':{const nf2=[...onFieldR.current,msg.value];setOnField(nf2);onFieldR.current=nf2;setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;setOnFieldColors(prev=>[...prev,onRoleR.current==='host'?'dealer':'player']);resumeAC();playTapSE();setOnOpCount(c=>Math.max(0,c-1));break;}
+      case 'burst':resumeAC();playBurstSE();setOnBurstAnim(true);{const ib=msg.msg.by===onRoleR.current;setOnFlashMsg({text:ib?'💥 バースト！あなた-2pt':'💥 相手バースト！相手-2pt',who:ib?'player':'dealer'});if(onRoleR.current==='host'){setOnMyPt(msg.hostPt);setOnOpPt(msg.guestPt);}else{setOnMyPt(msg.guestPt);setOnOpPt(msg.hostPt);}setTimeout(()=>{setOnBurstAnim(false);setOnFlashMsg(null);},1000);}break;
+      case 'score':if(msg.voice)playComboSfx(msg.voice);setOnResetFA(true);setOnComboShow(msg.combo);if(onRoleR.current==='host'){setOnMyPt(msg.hostPt);setOnOpPt(msg.guestPt);}else{setOnMyPt(msg.guestPt);setOnOpPt(msg.hostPt);}setTimeout(()=>setOnComboShow(null),5200);setTimeout(()=>setOnResetFA(false),1400);break;
       case 'comboEnd':setOnComboShow(null);break;
       case 'forceReset':setOnResetFA(true);setOnFlashMsg({text:'4枚！強制リセット',who:null});setTimeout(()=>{setOnResetFA(false);setOnFlashMsg(null);},900);break;
-      case 'finish':
-        const isMe=msg.winner===onRoleR.current;
-        setOnEndData({winner:isMe?'me':'op',myPt:onRoleR.current==='host'?msg.hostPt:msg.guestPt,opPt:onRoleR.current==='host'?msg.guestPt:msg.hostPt});
-        stopBGM();setPhase('online_end');phaseR.current='online_end';break;
+      case 'finish':{const isMe=msg.winner===onRoleR.current;setOnEndData({winner:isMe?'me':'op',myPt:onRoleR.current==='host'?msg.hostPt:msg.guestPt,opPt:onRoleR.current==='host'?msg.guestPt:msg.hostPt});stopBGM();setPhase('online_end');phaseR.current='online_end';}break;
       case 'opLeft':alert('相手が退出しました');goOnlineHome();break;
       case 'error':alert(msg.msg);break;
     }
@@ -774,356 +1106,167 @@ function App(){
   function createRoom(){onRoleR.current='host';onConnect(ws=>ws.send(JSON.stringify({type:'create'})));}
   function joinRoom(code){onRoleR.current='guest';onConnect(ws=>ws.send(JSON.stringify({type:'join',roomId:code})));}
   function onlinePlayCard(idx,value){
-    if(onCountNumR.current>=0||onTimeLeftR.current<=0)return;
-    if(!wsR.current||wsR.current.readyState!==WebSocket.OPEN)return;
-    if(!onMyHandR.current[idx])return;
-    if(!canPlay(value,onFieldSumR.current,onFieldR.current))return;
-    resumeAC();playTapSE();
-    const nh=[...onMyHandR.current];nh[idx]=0;setOnMyHand(nh);onMyHandR.current=nh;
-    const nf=[...onFieldR.current,value];const ns=onFieldSumR.current+value;
+    if(onCdNumR.current>=0||onTLR.current<=0)return;if(!wsR.current||wsR.current.readyState!==WebSocket.OPEN)return;
+    if(!onMyHandR.current[idx])return;if(!canPlay(value,onFieldSumR.current,onFieldR.current))return;
+    resumeAC();playTapSE();const nh=[...onMyHandR.current];nh[idx]=0;setOnMyHand(nh);onMyHandR.current=nh;
+    const nf=[...onFieldR.current,value],ns=onFieldSumR.current+value;
     setOnField(nf);onFieldR.current=nf;setOnFieldSum(ns);onFieldSumR.current=ns;
-    // ホスト=青('player'), ゲスト=赤('dealer')
     setOnFieldColors(prev=>[...prev,onRoleR.current==='host'?'player':'dealer']);
     wsR.current.send(JSON.stringify({type:'play',idx,value}));
   }
   function goOnlineHome(){
     if(wsR.current){try{wsR.current.send(JSON.stringify({type:'leave'}));}catch(e){}wsR.current.close();wsR.current=null;}
-    if(onCdIntervalR.current){clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;}
-    if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
-    endTimeRef.current=0;
-    stopBGM();setPhase('menu');phaseR.current='menu';
+    if(onCdIvR.current){clearInterval(onCdIvR.current);onCdIvR.current=null;}if(onTmIvR.current){clearInterval(onTmIvR.current);onTmIvR.current=null;}
+    endTimeR.current=0;stopBGM();setPhase('menu');phaseR.current='menu';
     setOnMyHand([]);setOnField([]);setOnFieldColors([]);setOnFieldSum(0);setOnMyPt(0);setOnOpPt(0);
-    setOnCountNum(-1);onCountNumR.current=-1;setOnFlashMsg(null);setOnEndData(null);setOnLoadingPct(-1);setOnShowReady(false);
-    if(timerRAFR.current){cancelAnimationFrame(timerRAFR.current);timerRAFR.current=null;}playingStartAtR.current=null;
+    setOnCountNum(-1);onCdNumR.current=-1;setOnFlashMsg(null);setOnEndData(null);setOnLoadPct(-1);setOnShowReady(false);
+    if(rafTmR.current){cancelAnimationFrame(rafTmR.current);rafTmR.current=null;}playStartR.current=null;
   }
-  function showOnlineMenu(){
-    // ルーム作成/入室選択
-    const code=window.prompt('ルームコードを入力（作る場合は空欄）');
-    if(code===null)return;
-    if(code.trim()===''){createRoom();}
-    else{joinRoom(code.trim());}
-  }
-
-  function toggleMusic(){if(musicEnabledR.current){stopBGM();musicEnabledR.current=false;setMusicEnabled(false);}else{musicEnabledR.current=true;setMusicEnabled(true);resumeAC();if(phaseR.current==='playing'||phaseR.current==='online_playing')startBGM();}}
-  function clearTimers(){clearTimeout(aiRef.current);clearInterval(timerRef.current);clearTimeout(countRef.current);}
+  function showOnlineMenu(){const code=window.prompt('ルームコードを入力（作る場合は空欄）');if(code===null)return;code.trim()===''?createRoom():joinRoom(code.trim());}
+  function toggleMusic(){if(musicEnabledR.current){stopBGM();musicEnabledR.current=false;setMusicEnabled(false);}else{musicEnabledR.current=true;setMusicEnabled(true);resumeAC();if(['playing','online_playing'].includes(phaseR.current))startBGM();}}
+  function clearTimers(){clearTimeout(aiR.current);clearInterval(tmR.current);clearTimeout(cdR.current);}
   useEffect(()=>()=>clearTimers(),[]);
 
+  /* ── Solo game ── */
   function startGame(diff){
-    if(diff){setDifficulty(diff);diffRef.current=diff;}
-    clearTimers();lockR.current=false;
-    const p=createDeck(),d=createDeck();
-    setPH(p);setDH(d);pHR.current=p;dHR.current=d;
+    if(diff){setDifficulty(diff);diffRef.current=diff;}clearTimers();lockR.current=false;
+    const p=createDeck(),d=createDeck();setPH(p);setDH(d);pHR.current=p;dHR.current=d;
     setPPt(0);setDPt(0);pPtR.current=0;dPtR.current=0;
-    setRNum(1);setField([]);setFieldSum(0);fieldR.current=[];fieldSumR.current=0;
+    setRNum(1);setField([]);setFieldSum(0);fieldR.current=[];fieldSumR.current=0;setFieldColors([]);fieldColorsR.current=[];
     setFlashMsg(null);setBurstAnim(false);setResetFA(false);setGameEndData(null);
+    setComboEffect(null);setWinField([]);setWinFieldColors([]);
     if(musicEnabledR.current)startBGM();doCountdown(p,d,0,0,1);
   }
-
-  function doCountdown(pHand,dHand,pp,dp,rn){
+  function doCountdown(pH2,dH2,pp,dp,rn){
     setPhase('playing');phaseR.current='playing';
-    setField([]);setFieldSum(0);fieldR.current=[];fieldSumR.current=0;
-    setFlashMsg(null);setTimeLeft(10);setComboShow(null);
-    let c=5;setCountNum(c);countNumR.current=c;
-    function tick(){
-      setCountNum(c);countNumR.current=c;
+    setField([]);setFieldSum(0);fieldR.current=[];fieldSumR.current=0;setFieldColors([]);fieldColorsR.current=[];
+    setFlashMsg(null);setTimeLeft(10);setWinField([]);setWinFieldColors([]);setComboEffect(null);
+    let c=5;setCountNum(c);cdNumR.current=c;
+    function tick(){setCountNum(c);cdNumR.current=c;
       if(c===0){
-        // GO！音
-        try{resumeAC();const t=AC.currentTime;
-          [[523,0,0.08],[659,0.09,0.08],[784,0.18,0.08],[1047,0.27,0.25]].forEach(([f,d,dur])=>{
-            const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.value=f;
-            g.gain.setValueAtTime(0.2,t+d);g.gain.exponentialRampToValueAtTime(0.001,t+d+dur);
-            o.connect(g);g.connect(AC.destination);o.start(t+d);o.stop(t+d+dur+0.02);
-          });
-        }catch(e){}
-        setTimeout(()=>{
-          setCountNum(-1);countNumR.current=-1;
-          aiFirstFastRef.current=Math.random()<0.90;
-          startTimer(rn);
-          if(Math.random()<0.50){lockR.current=true;scheduleAi(rn,120);setTimeout(()=>{lockR.current=false;},400);}
-          else{lockR.current=false;scheduleAi(rn,120);}
-        },650);
-        return;
+        playGoChime();
+        setTimeout(()=>{setCountNum(-1);cdNumR.current=-1;aiFastR.current=Math.random()<.90;startTimer(rn);if(Math.random()<.50){lockR.current=true;scheduleAi(rn,120);setTimeout(()=>{lockR.current=false;},400);}else{lockR.current=false;scheduleAi(rn,120);}},650);return;
       }
-      c--;countRef.current=setTimeout(tick,650);
+      c--;cdR.current=setTimeout(tick,650);
     }
     tick();
   }
-
-  function startTimer(rn){
-    clearInterval(timerRef.current);
-    let t=10;setTimeLeft(t);
-    timerRef.current=setInterval(()=>{
-      t--;setTimeLeft(t);
-      if(t<=0){clearInterval(timerRef.current);clearTimeout(aiRef.current);doTimeUp(rn);}
-    },1000);
-  }
-
+  function startTimer(rn){clearInterval(tmR.current);let t=10;setTimeLeft(t);tmR.current=setInterval(()=>{t--;setTimeLeft(t);if(t<=0){clearInterval(tmR.current);clearTimeout(aiR.current);doTimeUp(rn);}},1000);}
   function doTimeUp(rn){
-    resumeAC();playMissSE();
-    setFlashMsg({text:'⏱ 時間切れ！引き分け（±0pt）',color:DIM});
-    const newP=createDeck(),newD=createDeck();
-    setPH(newP);setDH(newD);pHR.current=newP;dHR.current=newD;
-    setTimeout(()=>{
-      setFlashMsg(null);
-      const pp=pPtR.current,dp=dPtR.current;
-      if(pp>=WIN_PT||dp>=WIN_PT){endGame(pp,dp);return;}
-      const nr=rn+1;setRNum(nr);doCountdown(newP,newD,pp,dp,nr);
-    },1600);
+    resumeAC();playMissSE();setFlashMsg({text:'⏱ 時間切れ！引き分け（±0pt）',who:null});
+    const np=createDeck(),nd=createDeck();setPH(np);setDH(nd);pHR.current=np;dHR.current=nd;
+    setTimeout(()=>{setFlashMsg(null);const pp=pPtR.current,dp=dPtR.current;if(pp>=WIN_PT||dp>=WIN_PT){endGame(pp,dp);return;}const nr=rn+1;setRNum(nr);doCountdown(np,nd,pp,dp,nr);},1600);
   }
-
   function scheduleAi(rn,delay=null){
-    clearTimeout(aiRef.current);
-    let d;
-    if(delay!==null){d=delay;}
-    else{
-      const cf=fieldR.current,cs=fieldSumR.current,fl=cf.length;
-      const canWin=dHR.current.some(v=>canPlay(v,cs,cf)&&cs+v===10);
-      const diff=diffRef.current;
-      if(canWin)d=diff==='easy'?600+Math.random()*800:diff==='hard'?50+Math.random()*100:100+Math.random()*200;
-      else if(fl===0){if(diff==='easy')d=800+Math.random()*800;else if(diff==='hard')d=150+Math.random()*200;else d=aiFirstFastRef.current?300+Math.random()*300:1200+Math.random()*800;}
+    clearTimeout(aiR.current);let d;
+    if(delay!==null){d=delay;}else{
+      const cf=fieldR.current,cs=fieldSumR.current,fl=cf.length;const cw=dHR.current.some(v=>canPlay(v,cs,cf)&&cs+v===10);const diff=diffRef.current;
+      if(cw)d=diff==='easy'?600+Math.random()*800:diff==='hard'?50+Math.random()*100:100+Math.random()*200;
+      else if(fl===0){if(diff==='easy')d=800+Math.random()*800;else if(diff==='hard')d=150+Math.random()*200;else d=aiFastR.current?300+Math.random()*300:1200+Math.random()*800;}
       else if(fl===1)d=diff==='easy'?1000+Math.random()*600:diff==='hard'?400+Math.random()*200:1000+Math.random()*400;
       else d=diff==='easy'?1200+Math.random()*800:diff==='hard'?600+Math.random()*300:1500+Math.random()*500;
     }
-    aiRef.current=setTimeout(()=>{if(phaseR.current==='playing'&&countNumR.current<0)aiPlay(rn);},d);
+    aiR.current=setTimeout(()=>{if(phaseR.current==='playing'&&cdNumR.current<0)aiPlay(rn);},d);
   }
-
   function aiPlay(rn){
-    const dHand=dHR.current,cf=fieldR.current,cs=fieldSumR.current;
-    if(!dHand.length)return;
-    const playable=dHand.filter(v=>canPlay(v,cs,cf));
-    if(!playable.length){scheduleAi(rn);return;}
-    const wins=playable.filter(v=>cs+v===10);
-    const safe=playable.filter(v=>cs+v<10);
-    const diff=diffRef.current;
-    const winRate  =diff==='easy'?0.60:diff==='hard'?0.97:0.85;
-    const safeRate5=diff==='easy'?0.25:diff==='hard'?0.60:0.35;
-    const safeBase =diff==='easy'?0.35:diff==='hard'?0.70:0.40;
-    const safeCap  =diff==='easy'?0.50:diff==='hard'?0.90:0.65;
-    const firstRate=diff==='easy'?0.45:diff==='hard'?0.80:0.55;
+    const dHand=dHR.current,cf=fieldR.current,cs=fieldSumR.current;if(!dHand.length)return;
+    const playable=dHand.filter(v=>canPlay(v,cs,cf));if(!playable.length){scheduleAi(rn);return;}
+    const wins=playable.filter(v=>cs+v===10),safe=playable.filter(v=>cs+v<10),diff=diffRef.current;
+    const wr=diff==='easy'?.60:diff==='hard'?.97:.85,sr5=diff==='easy'?.25:diff==='hard'?.60:.35;
+    const sb=diff==='easy'?.35:diff==='hard'?.70:.40,sc=diff==='easy'?.50:diff==='hard'?.90:.65,fr=diff==='easy'?.45:diff==='hard'?.80:.55;
     let chosen=null;
-    if(wins.length&&Math.random()<winRate)chosen=wins.reduce((b,v)=>calcPts([...cf,v]).total>calcPts([...cf,b]).total?v:b,wins[0]);
-    else if(cs>=8){if(diff==='hard'&&Math.random()<0.15&&safe.length)chosen=safe[Math.floor(Math.random()*safe.length)];}
-    else if(cs>=5){if(Math.random()<safeRate5&&safe.length)chosen=safe[Math.floor(Math.random()*safe.length)];}
-    else if(cs>=1){if(Math.random()<Math.min(safeBase+cf.length*0.08,safeCap)&&safe.length)chosen=safe[Math.floor(Math.random()*safe.length)];}
-    else{if(Math.random()<firstRate&&safe.length)chosen=safe.sort((a,b)=>a-b)[0];}
+    if(wins.length&&Math.random()<wr)chosen=wins.reduce((b,v)=>calcPts([...cf,v]).total>calcPts([...cf,b]).total?v:b,wins[0]);
+    else if(cs>=8){if(diff==='hard'&&Math.random()<.15&&safe.length)chosen=safe[Math.floor(Math.random()*safe.length)];}
+    else if(cs>=5){if(Math.random()<sr5&&safe.length)chosen=safe[Math.floor(Math.random()*safe.length)];}
+    else if(cs>=1){if(Math.random()<Math.min(sb+cf.length*.08,sc)&&safe.length)chosen=safe[Math.floor(Math.random()*safe.length)];}
+    else{if(Math.random()<fr&&safe.length)chosen=safe.sort((a,b)=>a-b)[0];}
     if(!chosen){scheduleAi(rn);return;}
-    resumeAC();playTapSE();
-    const idx=dHand.indexOf(chosen);
-    const newDH=dHand.filter((_,i)=>i!==idx);
-    setDH(newDH);dHR.current=newDH;
-    if(!newDH.length){const nd=createDeck();setDH(nd);dHR.current=nd;}
+    resumeAC();playTapSE();const idx=dHand.indexOf(chosen),nDH=dHand.filter((_,i)=>i!==idx);setDH(nDH);dHR.current=nDH;
+    if(!nDH.length){const nd=createDeck();setDH(nd);dHR.current=nd;}
     if(!resolvePlay(chosen,cf,cs,'dealer',rn))scheduleAi(rn);
   }
-
   function playCard(idx){
-    if(phaseR.current!=='playing'||countNumR.current>=0||lockR.current)return;
-    const value=pH[idx];
-    if(!value||!canPlay(value,fieldSum,field))return;
-    clearTimeout(aiRef.current);resumeAC();playTapSE();
-    const newPH=pH.map((v,i)=>i===idx?null:v);
-    setPH(newPH);pHR.current=newPH;
-    if(!newPH.filter(Boolean).length){const nd=createDeck();setTimeout(()=>{setPH(nd);pHR.current=nd;},100);}
-    if(!resolvePlay(value,field,fieldSum,'player',rNum)){clearTimeout(aiRef.current);scheduleAi(rNum);}
+    if(phaseR.current!=='playing'||cdNumR.current>=0||lockR.current)return;
+    const value=pH[idx];if(!value||!canPlay(value,fieldSum,field))return;
+    clearTimeout(aiR.current);resumeAC();playTapSE();
+    const nPH=pH.map((v,i)=>i===idx?null:v);setPH(nPH);pHR.current=nPH;
+    if(!nPH.filter(Boolean).length){const nd=createDeck();setTimeout(()=>{setPH(nd);pHR.current=nd;},100);}
+    if(!resolvePlay(value,field,fieldSum,'player',rNum)){clearTimeout(aiR.current);scheduleAi(rNum);}
   }
-
   function resolvePlay(value,curField,curSum,who,rn){
     const nf=[...curField,value],ns=curSum+value;
     setField(nf);setFieldSum(ns);fieldR.current=nf;fieldSumR.current=ns;
-    setFieldColors(prev=>[...prev,who]);
+    setFieldColors(prev=>{const nc=[...prev,who];fieldColorsR.current=nc;return nc;});
     if(ns>10){
       clearTimers();lockR.current=true;playBurstSE();setBurstAnim(true);
-      const newPP=who==='player'?Math.max(0,pPtR.current-2):pPtR.current;
-      const newDP=who==='dealer'?Math.max(0,dPtR.current-2):dPtR.current;
-      setPPt(newPP);setDPt(newDP);pPtR.current=newPP;dPtR.current=newDP;
-      setFlashMsg({text:who==='player'?'💥 バースト！あなた-2pt':'💥 ディーラーバースト！ディーラー-2pt',color:who==='player'?PINK:RED_C,who});
-      setTimeout(()=>{setBurstAnim(false);resetField();if(newPP>=WIN_PT||newDP>=WIN_PT){endGame(newPP,newDP);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,newPP,newDP,nr);},1000);
+      triggerScreenFlash('#ff000044',400);triggerShake(450);
+      const nPP=who==='player'?Math.max(0,pPtR.current-2):pPtR.current;
+      const nDP=who==='dealer'?Math.max(0,dPtR.current-2):dPtR.current;
+      setPPt(nPP);setDPt(nDP);pPtR.current=nPP;dPtR.current=nDP;
+      setFlashMsg({text:who==='player'?'💥 バースト！あなた-2pt':'💥 ディーラーバースト！-2pt',who});
+      setTimeout(()=>{setBurstAnim(false);resetFieldFn();if(nPP>=WIN_PT||nDP>=WIN_PT){endGame(nPP,nDP);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,nPP,nDP,nr);},1200);
       return true;
     }
     if(ns===10){
-      clearTimers();lockR.current=true;
-      const pts=calcPts(nf);
-      const newPP=who==='player'?pPtR.current+pts.total:pPtR.current;
-      const newDP=who==='dealer'?dPtR.current+pts.total:dPtR.current;
-      setPPt(newPP);setDPt(newDP);pPtR.current=newPP;dPtR.current=newDP;
-      playComboSfx(pts.voice||'役なし');
-      setResetFA(true);
-      const color=who==='player'?PINK:RED_C;
-      setComboShow({text:pts.voice||'10達成！',pts:pts.total,color});
-      setTimeout(()=>setComboShow(null),5200);
-      setTimeout(()=>{setResetFA(false);resetField();if(newPP>=WIN_PT||newDP>=WIN_PT){endGame(newPP,newDP);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,newPP,newDP,nr);},1400);
+      clearTimers();lockR.current=true;const pts=calcPts(nf);const lv=getComboLevel(pts.voice);
+      const nPP=who==='player'?pPtR.current+pts.total:pPtR.current;
+      const nDP=who==='dealer'?dPtR.current+pts.total:dPtR.current;
+      setPPt(nPP);setDPt(nDP);pPtR.current=nPP;dPtR.current=nDP;
+      playComboSfx(pts.voice);setResetFA(true);
+      const fc=['','#00e5ff22','#00ffff33','#ff88ff33','#ffff0055','#ffffff77'];
+      triggerScreenFlash(fc[Math.min(lv,5)],lv>=4?500:300);if(lv>=3)triggerShake(lv>=5?700:400);
+      setWinField(nf);
+      // fieldColors state is async — use ref for accurate snapshot
+      setWinFieldColors([...fieldColorsR.current,who]);
+      setWinLv(lv);setComboEffect({voice:pts.voice,who,pts:pts.total});
+      setTimeout(()=>{setResetFA(false);setComboEffect(null);setWinField([]);setWinFieldColors([]);resetFieldFn();if(nPP>=WIN_PT||nDP>=WIN_PT){endGame(nPP,nDP);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,nPP,nDP,nr);},5000);
       return true;
     }
     if(nf.length>=4){
-      clearTimers();lockR.current=true;setResetFA(true);
-      setFlashMsg({text:'4枚！強制リセット',color:DIM});
-      setTimeout(()=>{setResetFA(false);resetField();const pp=pPtR.current,dp=dPtR.current;if(pp>=WIN_PT||dp>=WIN_PT){endGame(pp,dp);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,pp,dp,nr);},900);
+      clearTimers();lockR.current=true;setResetFA(true);setFlashMsg({text:'4枚！強制リセット',who:null});
+      setTimeout(()=>{setResetFA(false);resetFieldFn();const pp=pPtR.current,dp=dPtR.current;if(pp>=WIN_PT||dp>=WIN_PT){endGame(pp,dp);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,pp,dp,nr);},900);
       return true;
     }
     return false;
   }
-
-  function resetField(){setField([]);setFieldSum(0);fieldR.current=[];fieldSumR.current=0;setFieldColors([]);}
+  function resetFieldFn(){setField([]);setFieldSum(0);fieldR.current=[];fieldSumR.current=0;setFieldColors([]);fieldColorsR.current=[];}
   function endGame(pp,dp){stopBGM();setGameEndData({pPt:pp,dPt:dp,winner:pp>=WIN_PT?'player':'dealer',diff:diffRef.current});setPhase('gameEnd');}
   function goHome(){clearTimers();stopBGM();setPhase('menu');}
 
-  if(phase==='menu')return h(MenuScreen,{onSolo:startGame,onOnline:showOnlineMenu,musicOn:musicEnabled,toggleMusic:toggleMusic});
+  /* ── Render ── */
+  if(phase==='menu')return h(MenuScreen,{onSolo:startGame,onOnline:showOnlineMenu,musicOn:musicEnabled,toggleMusic});
   if(phase==='online_waiting')return h(WaitingScreen,{roomId,onCancel:goOnlineHome});
-  if(phase==='online_end'&&onEndData)return h(OnlineEndScreen,{data:onEndData,onHome:goOnlineHome});
-  if(phase==='gameEnd'&&gameEndData)return h(GameEndScreen,{data:gameEndData,onRestart:startGame,onHome:goHome});
+  if(phase==='online_end'&&onEndData)return h(EndScreen,{win:onEndData.winner==='me',pScore:onEndData.myPt,dScore:onEndData.opPt,onHome:goOnlineHome,isOnline:true});
+  if(phase==='gameEnd'&&gameEndData)return h(EndScreen,{win:gameEndData.winner==='player',pScore:gameEndData.pPt,dScore:gameEndData.dPt,onRestart:startGame,onHome:goHome,diff:gameEndData.diff,isOnline:false});
 
   if(phase==='online_playing'){
     const role=onRoleR.current;
-    const isCardOff=(v)=>onCountNum>=0||onTimeLeft<=0||!canPlay(v,onFieldSum,onField);
-    return h('div',{style:{height:'100dvh',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a0035 100%)',fontFamily:"'Playfair Display',serif",position:'relative',justifyContent:'center'}},
-      
-      onComboShow&&h(CyberParticles,{key:'op_'+onComboShow.text+Date.now(),color:onComboShow.color,level:getComboLevel(onComboShow.text),active:true}),
-      onComboShow&&h(CyberComboDisplay,{key:'oc_'+onComboShow.text+Date.now(),combo:onComboShow}),
-      // ── オーバーレイ（ローディング/Ready/カウントダウン/フラッシュ）──
-      onLoadingPct>=0&&!onShowReady&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'#0a0a1aee',pointerEvents:'none'}},
-        h('div',{style:{fontSize:22,fontWeight:900,color:'#00d4ff',letterSpacing:4,marginBottom:24,fontFamily:"'Fira Code',monospace"}},'LOADING...'),
-        h('div',{style:{width:260,height:14,background:'#1a1a3a',borderRadius:8,border:'1px solid #00d4ff44',overflow:'hidden'}},
-          h('div',{style:{height:'100%',width:onLoadingPct+'%',background:'linear-gradient(90deg,#00d4ff,#a050ff)',borderRadius:8,transition:'width 0.1s linear',boxShadow:'0 0 12px #00d4ff88'}})
-        ),
-        h('div',{style:{marginTop:12,fontSize:14,color:'#00d4ff88',fontFamily:"'Fira Code',monospace"}},onLoadingPct+'%')
-      ),
-      onShowReady&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#0a0a1aee',pointerEvents:'none'}},
-        h('div',{style:{fontSize:72,fontWeight:900,color:'#00d4ff',animation:'countDown 0.4s ease both',textShadow:'0 0 40px #00d4ff',letterSpacing:8,fontFamily:"'Playfair Display',serif"}},'Ready')
-      ),
-      onCountNum>=0&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#2a103066',pointerEvents:'none'}},
-        h('div',{key:onCountNum,style:{fontSize:onCountNum===0?96:120,fontWeight:900,color:onCountNum===0?'#50e080':'#fff',animation:'countDown 0.65s ease both',textShadow:onCountNum===0?'0 0 60px #50e080':'0 0 30px #fff'}},onCountNum===0?'GO!!':onCountNum)
-      ),
-      onFlashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:onComboShow?'flex-start':'center',justifyContent:'center',paddingTop:onComboShow?'clamp(90px,20vh,140px)':'0',pointerEvents:'none'}},
-        h('div',{style:{background:onFlashMsg.who==='host'?'#00203088':onFlashMsg.who==='guest'?'#3a001088':'#1a103088',backdropFilter:'blur(8px)',borderRadius:14,padding:'14px 26px',fontSize:18,fontWeight:900,color:onFlashMsg.who==='host'?'#00d4ff':onFlashMsg.who==='guest'?'#ff2d6e':'#ffffff',boxShadow:'0 4px 32px '+(onFlashMsg.who==='host'?'#00d4ff55':onFlashMsg.who==='guest'?'#ff2d6e55':'#ffffff33'),border:'2px solid '+(onFlashMsg.who==='host'?'#00d4ff':onFlashMsg.who==='guest'?'#ff2d6e':'#ffffff'),animation:'slideIn 0.2s ease',maxWidth:'88vw',textAlign:'center'}},onFlashMsg.text)
-      ),
-
-      // ── エリア1: ヘッダー（固定高さ）──
-      h('div',{style:{flexShrink:0,height:'clamp(50px,12dvh,80px)',zIndex:10,display:'flex',alignItems:'center',padding:'0 12px',paddingTop:'env(safe-area-inset-top,0px)',visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}},
-        h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%'}},
-          h('div',{style:{background:onTimeLeft<=5?RED_C:PANEL,border:'1px solid '+(onTimeLeft<=5?RED_C:BORDER),borderRadius:10,padding:'4px 10px',textAlign:'center',minWidth:54,transition:'background 0.3s',animation:onTimeLeft<=5&&onTimeLeft>0?'pulse 0.5s infinite':'none'}},
-            h('div',{style:{fontSize:8,color:onTimeLeft<=5?'#fff':DIM,fontFamily:"'Fira Code',monospace"}},'TIME'),
-            h('div',{style:{fontSize:24,fontWeight:900,color:onTimeLeft<=5?'#fff':TEXT,lineHeight:1.1}},onTimeLeft)
-          ),
-          h('div',{style:{display:'flex',gap:10,alignItems:'center'}},
-            h('div',{style:{textAlign:'center'}},
-              h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'YOU'),
-              h('div',{style:{fontSize:22,fontWeight:900,color:role==='host'?PINK:RED_C}},onMyPt+'pt'),
-              h('div',{style:{fontSize:9,color:'#ffffff88',fontFamily:"'Fira Code',monospace"}},onMyPt>=WIN_PT?'🏆':('あと'+(WIN_PT-onMyPt)+'pt'))
-            ),
-            h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:10,color:DIM,fontFamily:"'Fira Code',monospace"}},'R'+onRNum)),
-            h('div',{style:{textAlign:'center'}},
-              h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'相手'),
-              h('div',{style:{fontSize:22,fontWeight:900,color:role==='host'?RED_C:PINK}},onOpPt+'pt'),
-              h('div',{style:{fontSize:9,color:'#ffffff88',fontFamily:"'Fira Code',monospace"}},onOpPt>=WIN_PT?'🏆':('あと'+(WIN_PT-onOpPt)+'pt'))
-            )
-          ),
-          h('div',{style:{display:'flex',flexDirection:'column',gap:4,alignItems:'flex-end'}},
-
-            h('div',{style:{display:'flex',gap:6}},
-              h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:8,padding:'4px 8px',color:DIM,fontSize:14,cursor:'pointer'}},musicEnabled?'🎵':'🔇'),
-              h('button',{onClick:goOnlineHome,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:8,padding:'4px 8px',color:DIM,fontSize:12,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'🏠')
-            )
-          )
-        )
-      ),
-      // ── エリア2: 相手エリア（固定高さ）──
-      h('div',{style:{flexShrink:0,height:'clamp(80px,16dvh,130px)',zIndex:10,padding:'0 12px',display:'flex',flexDirection:'column',justifyContent:'center',visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}},
-        h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:12,padding:'6px 10px',height:'100%',display:'flex',flexDirection:'column',justifyContent:'center'}},
-          h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'相手 — '+onOpHandCount+'枚'),
-          h('div',{style:{display:'flex',gap:3,alignItems:'center',justifyContent:'center'}},
-            Array.from({length:Math.min(onOpHandCount,12)}).map((_,i)=>h('div',{key:i,style:{width:22,height:32,borderRadius:4,background:role==='host'?'linear-gradient(135deg,#3d0a0a,#200505)':'linear-gradient(135deg,#0a1e3d,#05101e)',border:'1px solid '+(role==='host'?'#801a1a':'#1a4080'),flexShrink:0}})),
-            onOpHandCount>0&&h('div',{style:{fontSize:13,fontWeight:700,color:'#ffffff',fontFamily:"'Fira Code',monospace",marginLeft:8,flexShrink:0}},onOpHandSum)
-          )
-        )
-      ),
-      // ── エリア3: 場（flex:1）──
-      h('div',{ref:onFieldAreaRef,style:{flexShrink:0,height:'clamp(160px,32dvh,280px)',zIndex:10,padding:'4px 12px',display:'flex',flexDirection:'column',visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}},
-        h('div',{style:{flex:1,minHeight:0,background:PANEL,border:'2px solid '+(onFieldSum>=8?(onFieldColors[onFieldColors.length-1]==='player'?'#4da8ff':RED_C):onFieldSum>=5?'#e08020':BORDER),borderRadius:14,padding:'8px',textAlign:'center',transition:'border-color 0.25s',animation:onResetFA?'resetAnim 0.5s ease':onBurstAnim?'burst 0.5s ease':'none',display:'flex',flexDirection:'column',justifyContent:'center'}},
-          h('div',{style:{fontSize:8,letterSpacing:4,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'── 場 ──'),
-          h('div',{style:{display:'flex',gap:5,justifyContent:'center',alignItems:'center'}},
-            [0,1,2,3].map(i=>onField[i]?h(FieldCard,{key:i,value:onField[i],by:onFieldColors[i]||'player'}):h('div',{key:i,style:{width:50,height:70,flexShrink:0}}))
-          ),
-          h('div',{style:{marginTop:5,height:36,display:'flex',alignItems:'center',justifyContent:'center',gap:8,visibility:onFieldSum>0?'visible':'hidden'}},
-            h('span',{style:{fontSize:28,fontWeight:900,color:onFieldSum>=8?(onFieldColors[onFieldColors.length-1]==='player'?'#4da8ff':RED_C):onFieldSum>=5?'#e08020':TEXT,transition:'color 0.25s'}},onFieldSum),
-            h('span',{style:{fontSize:11,color:DIM,fontFamily:"'Fira Code',monospace"}},'/ 10　あと'+(10-onFieldSum))
-          )
-        )
-      ),
-      // ── エリア4: 手札（固定高さ）──
-      h('div',{style:{flexShrink:0,height:'clamp(160px,28dvh,220px)',zIndex:10,background:PANEL,borderTop:'1.5px solid '+BORDER,padding:'6px 12px',paddingBottom:'calc(6px + env(safe-area-inset-bottom,0px))',display:'flex',flexDirection:'column',justifyContent:'center',visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}},
-        h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'YOU — '+onMyHand.filter(v=>v&&v!==0).length+'枚'),
-        h('div',{style:{display:'flex',gap:4,justifyContent:'center',marginBottom:4,flexWrap:'wrap'}},
-          onMyHand.slice(0,5).map((v,i)=>(!v||v===0)?h('div',{key:i,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+i+'_'+v,value:v,onPlay:()=>onlinePlayCard(i,v),disabled:isCardOff(v),cardRole:onRoleR.current==='host'?'player':'dealer',fieldBottom:onFieldAreaRef.current?onFieldAreaRef.current.getBoundingClientRect().bottom:null}))
-        ),
-        h('div',{style:{display:'flex',gap:4,justifyContent:'center',flexWrap:'wrap'}},
-          onMyHand.slice(5).map((v,i)=>(!v||v===0)?h('div',{key:i+5,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+(i+5)+'_'+v,value:v,onPlay:()=>onlinePlayCard(i+5,v),disabled:isCardOff(v),cardRole:onRoleR.current==='host'?'player':'dealer',fieldBottom:onFieldAreaRef.current?onFieldAreaRef.current.getBoundingClientRect().bottom:null}))
-        )
-      )
-    );
+    const onCombo=onComboShow?{voice:onComboShow.text||'役なし',who:role==='host'?'player':'dealer',pts:onComboShow.pts||1}:null;
+    return h(GameScreen,{
+      timeLeft:onTimeLeft,pPt:onMyPt,dPt:onOpPt,rNum:onRNum,
+      flashMsg:onFlashMsg,burstAnim:onBurstAnim,resetFA:onResetFA,
+      comboEffect:onCombo,winField:[],winFieldColors:[],winLv:1,
+      field:onField,fieldColors:onFieldColors,fieldSum:onFieldSum,
+      hand:onMyHand,dealerCount:onOpCount,
+      musicEnabled,onToggleMusic:toggleMusic,onGoHome:goOnlineHome,
+      onPlayCard:(idx)=>{const v=onMyHandR.current[idx];if(v)onlinePlayCard(idx,v);},
+      difficulty:'normal',isOnline:true,role,
+      loadingPct:onLoadPct,showReady:onShowReady,countNum:onCountNum,
+    });
   }
 
-
-  return h('div',{style:{position:'fixed',inset:0,background:'linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a0035 100%)',fontFamily:"'Playfair Display',serif",overflow:'hidden'}},
-    
-    comboShow&&h(CyberParticles,{key:'p_'+comboShow.text+Date.now(),color:comboShow.color,level:getComboLevel(comboShow.text),active:true}),
-    comboShow&&h(CyberComboDisplay,{key:'c_'+comboShow.text+Date.now(),combo:comboShow}),
-    countNum>=0&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#2a103066',pointerEvents:'none'}},
-      h('div',{key:countNum,style:{fontSize:countNum===0?96:120,fontWeight:900,color:countNum===0?'#50e080':'#fff',animation:'countDown 0.65s ease both',textShadow:countNum===0?'0 0 60px #50e080':'0 0 30px #fff'}},countNum===0?'GO!!':countNum)
-    ),
-    flashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:comboShow?'flex-start':'center',justifyContent:'center',paddingTop:comboShow?'clamp(90px,20vh,140px)':'0',pointerEvents:'none'}},
-      h('div',{style:{background:flashMsg.who==='player'?'#00203088':'#3a001088',backdropFilter:'blur(8px)',borderRadius:14,padding:'14px 26px',fontSize:18,fontWeight:900,color:flashMsg.who==='player'?'#00d4ff':'#ff2d6e',boxShadow:'0 4px 32px '+(flashMsg.who==='player'?'#00d4ff55':'#ff2d6e55'),border:'2px solid '+(flashMsg.who==='player'?'#00d4ff':'#ff2d6e'),animation:'slideIn 0.2s ease',maxWidth:'88vw',textAlign:'center'}},flashMsg.text)
-    ),
-
-    h('div',{style:{position:'fixed',top:0,left:0,right:0,zIndex:10,padding:'48px 12px 0'}},
-      h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:6}},
-        h('div',{style:{background:timeLeft<=5?RED_C:PANEL,border:'1px solid '+(timeLeft<=5?RED_C:BORDER),borderRadius:10,padding:'4px 10px',textAlign:'center',minWidth:54,transition:'background 0.3s',animation:timeLeft<=5?'pulse 0.5s infinite':'none'}},
-          h('div',{style:{fontSize:8,color:timeLeft<=5?'#fff':DIM,fontFamily:"'Fira Code',monospace"}},'TIME'),
-          h('div',{style:{fontSize:24,fontWeight:900,color:timeLeft<=5?'#fff':TEXT,lineHeight:1.1}},timeLeft)
-        ),
-        h('div',{style:{display:'flex',gap:10,alignItems:'center'}},
-          h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'YOU'),  h('div',{style:{fontSize:22,fontWeight:900,color:PINK}},pPt+'pt')),
-          h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:10,color:DIM,fontFamily:"'Fira Code',monospace"}},'R'+rNum),h('div',{style:{fontSize:8,color:difficulty==='easy'?'#00ff88':difficulty==='hard'?RED_C:BLUE_C,fontFamily:"'Fira Code',monospace",fontWeight:700}},difficulty==='easy'?'EASY':difficulty==='hard'?'HARD':'NORMAL')),
-          h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'DEALER'),h('div',{style:{fontSize:22,fontWeight:900,color:RED_C}},dPt+'pt'))
-        ),
-        h('div',{style:{display:'flex',flexDirection:'column',gap:6,alignItems:'flex-end'}},
-          h('div',{style:{display:'flex',gap:10}},
-            h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 12px',color:DIM,fontSize:16,cursor:'pointer'}},musicEnabled?'🎵':'🔇'),
-            h('button',{onClick:goHome,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 10px',color:DIM,fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'🏠')
-          )
-        )
-      ),
-      h('div',{style:{background:PANEL,border:'1px solid '+BORDER,borderRadius:12,padding:'6px 10px',marginBottom:6}},
-        h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'💀 DEALER — '+dH.length+'枚'),
-        h('div',{style:{display:'flex',gap:3,flexWrap:'wrap',justifyContent:'center'}},
-          dH.slice(0,12).map((_,i)=>h('div',{key:i,style:{width:22,height:32,borderRadius:4,background:'linear-gradient(135deg,#1a0515,#0a0010)',border:'1px solid #3a0a2a',flexShrink:0}}))
-        )
-      ),
-      h('div',{ref:fieldAreaRef,style:{background:PANEL,border:'2px solid '+(fieldSum>=8?(fieldColors[fieldColors.length-1]==='player'?'#4da8ff':RED_C):fieldSum>=5?'#e08020':BORDER),borderRadius:14,padding:'10px',textAlign:'center',transition:'border-color 0.25s',marginBottom:6,animation:resetFA?'resetAnim 0.5s ease':burstAnim?'burst 0.5s ease':'none'}},
-        h('div',{style:{fontSize:8,letterSpacing:4,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'── 場 ──'),
-        h('div',{style:{display:'flex',gap:5,justifyContent:'center',alignItems:'center',height:70}},
-          [0,1,2,3].map(i=>field[i]?h(FieldCard,{key:i,value:field[i],by:fieldColors[i]}):h('div',{key:i,style:{width:50,height:70,flexShrink:0}}))
-        ),
-        h('div',{style:{marginTop:5,height:36,display:'flex',alignItems:'center',justifyContent:'center',gap:8,visibility:fieldSum>0?'visible':'hidden'}},
-          h('span',{style:{fontSize:28,fontWeight:900,color:fieldSum>=8?(fieldColors[fieldColors.length-1]==='player'?'#4da8ff':RED_C):fieldSum>=5?'#e08020':TEXT,transition:'color 0.25s'}},fieldSum),
-          h('span',{style:{fontSize:11,color:DIM,fontFamily:"'Fira Code',monospace"}},'/ 10　あと'+(10-fieldSum))
-        )
-      )
-    ),
-    h('div',{style:{position:'fixed',top:'48vh',left:0,right:0,zIndex:50,background:PANEL,borderTop:'1.5px solid '+BORDER,padding:'8px 12px 12px',boxShadow:'0 -4px 16px #0001'}},
-      h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:5}},'YOU — '+pH.filter(Boolean).length+'枚'),
-      h('div',{style:{display:'flex',gap:4,justifyContent:'center',marginBottom:4,flexWrap:'wrap'}},
-        pH.slice(0,5).map((v,i)=>v===null?h('div',{key:i,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:i+'_'+v,value:v,onPlay:()=>playCard(i),disabled:countNum>=0||!canPlay(v,fieldSum,field),cardRole:'player',fieldBottom:fieldAreaRef.current?fieldAreaRef.current.getBoundingClientRect().bottom:null}))
-      ),
-      h('div',{style:{display:'flex',gap:4,justifyContent:'center',flexWrap:'wrap'}},
-        pH.slice(5).map((v,i)=>v===null?h('div',{key:i+5,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:(i+5)+'_'+v,value:v,onPlay:()=>playCard(i+5),disabled:countNum>=0||!canPlay(v,fieldSum,field),cardRole:'player',fieldBottom:fieldAreaRef.current?fieldAreaRef.current.getBoundingClientRect().bottom:null}))
-      )
-    ),
-    h('div',{style:{position:'fixed',bottom:0,left:0,right:0,zIndex:49,padding:'6px 12px 8px',display:'flex',gap:5,flexWrap:'wrap',justifyContent:'center'}},
-      [['ストレート','5pt'],['スリーカード','4pt'],['ツーペア','3pt'],['ワンペア','2pt'],['バースト','自身-2pt']].map(([k,v])=>
-        h('div',{key:k,style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace",background:'#ffffff22',borderRadius:4,padding:'2px 5px',whiteSpace:'nowrap'}},
-          h('span',{style:{color:PINK,fontWeight:700}},k),':',v)
-      )
-    )
-  );
+  /* solo */
+  return h(GameScreen,{
+    timeLeft,pPt,dPt,rNum,
+    flashMsg,burstAnim,resetFA,
+    comboEffect,winField,winFieldColors,winLv,
+    field,fieldColors,fieldSum,
+    hand:pH,dealerCount:dH.length,
+    musicEnabled,onToggleMusic:toggleMusic,onGoHome:goHome,
+    onPlayCard:playCard,
+    difficulty,isOnline:false,role:'',
+    loadingPct:-1,showReady:false,countNum,
+  });
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(h(App,null));
