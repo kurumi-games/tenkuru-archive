@@ -81,9 +81,8 @@ function canPlay(v,fieldSum,field){
   return true;
 }
 
-// ── BGM ──
-const BGM_TRACKS=['Grit Sprint.mp3','Iron Lullaby.mp3'];
-let bgmRunning=false,bgmAudio=null,bgmTrackIdx=0;
+// ── BGM (Grit Sprint.mp3) ──
+let bgmRunning=false,bgmAudio=null;
 function stopBGM(){
   bgmRunning=false;
   if(bgmAudio){bgmAudio.pause();bgmAudio.currentTime=0;}
@@ -91,21 +90,14 @@ function stopBGM(){
 function startBGM(){
   if(bgmRunning)return;
   bgmRunning=true;
-  if(!bgmAudio){
-    bgmAudio=new Audio(BGM_TRACKS[bgmTrackIdx]);
-    bgmAudio.loop=true;
-    bgmAudio.volume=0.45;
-  }
-  bgmAudio.play().catch(()=>{});
-}
-function nextBGM(){
-  bgmTrackIdx=(bgmTrackIdx+1)%BGM_TRACKS.length;
-  const wasRunning=bgmRunning;
-  stopBGM();
-  bgmAudio=new Audio(BGM_TRACKS[bgmTrackIdx]);
-  bgmAudio.loop=true;
-  bgmAudio.volume=0.45;
-  if(wasRunning){bgmRunning=true;bgmAudio.play().catch(()=>{});}
+  try{
+    if(!bgmAudio){
+      bgmAudio=new Audio('Grit_Sprint.mp3');
+      bgmAudio.loop=true;
+      bgmAudio.volume=0.45;
+    }
+    bgmAudio.play().catch(()=>{});
+  }catch(e){bgmRunning=false;}
 }
 
 // ── サーバー時刻同期 ──
@@ -373,9 +365,8 @@ function CyberComboDisplay({combo}){
 function SlideCard({value,onPlay,disabled,cardRole}){
   const[pressed,setPressed]=useState(false);
   const isBlue=cardRole==='player'||cardRole==='host';
-  const cardBg=disabled?'#111122':isBlue?'#0a1e3d':'#3d0a0a';
-  const numColor=disabled?'#333':isBlue?'#4da8ff':'#ff6b6b';
-  const borderN=disabled?'#333':isBlue?'#1a4080':'#801a1a';
+  const col=disabled?'#333':isBlue?'#00ffff':'#ff00ff';
+  const cardBg=disabled?'#0a0a1a':isBlue?'linear-gradient(135deg,#050518,#0a0a2e)':'linear-gradient(135deg,#18050a,#2a0015)';
   return h('div',{
     style:{width:50,height:70,borderRadius:7,flexShrink:0,background:cardBg,
       border:'1.5px solid '+borderN,
@@ -392,20 +383,20 @@ function SlideCard({value,onPlay,disabled,cardRole}){
     onPointerLeave:()=>setPressed(false),
     onClick:()=>{if(!disabled)onPlay();},
   },
-    h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Playfair Display',serif",lineHeight:1,pointerEvents:'none'}},value),
-    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900,pointerEvents:'none'}},value),
-    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,transform:'rotate(180deg)',pointerEvents:'none'}},value)
+    h('span',{style:{fontSize:26,fontWeight:900,color:col,fontFamily:"'Fira Code',monospace",lineHeight:1,pointerEvents:'none',textShadow:`0 0 10px ${col}`}},value),
+    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:col,fontWeight:900,pointerEvents:'none',textShadow:`0 0 6px ${col}`}},value),
+    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:col,fontWeight:900,transform:'rotate(180deg)',pointerEvents:'none',textShadow:`0 0 6px ${col}`}},value)
   );
 }
 function FieldCard({value,by}){
   const isBlue=by==='player'||by==='host';
-  const cardBg=isBlue?'#0a1e3d':'#3d0a0a';
-  const numColor=isBlue?'#4da8ff':'#ff6b6b';
+  const col='#ff00ff';
+  const cardBg='linear-gradient(135deg,#18050a,#2a0015)';
   const borderColor=isBlue?'#1a4080':'#801a1a';
-  return h('div',{style:{width:50,height:70,borderRadius:7,flexShrink:0,background:cardBg,border:'1.5px solid '+borderColor,display:'flex',alignItems:'center',justifyContent:'center',animation:'dealIn 0.25s cubic-bezier(0.2,1.3,0.5,1) both',position:'relative',boxShadow:`0 3px 12px #0006, 0 0 12px ${isBlue?'#4da8ff66':'#ff6b6b66'}`}},
-    h('span',{style:{fontSize:26,fontWeight:900,color:numColor,fontFamily:"'Playfair Display',serif"}},value),
-    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:numColor,fontWeight:900}},value),
-    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:numColor,fontWeight:900,transform:'rotate(180deg)'}},value)
+  return h('div',{style:{width:50,height:70,borderRadius:8,flexShrink:0,background:cardBg,border:`1.5px solid ${col}`,display:'flex',alignItems:'center',justifyContent:'center',animation:'dealIn 0.25s cubic-bezier(0.2,1.3,0.5,1) both',position:'relative',boxShadow:`0 0 12px ${col}88,0 0 2px ${col}`}},
+    h('span',{style:{fontSize:26,fontWeight:900,color:col,fontFamily:"'Fira Code',monospace",textShadow:`0 0 10px ${col}`}},value),
+    h('span',{style:{position:'absolute',top:2,left:4,fontSize:10,color:col,fontWeight:900,textShadow:`0 0 6px ${col}`}},value),
+    h('span',{style:{position:'absolute',bottom:2,right:4,fontSize:10,color:col,fontWeight:900,transform:'rotate(180deg)',textShadow:`0 0 6px ${col}`}},value)
   );
 }
 
@@ -443,7 +434,6 @@ function OnlineEndScreen({data,onHome}){
 // ── MenuScreen ──
 function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
   const[showRule,setShowRule]=useState(false);
-  const[showDiff,setShowDiff]=useState(false);
   return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#150035 40%,#1a0040 70%,#200050 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
     showRule&&h('div',{style:{position:'fixed',inset:0,background:'#000000ee',zIndex:300,overflowY:'auto',padding:20},onClick:()=>setShowRule(false)},
       h('div',{style:{maxWidth:360,margin:'0 auto',color:'#fff'},onClick:e=>e.stopPropagation()},
@@ -454,9 +444,18 @@ function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
         ),
         h('div',{style:{background:'#ffffff11',borderRadius:10,padding:12,marginBottom:12}},
           h('div',{style:{fontSize:13,color:PINK2,fontFamily:"'Fira Code',monospace",fontWeight:700,marginBottom:6}},'🃏 遊び方'),
-          [['🃏 カード','1〜5の数字カードを使う。手札は10枚でスタート'],['⚡ 出し方','リアルタイムで自由にカードを出せる。どちらが先でもOK！'],['🎯 得点','場の合計がピッタリ10になった瞬間、最後に出した人がポイント獲得！'],['⏱ 制限時間','1回のラウンドは10秒。時間切れになると引き分け（±0pt）で場と手札がリセット'],['📋 カード制限','場に出せるカードは最大4枚。3枚目は合計5以上、4枚目は10以上になるカードのみ'],['💥 バースト','合計が10を超えたら出した人が-2pt。場はリセット'],['♻️ 補充','手札が0になると自動で10枚補充される']].map(([icon,tx],i)=>
+          [
+            ['🃏 カード','1〜5の数字カードを使う。手札は10枚でスタート'],
+            ['⚡ 出し方','リアルタイムで自由にカードを出せる。どちらが先でもOK！'],
+            ['🎯 得点','場の合計がピッタリ10になった瞬間、最後に出した人がポイント獲得！'],
+            ['⏱ 制限時間','1回のラウンドは10秒。時間切れになると引き分け（±0pt）で場と手札がリセット'],
+            ['📋 カード制限','場に出せるカードは最大4枚。\n・3枚目：出した後の合計が5以上になるカードのみ\n・4枚目：出した後の合計が10以上になるカードのみ\n例）場が2-3なら3枚目は0以上のカードならOK'],
+            ['💥 バースト','合計が10を超えたら出した人が-2pt。場はリセット'],
+            ['♻️ 補充','手札が0になると自動で10枚補充される'],
+          ].map(([icon,tx],i)=>
             h('div',{key:i,style:{display:'flex',gap:8,fontSize:12,color:'#ccc',fontFamily:"'Fira Code',monospace",padding:'8px 0',borderBottom:'1px solid #333',lineHeight:1.7,alignItems:'flex-start'}},
-              h('span',{style:{minWidth:24,fontSize:14,flexShrink:0}},icon),h('span',{style:{whiteSpace:'pre-wrap'}},tx))
+              h('span',{style:{minWidth:24,fontSize:14,flexShrink:0}},icon),
+              h('span',{style:{whiteSpace:'pre-wrap'}},tx))
           )
         ),
         h('div',{style:{background:'#ffffff11',borderRadius:10,padding:12,marginBottom:12}},
@@ -487,21 +486,16 @@ function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
         h('div',{style:{marginTop:4,height:1,background:'linear-gradient(90deg,transparent,#00ffff88,transparent)'}})
       ),
       h('div',{style:{display:'flex',flexDirection:'column',gap:12,width:'100%'}},
-        h('button',{onClick:()=>setShowDiff(true),style:{width:'100%',background:'linear-gradient(135deg,#0a0a2e,#1a0a3a)',border:'1.5px solid #00ffff66',borderRadius:14,padding:'14px 0',color:'#00ffff',fontSize:17,fontFamily:"'Fira Code',monospace",fontWeight:900,cursor:'pointer',letterSpacing:2,boxShadow:'0 0 16px #00ffff22'}},'練習モード'),
+        h('div',{style:{display:'flex',gap:8}},
+          h('button',{onClick:()=>onSolo('easy'),style:{flex:1,background:'linear-gradient(135deg,#0a2a10,#0a4020)',border:'1.5px solid #00ff8866',borderRadius:12,padding:'14px 0',color:'#00ff88',fontSize:13,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:1,boxShadow:'0 0 10px #00ff8833'}},'EASY'),
+          h('button',{onClick:()=>onSolo('normal'),style:{flex:1,background:'linear-gradient(135deg,#0a0a2e,#1a0a3a)',border:'1.5px solid #00ffff66',borderRadius:12,padding:'14px 0',color:'#00ffff',fontSize:13,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:1,boxShadow:'0 0 10px #00ffff33'}},'NORMAL'),
+          h('button',{onClick:()=>onSolo('hard'),style:{flex:1,background:'linear-gradient(135deg,#2a0010,#3a0020)',border:'1.5px solid #ff00ff66',borderRadius:12,padding:'14px 0',color:'#ff00ff',fontSize:13,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:1,boxShadow:'0 0 10px #ff00ff33'}},'HARD')
+        ),
         h('button',{onClick:()=>onOnline(),style:{width:'100%',background:'linear-gradient(135deg,#0a1a30,#0a3040)',border:'1.5px solid #00ffff44',borderRadius:14,padding:'14px 0',color:'#00ffff',fontSize:18,fontFamily:"'Fira Code',monospace",fontWeight:900,cursor:'pointer',letterSpacing:2,boxShadow:'0 0 16px #00ffff22'}},'🌐 オンライン対戦'),
         h('button',{onClick:()=>setShowRule(true),style:{width:'100%',background:'transparent',border:'1.5px solid #ffffff33',borderRadius:12,padding:'10px 0',color:'#ffffff88',fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer',letterSpacing:2}},'📖 ルール説明')
       ),
-      h('div',{style:{display:'flex',justifyContent:'flex-end',width:'100%',gap:8}},
-        h('button',{onClick:()=>nextBGM(),style:{background:'transparent',border:'1.5px solid #ffffff33',borderRadius:12,padding:'10px 14px',color:'#ffffff66',fontSize:14,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'↻'),
+      h('div',{style:{display:'flex',justifyContent:'flex-end',width:'100%'}},
         h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid #ffffff33',borderRadius:12,padding:'10px 14px',color:'#ffffff66',fontSize:14,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},musicOn?'🎵':'🔇')
-      )
-    ),
-    showDiff&&h('div',{style:{position:'fixed',inset:0,zIndex:400,display:'flex',alignItems:'center',justifyContent:'center',background:'linear-gradient(180deg,#0a0020 0%,#150035 40%,#1a0040 70%,#200050 100%)'},onClick:()=>setShowDiff(false)},
-      h('div',{style:{display:'flex',flexDirection:'column',gap:14,width:280,position:'relative',zIndex:1},onClick:e=>e.stopPropagation()},
-        h('div',{style:{fontSize:11,letterSpacing:4,color:'#00ffff88',fontFamily:"'Fira Code',monospace",textAlign:'center',marginBottom:4}},'── 難易度を選択 ──'),
-        h('button',{onClick:()=>{setShowDiff(false);onSolo('easy');},style:{width:'100%',background:'linear-gradient(135deg,#0a2a10,#0a4020)',border:'1.5px solid #00ff8866',borderRadius:14,padding:'16px 0',color:'#00ff88',fontSize:16,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:2,boxShadow:'0 0 10px #00ff8833'}},'EASY'),
-        h('button',{onClick:()=>{setShowDiff(false);onSolo('normal');},style:{width:'100%',background:'linear-gradient(135deg,#0a0a2e,#1a0a3a)',border:'1.5px solid #00ffff66',borderRadius:14,padding:'16px 0',color:'#00ffff',fontSize:16,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:2,boxShadow:'0 0 10px #00ffff33'}},'NORMAL'),
-        h('button',{onClick:()=>{setShowDiff(false);onSolo('hard');},style:{width:'100%',background:'linear-gradient(135deg,#2a0010,#3a0020)',border:'1.5px solid #ff00ff66',borderRadius:14,padding:'16px 0',color:'#ff00ff',fontSize:16,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:2,boxShadow:'0 0 10px #ff00ff33'}},'HARD')
       )
     )
   );
@@ -1026,7 +1020,6 @@ function App(){
           h('div',{style:{display:'flex',flexDirection:'column',gap:4,alignItems:'flex-end'}},
 
             h('div',{style:{display:'flex',gap:6}},
-              h('button',{onClick:()=>nextBGM(),style:{background:'transparent',border:'1.5px solid #ffffff',borderRadius:8,padding:'4px 8px',color:'#ffffff',fontSize:14,cursor:'pointer'}},'↻'),
               h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:8,padding:'4px 8px',color:DIM,fontSize:14,cursor:'pointer'}},musicEnabled?'🎵':'🔇'),
               h('button',{onClick:goOnlineHome,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:8,padding:'4px 8px',color:DIM,fontSize:12,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'🏠')
             )
@@ -1094,7 +1087,6 @@ function App(){
         ),
         h('div',{style:{display:'flex',flexDirection:'column',gap:6,alignItems:'flex-end'}},
           h('div',{style:{display:'flex',gap:10}},
-            h('button',{onClick:()=>nextBGM(),style:{background:'transparent',border:'1.5px solid #ffffff',borderRadius:10,padding:'6px 12px',color:'#ffffff',fontSize:16,cursor:'pointer'}},'↻'),
             h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 12px',color:DIM,fontSize:16,cursor:'pointer'}},musicEnabled?'🎵':'🔇'),
             h('button',{onClick:goHome,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 10px',color:DIM,fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'🏠')
           )
