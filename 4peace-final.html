@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PiCLuK ver.35</title>
+<title>PiCLuK ver.36</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <style>
@@ -118,7 +118,7 @@ let bgmRunning=false,bgmAudio=null,bgmTrack=0;
 const BGM_TRACKS=[
   {file:'Grit Sprint.mp3',   label:'♪1', name:'Grit Sprint'},
   {file:'Iron Lullaby.mp3',  label:'♪2', name:'Iron Lullaby'},
-  {file:'Brass_Blitz.mp3',   label:'♪3', name:'Brass Blitz'},
+  {file:'Brass Blitz.mp3',   label:'♪3', name:'Brass Blitz'},
 ];
 function stopBGM(){
   bgmRunning=false;
@@ -840,7 +840,7 @@ function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
             WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
             filter:'blur(12px)',opacity:0.5,pointerEvents:'none'}},'PiCLuK')
         ),
-        h('div',{style:{fontSize:11,color:'#00ffff66',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'ver. 35'),
+        h('div',{style:{fontSize:11,color:'#00ffff66',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'ver. 36'),
         h('div',{style:{marginTop:4,height:1,background:'linear-gradient(90deg,transparent,#00ffff88,transparent)'}})
       ),
       h('div',{style:{display:'flex',flexDirection:'column',gap:12,width:'100%'}},
