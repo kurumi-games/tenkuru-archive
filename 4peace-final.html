@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PiCLuK ver.29</title>
+<title>PiCLuK ver.32</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <style>
@@ -114,7 +114,8 @@ function canPlay(v,fieldSum,field){
 }
 
 // ── BGM (Grit Sprint.mp3) ──
-let bgmRunning=false,bgmAudio=null;
+let bgmRunning=false,bgmAudio=null,bgmTrack=0;
+const BGM_TRACKS=['Grit Sprint.mp3','Iron Lullaby.mp3'];
 function stopBGM(){
   bgmRunning=false;
   if(bgmAudio){bgmAudio.pause();bgmAudio.currentTime=0;}
@@ -123,13 +124,22 @@ function startBGM(){
   if(bgmRunning)return;
   bgmRunning=true;
   try{
-    if(!bgmAudio){
-      bgmAudio=new Audio('Grit_Sprint.mp3');
+    if(!bgmAudio||bgmAudio._track!==bgmTrack){
+      if(bgmAudio){bgmAudio.pause();}
+      bgmAudio=new Audio(BGM_TRACKS[bgmTrack]);
+      bgmAudio._track=bgmTrack;
       bgmAudio.loop=true;
       bgmAudio.volume=0.45;
     }
     bgmAudio.play().catch(()=>{});
   }catch(e){bgmRunning=false;}
+}
+function switchBGMTrack(){
+  const wasRunning=bgmRunning;
+  stopBGM();
+  bgmAudio=null;
+  bgmTrack=(bgmTrack+1)%BGM_TRACKS.length;
+  if(wasRunning)startBGM();
 }
 
 // ── サーバー時刻同期 ──
@@ -715,8 +725,9 @@ function FieldCard({value,by}){
   const isBlue=by==='player'||by==='host';
   const col=isBlue?'var(--neon-cyan)':'var(--neon-magenta)';
   const glow=isBlue?'var(--glow-cyan)':'var(--glow-magenta)';
+  // 手札と同じアクセントカラーを数字ごとに適用
   const accentMap={1:'#00e5ff',2:'#40ffcc',3:'#a060ff',4:'#ff8800',5:'#ff2d9b'};
-  const accent=isBlue?(accentMap[value]||'#00e5ff'):'#ff2d9b';
+  const accent=accentMap[value]||'#00e5ff';
   return h('div',{style:{
     width:50,height:70,borderRadius:10,flexShrink:0,
     background:isBlue
@@ -821,7 +832,7 @@ function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
             WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
             filter:'blur(12px)',opacity:0.5,pointerEvents:'none'}},'PiCLuK')
         ),
-        h('div',{style:{fontSize:11,color:'#00ffff66',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'ver. 29'),
+        h('div',{style:{fontSize:11,color:'#00ffff66',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'ver. 32'),
         h('div',{style:{marginTop:4,height:1,background:'linear-gradient(90deg,transparent,#00ffff88,transparent)'}})
       ),
       h('div',{style:{display:'flex',flexDirection:'column',gap:12,width:'100%'}},
@@ -877,6 +888,7 @@ function App(){
   const[gameEndData,setGameEndData]=useState(null);
   const[musicEnabled,setMusicEnabled]=useState(true);
   const musicEnabledR=useRef(true);
+  const[bgmTrackNum,setBgmTrackNum]=useState(0);
   const[difficulty,setDifficulty]=useState('normal');
   const diffRef=useRef('normal');
   useEffect(()=>{diffRef.current=difficulty;},[difficulty]);
@@ -1389,8 +1401,12 @@ function App(){
         )
       ),
       // ── エリア4: 手札（固定高さ）──
-      h('div',{style:{flexShrink:0,height:'clamp(160px,28dvh,220px)',zIndex:10,background:PANEL,borderTop:'1.5px solid '+BORDER,padding:'6px 12px',paddingBottom:'calc(6px + env(safe-area-inset-bottom,0px))',display:'flex',flexDirection:'column',justifyContent:'center',visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}},
-        h('div',{style:{fontSize:8,letterSpacing:3,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:4}},'YOU — '+onMyHand.filter(v=>v&&v!==0).length+'枚'),
+      h('div',{style:{flexShrink:0,height:'clamp(160px,28dvh,220px)',zIndex:10,
+        background:'linear-gradient(180deg,#0a2a12 0%,#0d3318 40%,#0a2a12 100%)',
+        borderTop:'2px solid #1a5a28',
+        boxShadow:'0 -4px 24px rgba(0,80,20,0.5), inset 0 1px 0 rgba(100,255,120,0.15)',
+        padding:'6px 12px',paddingBottom:'calc(6px + env(safe-area-inset-bottom,0px))',display:'flex',flexDirection:'column',justifyContent:'center',visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}},
+        h('div',{style:{fontSize:8,letterSpacing:3,color:'#80ffaa',fontFamily:"'Fira Code',monospace",marginBottom:4,textShadow:'0 0 8px #00ff44'}},'YOU — '+onMyHand.filter(v=>v&&v!==0).length+'枚'),
         h('div',{style:{display:'flex',gap:4,justifyContent:'center',marginBottom:4,flexWrap:'wrap'}},
           onMyHand.slice(0,5).map((v,i)=>(!v||v===0)?h('div',{key:i,style:{width:50,height:70,flexShrink:0}}):h(SlideCard,{key:'c'+i+'_'+v,value:v,onPlay:()=>onlinePlayCard(i,v),disabled:isCardOff(v),cardRole:onRoleR.current==='host'?'player':'dealer',fieldBottom:onFieldAreaRef.current?onFieldAreaRef.current.getBoundingClientRect().bottom:null}))
         ),
@@ -1427,8 +1443,9 @@ function App(){
           h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'DEALER'),h('div',{style:{fontSize:22,fontWeight:900,color:RED_C}},dPt+'pt'))
         ),
         h('div',{style:{display:'flex',flexDirection:'column',gap:6,alignItems:'flex-end'}},
-          h('div',{style:{display:'flex',gap:10}},
-            h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 12px',color:DIM,fontSize:16,cursor:'pointer'}},musicEnabled?'🎵':'🔇'),
+          h('div',{style:{display:'flex',gap:6}},
+            h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 10px',color:DIM,fontSize:15,cursor:'pointer'}},musicEnabled?'🎵':'🔇'),
+            h('button',{onClick:()=>{switchBGMTrack();setBgmTrackNum(t=>1-t);},title:bgmTrackNum===0?'Iron Lullaby に切替':'Grit Sprint に切替',style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'4px 8px',color:DIM,fontSize:10,fontFamily:"'Fira Code',monospace",cursor:'pointer',letterSpacing:1}},bgmTrackNum===0?'♪2':'♪1'),
             h('button',{onClick:goHome,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:10,padding:'6px 10px',color:DIM,fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'🏠')
           )
         )
