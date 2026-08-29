@@ -1622,7 +1622,7 @@ function OnlineEndScreen({data,onHome}){
 }
 
 // ── MenuScreen ──
-const APP_VER='v45';
+const APP_VER='v46';
 function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
   const btnBase={borderRadius:14,padding:'15px 0',fontSize:13,fontWeight:800,letterSpacing:2,cursor:'pointer',fontFamily:"'Inter',sans-serif",background:'rgba(255,255,255,.78)',boxShadow:'0 4px 16px rgba(70,100,150,.16), inset 0 1px 0 #fff'};
   return h('div',{style:{minHeight:'100vh',background:"url('img/title-bg.jpg') center/cover no-repeat, #eef2f8",display:'flex',alignItems:'center',justifyContent:'center',padding:16,position:'relative'}},
@@ -1965,6 +1965,7 @@ function App(){
     resolvingR.current=false;
     setPhase('playing');phaseR.current='playing';
     setField([]);setFieldSum(0);fieldR.current=[];fieldSumR.current=0;
+    setFieldColors([]); // v46: 時間切れ後に前ラウンドの色記録が残って自分のカードがオレンジになるバグ修正
     setFlashMsg(null);setTimeLeft(10);setComboShow(null);setTimeUpShow(false);
     let c=5;setCountNum(c);countNumR.current=c;
     function tick(){
