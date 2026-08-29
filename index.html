@@ -2368,6 +2368,11 @@ function App(){
         if(onRoleR.current==='host'){setOnMyPt(msg.hostPt);setOnOpPt(msg.guestPt);}else{setOnMyPt(msg.guestPt);setOnOpPt(msg.hostPt);}
         setTimeout(()=>setOnComboShow(null),5200);setTimeout(()=>setOnResetFA(false),1400);break;
       case 'comboEnd':setOnComboShow(null);break;
+      case 'cardReturned':
+        // 返却システム：相手のカードが先に着弾していた等でカードが跳ね返された
+        // 手札は次のtickでサーバー正の状態に自動復元される
+        fxRejectStamp();
+        break;
       case 'forceReset':setOnResetFA(true);setOnFlashMsg({text:'4枚！強制リセット',who:null});setTimeout(()=>{setOnResetFA(false);setOnFlashMsg(null);},900);break;
       case 'finish':
         const isMe=msg.winner===onRoleR.current;
@@ -2384,13 +2389,14 @@ function App(){
     if(!wsR.current||wsR.current.readyState!==WebSocket.OPEN)return;
     if(!onMyHandR.current[idx])return;
     if(!canPlay(value,onFieldSumR.current,onFieldR.current))return;
+    const baseSum=onFieldSumR.current; // 返却判定用：出した瞬間の場の合計
     resumeAC();setTimeout(()=>playPlaceSE(true),100);
     const nh=[...onMyHandR.current];nh[idx]=0;setOnMyHand(nh);onMyHandR.current=nh;
     const nf=[...onFieldR.current,value];const ns=onFieldSumR.current+value;
     setOnField(nf);onFieldR.current=nf;setOnFieldSum(ns);onFieldSumR.current=ns;
     // ホスト=青('player'), ゲスト=赤('dealer')
     setOnFieldColors(prev=>[...prev,onRoleR.current==='host'?'player':'dealer']);
-    wsR.current.send(JSON.stringify({type:'play',idx,value}));
+    wsR.current.send(JSON.stringify({type:'play',idx,value,baseSum}));
   }
   function goOnlineHome(){
     if(wsR.current){try{wsR.current.send(JSON.stringify({type:'leave'}));}catch(e){}wsR.current.close();wsR.current=null;}
