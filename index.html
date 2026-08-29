@@ -278,6 +278,7 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 .gp-round-pill .lvl{font-size:calc(9 * var(--u));font-weight:700;letter-spacing:calc(1.2 * var(--u));line-height:1;}
 .gp-round-pill.easy .lvl{color:#3ad98a;text-shadow:0 0 calc(6 * var(--u)) rgba(58,217,138,.4);}
 .gp-round-pill.normal .lvl{color:#f7ad6a;text-shadow:0 0 calc(6 * var(--u)) rgba(247,173,106,.4);}
+.gp-round-pill.master .lvl{color:#8b5cf6;}
 .gp-round-pill.hard .lvl{color:#ff5b85;text-shadow:0 0 calc(6 * var(--u)) rgba(255,91,133,.4);}
 
 /* HOME button: 黒ガラスの角丸スクエア */
@@ -1622,7 +1623,7 @@ function OnlineEndScreen({data,onHome}){
 }
 
 // ── MenuScreen ──
-const APP_VER='v46';
+const APP_VER='v47';
 function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
   const btnBase={borderRadius:14,padding:'15px 0',fontSize:13,fontWeight:800,letterSpacing:2,cursor:'pointer',fontFamily:"'Inter',sans-serif",background:'rgba(255,255,255,.78)',boxShadow:'0 4px 16px rgba(70,100,150,.16), inset 0 1px 0 #fff'};
   return h('div',{style:{minHeight:'100vh',background:"url('img/title-bg.jpg') center/cover no-repeat, #eef2f8",display:'flex',alignItems:'center',justifyContent:'center',padding:16,position:'relative'}},
@@ -1635,6 +1636,7 @@ function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
           h('button',{onClick:()=>onSolo('normal'),style:{...btnBase,flex:1,border:'1.5px solid rgba(46,127,232,.55)',color:'#2e7fe8'}},'NORMAL'),
           h('button',{onClick:()=>onSolo('hard'),style:{...btnBase,flex:1,border:'1.5px solid rgba(245,145,42,.6)',color:'#d97a12'}},'HARD')
         ),
+        h('button',{onClick:()=>onSolo('master'),style:{...btnBase,width:'100%',padding:'13px 0',border:'1.5px solid rgba(139,92,246,.6)',color:'#7c3aed',boxShadow:'0 5px 18px rgba(139,92,246,.22), inset 0 1px 0 #fff'}},'★ MASTER'),
         h('button',{onClick:()=>onOnline(),style:{...btnBase,width:'100%',padding:'16px 0',fontSize:17,fontWeight:900,border:'1.5px solid rgba(46,127,232,.5)',color:'#2e7fe8',boxShadow:'0 6px 20px rgba(46,127,232,.2), inset 0 1px 0 #fff'}},'🌐 オンライン対戦')
       ),
       h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',width:'100%',marginTop:2}},
@@ -2022,10 +2024,10 @@ function App(){
       const canWin=dHR.current.some(v=>canPlay(v,cs,cf)&&cs+v===10);
       const diff=diffRef.current;
       // 10完成できる時も人間が反応できる程度の「間」を必ず空ける(v40)
-      if(canWin)d=diff==='easy'?900+Math.random()*600:diff==='hard'?300+Math.random()*250:450+Math.random()*350;
-      else if(fl===0){if(diff==='easy')d=800+Math.random()*800;else if(diff==='hard')d=150+Math.random()*200;else d=aiFirstFastRef.current?300+Math.random()*300:1200+Math.random()*800;}
-      else if(fl===1)d=diff==='easy'?1000+Math.random()*600:diff==='hard'?400+Math.random()*200:1000+Math.random()*400;
-      else d=diff==='easy'?1200+Math.random()*800:diff==='hard'?600+Math.random()*300:1500+Math.random()*500;
+      if(canWin)d=diff==='easy'?900+Math.random()*600:diff==='hard'?300+Math.random()*250:diff==='master'?250+Math.random()*200:450+Math.random()*350;
+      else if(fl===0){if(diff==='easy')d=800+Math.random()*800;else if(diff==='hard')d=150+Math.random()*200;else if(diff==='master')d=120+Math.random()*180;else d=aiFirstFastRef.current?300+Math.random()*300:1200+Math.random()*800;}
+      else if(fl===1)d=diff==='easy'?1000+Math.random()*600:diff==='hard'?400+Math.random()*200:diff==='master'?300+Math.random()*180:1000+Math.random()*400;
+      else d=diff==='easy'?1200+Math.random()*800:diff==='hard'?600+Math.random()*300:diff==='master'?450+Math.random()*250:1500+Math.random()*500;
     }
     aiRef.current=setTimeout(()=>{if(phaseR.current==='playing'&&countNumR.current<0)aiPlay(rn);},d);
   }
@@ -2041,14 +2043,18 @@ function App(){
     const wins=playable.filter(v=>cs+v===10);
     const safe=playable.filter(v=>cs+v<10);
     const diff=diffRef.current;
-    const winRate  =diff==='easy'?0.60:diff==='hard'?0.97:0.85;
-    const safeRate5=diff==='easy'?0.25:diff==='hard'?0.60:0.35;
-    const safeBase =diff==='easy'?0.35:diff==='hard'?0.70:0.40;
-    const safeCap  =diff==='easy'?0.50:diff==='hard'?0.90:0.65;
-    const firstRate=diff==='easy'?0.45:diff==='hard'?0.80:0.55;
+    const winRate  =diff==='easy'?0.60:diff==='hard'?0.97:diff==='master'?1.0:0.85;
+    const safeRate5=diff==='easy'?0.25:diff==='hard'?0.60:diff==='master'?0.75:0.35;
+    const safeBase =diff==='easy'?0.35:diff==='hard'?0.70:diff==='master'?0.80:0.40;
+    const safeCap  =diff==='easy'?0.50:diff==='hard'?0.90:diff==='master'?0.95:0.65;
+    const firstRate=diff==='easy'?0.45:diff==='hard'?0.80:diff==='master'?0.90:0.55;
     let chosen=null;
     if(wins.length&&Math.random()<winRate)chosen=wins.reduce((b,v)=>calcPts([...cf,v]).total>calcPts([...cf,b]).total?v:b,wins[0]);
-    else if(cs>=8){if(diff==='hard'&&Math.random()<0.15&&safe.length)chosen=safe[Math.floor(Math.random()*safe.length)];}
+    else if(diff==='master'&&safe.length&&dHand.includes(1)&&cs<9&&safe.includes(9-cs)&&Math.random()<0.65){
+      // MASTERの妨害プレイ：手札に1がある時、場を合計9にして「1でしか完成できない場」の罠を張り、自分の1で刈り取る
+      chosen=9-cs;
+    }
+    else if(cs>=8){if((diff==='hard'&&Math.random()<0.15||diff==='master'&&Math.random()<0.25)&&safe.length)chosen=safe[Math.floor(Math.random()*safe.length)];}
     else if(cs>=5){if(Math.random()<safeRate5&&safe.length)chosen=safe[Math.floor(Math.random()*safe.length)];}
     else if(cs>=1){if(Math.random()<Math.min(safeBase+cf.length*0.08,safeCap)&&safe.length)chosen=safe[Math.floor(Math.random()*safe.length)];}
     else{if(Math.random()<firstRate&&safe.length)chosen=safe.sort((a,b)=>a-b)[0];}
@@ -2256,7 +2262,7 @@ function App(){
       ),
       h('div',{className:'gp-round-pill '+difficulty},
         h('span',{className:'r'},'R'+rNum),
-        h('span',{className:'lvl'},difficulty==='easy'?'EASY':difficulty==='hard'?'HARD':'NORMAL')
+        h('span',{className:'lvl'},difficulty==='easy'?'EASY':difficulty==='hard'?'HARD':difficulty==='master'?'MASTER':'NORMAL')
       ),
       h('div',{className:'gp-score dealer'},
         h('div',{className:'lbl'},'DEALER'),
