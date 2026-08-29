@@ -1814,7 +1814,7 @@ function OnlineEndScreen({data,onHome}){
 }
 
 // ── MenuScreen ──
-const APP_VER='v41';
+const APP_VER='v42';
 function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
   const btnBase={borderRadius:14,padding:'15px 0',fontSize:13,fontWeight:800,letterSpacing:2,cursor:'pointer',fontFamily:"'Inter',sans-serif",background:'rgba(255,255,255,.78)',boxShadow:'0 4px 16px rgba(70,100,150,.16), inset 0 1px 0 #fff'};
   return h('div',{style:{minHeight:'100vh',background:"url('img/title-bg.jpg') center/cover no-repeat, #eef2f8",display:'flex',alignItems:'center',justifyContent:'center',padding:16,position:'relative'}},
@@ -2014,7 +2014,7 @@ function App(){
         setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
         // サーバーから fieldOwners が届いた場合: host=青('player'), guest=赤('dealer') で固定
         if(msg.fieldOwners){
-          const colors=msg.fieldOwners.map(o=>o==='host'?'player':'dealer');
+          const colors=msg.fieldOwners.map(o=>o===role?'player':'dealer'); // v42: 自分=青/相手=橙の視点固定
           setOnFieldColors(colors);
         } else if(newField.length===0){
           setOnFieldColors([]);
@@ -2062,7 +2062,7 @@ function App(){
           if(!comboSeenR.current){
             comboSeenR.current=true;
             const by=(msg.flashMsg&&msg.flashMsg.by)||null;
-            setOnComboShow({...msg.comboShow,who:by===role?'player':'dealer',opp:'RIVAL',seq:++comboSeqR.current});
+            setOnComboShow({...msg.comboShow,who:by===role?'player':'dealer',color:by===role?'#2e7fe8':'#f5912a',opp:'RIVAL',seq:++comboSeqR.current});
             clearTimeout(comboClearTR.current);
             comboClearTR.current=setTimeout(()=>setOnComboShow(null),2600);
           }
@@ -2143,8 +2143,8 @@ function App(){
         const newField=[...onFieldR.current,msg.value];
         setOnField(newField);onFieldR.current=newField;
         setOnFieldSum(msg.fieldSum);onFieldSumR.current=msg.fieldSum;
-        // ホストの相手=guest=赤('dealer'), ゲストの相手=host=青('player')
-        setOnFieldColors(prev=>[...prev,onRoleR.current==='host'?'dealer':'player']);
+        // v42: 相手のカードは常に橙('dealer')
+        setOnFieldColors(prev=>[...prev,'dealer']);
         resumeAC();setTimeout(()=>playPlaceSE(false),100);setOnOpHandCount(c=>Math.max(0,c-1));
         break;
       case 'burst':
@@ -2185,8 +2185,8 @@ function App(){
     const nh=[...onMyHandR.current];nh[idx]=0;setOnMyHand(nh);onMyHandR.current=nh;
     const nf=[...onFieldR.current,value];const ns=onFieldSumR.current+value;
     setOnField(nf);onFieldR.current=nf;setOnFieldSum(ns);onFieldSumR.current=ns;
-    // ホスト=青('player'), ゲスト=赤('dealer')
-    setOnFieldColors(prev=>[...prev,onRoleR.current==='host'?'player':'dealer']);
+    // v42: 自分のカードは常に青('player')
+    setOnFieldColors(prev=>[...prev,'player']);
     wsR.current.send(JSON.stringify({type:'play',idx,value,baseSum}));
   }
   function goOnlineHome(){
@@ -2406,7 +2406,7 @@ function App(){
 
   if(phase==='online_playing'){
     const role=onRoleR.current;
-    const myColorRole=role==='host'?'player':'dealer';
+    const myColorRole='player'; // v42: 自分の手札は常に青
     const isCardOff=(v)=>onCountNum>=0||onTimeLeft<=0||!canPlay(v,onFieldSum,onField);
     const myHandCount=onMyHand.filter(v=>v&&v!==0).length;
     return h('div',{className:'gp-screen'},
