@@ -1284,35 +1284,6 @@ function playGoSE(){
     fxAir({v:0.03,a:0.002,d:0.02,hp:8000,rev:0.4});
   }catch(e){}
 }
-// カウント音（爽快版：5から全部鳴る・段々ピッチが上がる・1は強調）
-function playTickSE(n){
-  try{
-    resumeAC();
-    const c=AC, t0=c.currentTime;
-    const fmap={5:620,4:700,3:800,2:920,1:1150};
-    const f=fmap[n]||800;
-    // 芯のビープ（squareは倍音キツいのでローパスで整える）
-    const o=c.createOscillator(),g=c.createGain(),lp=c.createBiquadFilter();
-    o.type='square';o.frequency.value=f;
-    lp.type='lowpass';lp.frequency.value=f*4;
-    g.gain.setValueAtTime(0.0001,t0);g.gain.linearRampToValueAtTime(n===1?0.2:0.13,t0+0.004);
-    g.gain.exponentialRampToValueAtTime(0.001,t0+(n===1?0.14:0.08));
-    o.connect(lp);lp.connect(g);g.connect(c.destination);o.start(t0);o.stop(t0+0.16);
-    // アタックのクリック
-    const len=Math.max(1,Math.floor(c.sampleRate*0.008));
-    const buf=c.createBuffer(1,len,c.sampleRate);const d=buf.getChannelData(0);
-    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/c.sampleRate*600);
-    const src=c.createBufferSource(),hi=c.createBiquadFilter(),ng=c.createGain();
-    src.buffer=buf;hi.type='highpass';hi.frequency.value=4000;ng.gain.value=n===1?0.15:0.08;
-    src.connect(hi);hi.connect(ng);ng.connect(c.destination);src.start(t0);
-    if(n===1){ // 1だけオクターブ上を重ねて緊張感MAX
-      const o2=c.createOscillator(),g2=c.createGain();
-      o2.type='triangle';o2.frequency.value=f*2;
-      g2.gain.setValueAtTime(0.09,t0);g2.gain.exponentialRampToValueAtTime(0.001,t0+0.12);
-      o2.connect(g2);g2.connect(c.destination);o2.start(t0);o2.stop(t0+0.13);
-    }
-  }catch(e){}
-}
 function playTapSE(){
   // ファイル不要・コードで生成する「カチッ」というタップ音
   try{
@@ -1332,14 +1303,15 @@ function playTapSE(){
     o.connect(eg);eg.connect(c.destination);o.start();o.stop(c.currentTime+0.025);
   }catch(e){}
 }
-// カード着地音（C2 光の雫・残響：「ピチュン」＋波紋の響き）
+// カード着地音（C2 光の雫・残響：「ピチュン」＋波紋の響き）※v40で音量アップ＋芯を追加
 // isMe=true(自分)は元の高さ、false(相手)は同じ音色のまま音程だけ少し低く（こもらせない）
 function playPlaceSE(isMe){
   try{
     resumeAC();
     const k=isMe?1:0.88;
-    fxTone({f:2100*k,f2:1050*k,type:'sine',v:0.2,a:0.002,d:0.06,rev:0.5});
-    fxBell({f:2637*k,v:0.06,d:0.2,t:0.045,rev:0.55});
+    fxTone({f:2100*k,f2:1050*k,type:'sine',v:0.34,a:0.002,d:0.06,rev:0.5});
+    fxTone({f:660*k,type:'sine',v:0.12,a:0.002,d:0.05,rev:0.25}); // 置いた手応えの芯
+    fxBell({f:2637*k,v:0.11,d:0.2,t:0.045,rev:0.55});
   }catch(e){}
 }
 // 時間切れ音：静かなラウンド終了・リセット音
@@ -1589,7 +1561,6 @@ function CyberComboDisplay({combo}){
 
     // 「溜め」：音の膨らみと同期して、画面のあちこちから星が中心に吸い込まれる（ツーペア以上。暗転はストレートのみ）
     const D=p.pre||0;
-    const STAR4C='polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%)';
     if(D>0){
       if(p.myth){
         const dim=document.createElement('div');
@@ -1624,7 +1595,6 @@ function CyberComboDisplay({combo}){
       const imp=document.createElement('div');imp.className='fx2-impact'+(isBurst?' red':'');
       ov.appendChild(imp);void imp.offsetWidth;imp.classList.add('go');
       // ② 巨大な星：テキストの背後でゆっくり回りながら現れる（星盤＝完成装置）
-      const STAR4='polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%)';
       const gs=document.createElement('div');
       const giantSz=Math.round(p.giant*1.15);
       gs.style.cssText='position:absolute;left:'+cx+'px;top:'+cy+'px;width:'+giantSz+'px;height:'+giantSz+'px;background:'+starImg('#ffffff',p.ac)+' center/contain no-repeat;opacity:0;transform:translate(-50%,-50%) scale(.15) rotate(0deg);';
@@ -1844,71 +1814,24 @@ function OnlineEndScreen({data,onHome}){
 }
 
 // ── MenuScreen ──
-function MenuScreen({onSolo,onOnline,onCustomize,musicOn,toggleMusic}){
-  const[showRule,setShowRule]=useState(false);
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#150035 40%,#1a0040 70%,#200050 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
-    showRule&&h('div',{style:{position:'fixed',inset:0,background:'#000000ee',zIndex:300,overflowY:'auto',padding:20},onClick:()=>setShowRule(false)},
-      h('div',{style:{maxWidth:360,margin:'0 auto',color:'#fff'},onClick:e=>e.stopPropagation()},
-        h('div',{style:{fontSize:10,letterSpacing:6,color:PINK,fontFamily:"'Fira Code',monospace",textAlign:'center',marginBottom:16}},'── ルール説明 ──'),
-        h('div',{style:{background:'#ffffff11',borderRadius:10,padding:12,marginBottom:12}},
-          h('div',{style:{fontSize:13,color:PINK2,fontFamily:"'Fira Code',monospace",fontWeight:700,marginBottom:6}},'🎯 目的'),
-          h('div',{style:{fontSize:12,color:'#ddd',fontFamily:"'Fira Code',monospace",lineHeight:1.7}},'先に15ポイント取った方が勝ち！')
-        ),
-        h('div',{style:{background:'#ffffff11',borderRadius:10,padding:12,marginBottom:12}},
-          h('div',{style:{fontSize:13,color:PINK2,fontFamily:"'Fira Code',monospace",fontWeight:700,marginBottom:6}},'🃏 遊び方'),
-          [
-            ['🃏 カード','1〜5の数字カードを使う。手札は10枚でスタート'],
-            ['⚡ 出し方','リアルタイムで自由にカードを出せる。どちらが先でもOK！'],
-            ['🎯 得点','場の合計がピッタリ10になった瞬間、最後に出した人がポイント獲得！'],
-            ['⏱ 制限時間','1回のラウンドは10秒。時間切れになると引き分け（±0pt）で場と手札がリセット'],
-            ['📋 カード制限','場に出せるカードは最大4枚。\n・3枚目：出した後の合計が5以上になるカードのみ\n・4枚目：出した後の合計が10以上になるカードのみ\n例）場が2-3なら3枚目は0以上のカードならOK'],
-            ['💥 バースト','合計が10を超えたら出した人が-2pt。場はリセット'],
-            ['♻️ 補充','手札が0になると自動で10枚補充される'],
-          ].map(([icon,tx],i)=>
-            h('div',{key:i,style:{display:'flex',gap:8,fontSize:12,color:'#ccc',fontFamily:"'Fira Code',monospace",padding:'8px 0',borderBottom:'1px solid #333',lineHeight:1.7,alignItems:'flex-start'}},
-              h('span',{style:{minWidth:24,fontSize:14,flexShrink:0}},icon),
-              h('span',{style:{whiteSpace:'pre-wrap'}},tx))
-          )
-        ),
-        h('div',{style:{background:'#ffffff11',borderRadius:10,padding:12,marginBottom:12}},
-          h('div',{style:{fontSize:13,color:PINK2,fontFamily:"'Fira Code',monospace",fontWeight:700,marginBottom:6}},'⭐ ポイント一覧'),
-          [['ストレート','1-2-3-4の4枚','5pt'],['スリーカード','同じ数字3枚含む','4pt'],['ツーペア','2枚ペア×2組','3pt'],['ワンペア','2枚ペア×1組','2pt'],['バラバラ / 5+5','役なし or 5と5','1pt'],['バースト','合計10超え','自身-2pt']].map(([k,desc,v])=>
-            h('div',{key:k,style:{display:'flex',alignItems:'center',fontSize:11,color:'#ccc',fontFamily:"'Fira Code',monospace",padding:'6px 0',borderBottom:'1px solid #333',gap:6}},
-              h('div',{style:{flex:1}},h('div',{style:{color:'#fff',fontWeight:700,fontSize:12}},k),h('div',{style:{color:'#ffffffaa',fontSize:10,marginTop:2}},desc)),
-              h('span',{style:{color:PINK,fontWeight:700,fontSize:13}},v))
-          )
-        ),
-        h('button',{onClick:()=>setShowRule(false),style:{width:'100%',background:'linear-gradient(135deg,'+PINK+','+BLUE_C+')',border:'none',borderRadius:12,padding:'12px 0',color:'#fff',fontSize:16,fontFamily:"'Fira Code',monospace",fontWeight:900,cursor:'pointer'}},'閉じる')
-      )
-    ),
-    h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:20,width:'100%',maxWidth:320,animation:'fadeUp 0.5s ease'}},
-      h('div',{style:{textAlign:'center',width:'100%'}},
-        h('div',{style:{fontSize:9,letterSpacing:8,color:'#00ffff88',fontFamily:"'Fira Code',monospace",marginBottom:8,opacity:0.8}},'✦ CARD GAME ✦'),
-        h('div',{style:{position:'relative',display:'inline-block'}},
-          h('div',{style:{fontSize:52,fontWeight:900,lineHeight:1,letterSpacing:1,
-            background:'linear-gradient(135deg,#ffffff 0%,#00ffff 50%,#ff00ff 100%)',
-            WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
-            filter:'drop-shadow(0 2px 24px #00ffff88)'}},'TEN-KURU'),
-          h('div',{style:{position:'absolute',inset:0,fontSize:52,fontWeight:900,lineHeight:1,letterSpacing:1,
-            background:'linear-gradient(135deg,#00ffff,#ff00ff)',
-            WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
-            filter:'blur(12px)',opacity:0.5,pointerEvents:'none'}},'TEN-KURU')
-        ),
-        h('div',{style:{fontSize:11,color:'#00ffff66',fontFamily:"'Fira Code',monospace",letterSpacing:3,marginTop:4,marginBottom:4}},'テンクル'),
-        h('div',{style:{marginTop:4,height:1,background:'linear-gradient(90deg,transparent,#00ffff88,transparent)'}})
-      ),
-      h('div',{style:{display:'flex',flexDirection:'column',gap:12,width:'100%'}},
+const APP_VER='v40';
+function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
+  const btnBase={borderRadius:14,padding:'15px 0',fontSize:13,fontWeight:800,letterSpacing:2,cursor:'pointer',fontFamily:"'Inter',sans-serif",background:'rgba(255,255,255,.78)',boxShadow:'0 4px 16px rgba(70,100,150,.16), inset 0 1px 0 #fff'};
+  return h('div',{style:{minHeight:'100vh',background:"url('img/title-bg.jpg') center/cover no-repeat, #eef2f8",display:'flex',alignItems:'center',justifyContent:'center',padding:16,position:'relative'}},
+    h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:18,width:'100%',maxWidth:340,animation:'fadeUp 0.5s ease'}},
+      h('div',{style:{fontSize:10,letterSpacing:8,color:'#5a80ab',fontWeight:700,fontFamily:"'Inter',sans-serif"}},'✦ CARD GAME ✦'),
+      h('img',{src:'img/logo.webp',alt:'テンクル',style:{width:'100%',maxWidth:330,height:'auto',filter:'drop-shadow(0 8px 22px rgba(80,110,160,.28))',animation:'float 3.5s ease-in-out infinite'}}),
+      h('div',{style:{display:'flex',flexDirection:'column',gap:12,width:'100%',marginTop:6}},
         h('div',{style:{display:'flex',gap:8}},
-          h('button',{onClick:()=>onSolo('easy'),style:{flex:1,background:'linear-gradient(135deg,#0a2a10,#0a4020)',border:'1.5px solid #00ff8866',borderRadius:12,padding:'14px 0',color:'#00ff88',fontSize:13,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:1,boxShadow:'0 0 10px #00ff8833'}},'EASY'),
-          h('button',{onClick:()=>onSolo('normal'),style:{flex:1,background:'linear-gradient(135deg,#0a0a2e,#1a0a3a)',border:'1.5px solid #00ffff66',borderRadius:12,padding:'14px 0',color:'#00ffff',fontSize:13,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:1,boxShadow:'0 0 10px #00ffff33'}},'NORMAL'),
-          h('button',{onClick:()=>onSolo('hard'),style:{flex:1,background:'linear-gradient(135deg,#2a0010,#3a0020)',border:'1.5px solid #ff00ff66',borderRadius:12,padding:'14px 0',color:'#ff00ff',fontSize:13,fontFamily:"'Fira Code',monospace",fontWeight:700,cursor:'pointer',letterSpacing:1,boxShadow:'0 0 10px #ff00ff33'}},'HARD')
+          h('button',{onClick:()=>onSolo('easy'),style:{...btnBase,flex:1,border:'1.5px solid rgba(52,192,125,.55)',color:'#1e9a5f'}},'EASY'),
+          h('button',{onClick:()=>onSolo('normal'),style:{...btnBase,flex:1,border:'1.5px solid rgba(46,127,232,.55)',color:'#2e7fe8'}},'NORMAL'),
+          h('button',{onClick:()=>onSolo('hard'),style:{...btnBase,flex:1,border:'1.5px solid rgba(245,145,42,.6)',color:'#d97a12'}},'HARD')
         ),
-        h('button',{onClick:()=>onOnline(),style:{width:'100%',background:'linear-gradient(135deg,#0a1a30,#0a3040)',border:'1.5px solid #00ffff44',borderRadius:14,padding:'14px 0',color:'#00ffff',fontSize:18,fontFamily:"'Fira Code',monospace",fontWeight:900,cursor:'pointer',letterSpacing:2,boxShadow:'0 0 16px #00ffff22'}},'🌐 オンライン対戦'),
-        h('button',{onClick:()=>setShowRule(true),style:{width:'100%',background:'transparent',border:'1.5px solid #ffffff33',borderRadius:12,padding:'10px 0',color:'#ffffff88',fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer',letterSpacing:2}},'📖 ルール説明'),
-        h('button',{onClick:onCustomize,style:{width:'100%',background:'transparent',border:'1.5px solid #cfb8ff55',borderRadius:12,padding:'10px 0',color:'#cfb8ffcc',fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer',letterSpacing:2}},'⚙ HUD カスタマイズ')
+        h('button',{onClick:()=>onOnline(),style:{...btnBase,width:'100%',padding:'16px 0',fontSize:17,fontWeight:900,border:'1.5px solid rgba(46,127,232,.5)',color:'#2e7fe8',boxShadow:'0 6px 20px rgba(46,127,232,.2), inset 0 1px 0 #fff'}},'🌐 オンライン対戦')
       ),
-      h('div',{style:{display:'flex',justifyContent:'flex-end',width:'100%'}},
-        h('button',{onClick:toggleMusic,style:{background:'transparent',border:'1.5px solid #ffffff33',borderRadius:12,padding:'10px 14px',color:'#ffffff66',fontSize:14,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},musicOn?'🎵':'🔇')
+      h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',width:'100%',marginTop:2}},
+        h('div',{style:{fontSize:10,letterSpacing:2,color:'#8aa0be',fontFamily:"'Inter',sans-serif",fontWeight:700}},'TEN-KURU '+APP_VER),
+        h('button',{onClick:toggleMusic,style:{background:'rgba(255,255,255,.7)',border:'1.5px solid rgba(120,150,190,.35)',borderRadius:12,padding:'9px 14px',color:'#5a80ab',fontSize:14,cursor:'pointer',boxShadow:'0 3px 10px rgba(70,100,150,.12)'}},musicOn?'🎵':'🔇')
       )
     )
   );
@@ -1931,199 +1854,7 @@ function GameEndScreen({data,onRestart,onHome}){
   );
 }
 
-// ── CustomizeScreen ──
 const DEFAULT_LAYOUT={handW:53,handY:0,fieldW:53,sumSize:30,sumX:1,sumY:-8,gapDF:10,gapFH:38};
-
-function CustomizeScreen({initialLayout,onSave,onCancel}){
-  const[layout,setLayout]=useState(initialLayout);
-  const savedRef=useRef(false);
-  const initRef=useRef(initialLayout);
-
-  // Apply layout to CSS variables on every change
-  useEffect(()=>{
-    const root=document.documentElement;
-    root.style.setProperty('--user-hand-w',layout.handW);
-    root.style.setProperty('--user-hand-y',layout.handY);
-    root.style.setProperty('--user-field-w',layout.fieldW);
-    root.style.setProperty('--user-sum-size',layout.sumSize);
-    root.style.setProperty('--user-sum-x',layout.sumX);
-    root.style.setProperty('--user-sum-y',layout.sumY);
-    root.style.setProperty('--user-gap-df',layout.gapDF);
-    root.style.setProperty('--user-gap-fh',layout.gapFH);
-  },[layout]);
-
-  // On unmount without save, restore initial
-  useEffect(()=>{
-    return ()=>{
-      if(savedRef.current)return;
-      const root=document.documentElement;
-      const i=initRef.current;
-      root.style.setProperty('--user-hand-w',i.handW);
-      root.style.setProperty('--user-hand-y',i.handY);
-      root.style.setProperty('--user-field-w',i.fieldW);
-      root.style.setProperty('--user-sum-size',i.sumSize);
-      root.style.setProperty('--user-sum-x',i.sumX);
-      root.style.setProperty('--user-sum-y',i.sumY);
-      root.style.setProperty('--user-gap-df',i.gapDF);
-      root.style.setProperty('--user-gap-fh',i.gapFH);
-    };
-  },[]);
-
-  // Drag handlers for sum, hand area, and field resize handles
-  useEffect(()=>{
-    const sumEl=document.querySelector('.cust-mode .gp-field-sum');
-    const handEl=document.querySelector('.cust-mode .gp-hand-area');
-    const topHandle=document.querySelector('.cust-resize-handle.top');
-    const botHandle=document.querySelector('.cust-resize-handle.bottom');
-    const root=document.documentElement;
-    let target=null,sx=0,sy=0,bx=0,by=0,bGapDF=0,bGapFH=0;
-
-    function down(t,e){
-      if(e.target.closest('.cust-slider'))return;
-      target=t;sx=e.clientX;sy=e.clientY;
-      if(t==='sum'){
-        bx=parseFloat(getComputedStyle(root).getPropertyValue('--user-sum-x'))||0;
-        by=parseFloat(getComputedStyle(root).getPropertyValue('--user-sum-y'))||0;
-        sumEl&&sumEl.classList.add('dragging');
-      }else if(t==='hand'){
-        by=parseFloat(getComputedStyle(root).getPropertyValue('--user-hand-y'))||0;
-        handEl&&handEl.classList.add('dragging');
-      }else if(t==='top'){
-        bGapDF=parseFloat(getComputedStyle(root).getPropertyValue('--user-gap-df'))||10;
-        topHandle&&topHandle.classList.add('dragging');
-      }else if(t==='bottom'){
-        bGapFH=parseFloat(getComputedStyle(root).getPropertyValue('--user-gap-fh'))||38;
-        botHandle&&botHandle.classList.add('dragging');
-      }
-      e.preventDefault();
-    }
-    function move(e){
-      if(!target)return;
-      const dx=e.clientX-sx,dy=e.clientY-sy;
-      if(target==='sum'){
-        root.style.setProperty('--user-sum-x',Math.round(bx+dx));
-        root.style.setProperty('--user-sum-y',Math.round(by+dy));
-      }else if(target==='hand'){
-        root.style.setProperty('--user-hand-y',Math.round(by+dy));
-      }else if(target==='top'){
-        // Drag down → gap-df grows (field moves down)
-        root.style.setProperty('--user-gap-df',Math.max(0,Math.round(bGapDF+dy)));
-      }else if(target==='bottom'){
-        // Drag down → gap-fh shrinks (field grows downward)
-        root.style.setProperty('--user-gap-fh',Math.max(0,Math.round(bGapFH-dy)));
-      }
-    }
-    function up(){
-      if(!target)return;
-      const fx=parseFloat(getComputedStyle(root).getPropertyValue('--user-sum-x'));
-      const fy=parseFloat(getComputedStyle(root).getPropertyValue('--user-sum-y'));
-      const fhy=parseFloat(getComputedStyle(root).getPropertyValue('--user-hand-y'));
-      const fdf=parseFloat(getComputedStyle(root).getPropertyValue('--user-gap-df'));
-      const ffh=parseFloat(getComputedStyle(root).getPropertyValue('--user-gap-fh'));
-      setLayout(p=>({...p,sumX:fx,sumY:fy,handY:fhy,gapDF:fdf,gapFH:ffh}));
-      sumEl&&sumEl.classList.remove('dragging');
-      handEl&&handEl.classList.remove('dragging');
-      topHandle&&topHandle.classList.remove('dragging');
-      botHandle&&botHandle.classList.remove('dragging');
-      target=null;
-    }
-    const sd=(e)=>down('sum',e),hd=(e)=>down('hand',e),td=(e)=>down('top',e),bd=(e)=>down('bottom',e);
-    sumEl&&sumEl.addEventListener('pointerdown',sd);
-    handEl&&handEl.addEventListener('pointerdown',hd);
-    topHandle&&topHandle.addEventListener('pointerdown',td);
-    botHandle&&botHandle.addEventListener('pointerdown',bd);
-    window.addEventListener('pointermove',move);
-    window.addEventListener('pointerup',up);
-    window.addEventListener('pointercancel',up);
-    return()=>{
-      sumEl&&sumEl.removeEventListener('pointerdown',sd);
-      handEl&&handEl.removeEventListener('pointerdown',hd);
-      topHandle&&topHandle.removeEventListener('pointerdown',td);
-      botHandle&&botHandle.removeEventListener('pointerdown',bd);
-      window.removeEventListener('pointermove',move);
-      window.removeEventListener('pointerup',up);
-      window.removeEventListener('pointercancel',up);
-    };
-  },[]);
-
-  function reset(){setLayout(DEFAULT_LAYOUT);}
-  function save(){savedRef.current=true;onSave(layout);}
-
-  const dummyDealer=Array(10).fill(0);
-  const dummyField=[3,4];
-  const dummyFieldSum=7;
-
-  return h('div',{className:'gp-screen cust-mode'},
-    // Top bar
-    h('div',{className:'cust-top-bar'},
-      h('button',{className:'cust-top-btn',onClick:onCancel},'← もどる'),
-      h('button',{className:'cust-top-btn danger',onClick:reset},'リセット'),
-      h('button',{className:'cust-top-btn primary',onClick:save},'✓ 保存')
-    ),
-
-    // Dealer (mock, no slider needed)
-    h('div',{className:'gp-dealer-area'},
-      h('div',{className:'gp-area-label'},'💀 DEALER — 10枚'),
-      h('div',{className:'gp-dealer-cards'},
-        dummyDealer.map((_,i)=>h('div',{key:i,className:'gp-dealer-card'}))
-      )
-    ),
-
-    h('div',{className:'gp-spacer'}),
-
-    // Field area with inline size sliders + top/bottom resize handles
-    h('div',{className:'gp-field-area field-card-area'},
-      h('div',{className:'field-planet'}),
-      h('div',{className:'cust-resize-handle top'},'═══ 上の余白 ═══'),
-      h('div',{className:'cust-slider'},
-        h('span',{className:'lbl'},'場サイズ'),
-        h('input',{type:'range',min:40,max:75,value:layout.fieldW,onInput:(e)=>setLayout(p=>({...p,fieldW:+e.target.value}))}),
-        h('span',{className:'val'},layout.fieldW)
-      ),
-      h('div',{className:'gp-area-label'},'— — 場 — —'),
-      h('div',{className:'gp-field-cards'},
-        dummyField.map((v,i)=>h(FieldCard,{key:i,value:v,by:i===0?'player':'dealer',isComplete:false}))
-      ),
-      h('div',{className:'gp-field-sum'},
-        h('div',{className:'main'},
-          h('span',{className:'num'},dummyFieldSum),
-          h('span',{className:'sep'},'/ 10')
-        ),
-        h('div',{className:'ato'},'あと '+(10-dummyFieldSum))
-      ),
-      h('div',{className:'cust-slider compact'},
-        h('span',{className:'lbl'},'合計サイズ'),
-        h('input',{type:'range',min:14,max:48,value:layout.sumSize,onInput:(e)=>setLayout(p=>({...p,sumSize:+e.target.value}))}),
-        h('span',{className:'val'},layout.sumSize)
-      ),
-      h('div',{className:'cust-hint'},'↑ 7/10 をドラッグで自由移動'),
-      h('div',{className:'cust-resize-handle bottom'},'═══ 下の余白 ═══')
-    ),
-
-    h('div',{className:'gp-spacer'}),
-
-    // Hand area with inline size slider
-    h('div',{className:'gp-hand-area hand-card-area'},
-      h('div',{className:'cust-slider'},
-        h('span',{className:'lbl'},'手札サイズ'),
-        h('input',{type:'range',min:40,max:66,value:layout.handW,onInput:(e)=>setLayout(p=>({...p,handW:+e.target.value}))}),
-        h('span',{className:'val'},layout.handW)
-      ),
-      h('div',{className:'gp-area-label'},'YOU — 10枚'),
-      h('div',{className:'gp-hand-rows'},
-        h('div',{className:'gp-hand-row'},
-          [1,2,3,4,5].map((v,i)=>h(SlideCard,{key:'a'+i,value:v,onPlay:()=>{},disabled:true,cardRole:'player'}))
-        ),
-        h('div',{className:'gp-hand-row'},
-          [1,2,3,4,5].map((v,i)=>h(SlideCard,{key:'b'+i,value:v,onPlay:()=>{},disabled:true,cardRole:'player'}))
-        )
-      ),
-      h('div',{className:'cust-hint'},'エリアをドラッグで上下移動')
-    ),
-
-    h('div',{className:'gp-spacer'})
-  );
-}
 
 // ── App ──
 function App(){
@@ -2378,7 +2109,7 @@ function App(){
               onCountNumR.current=0;setOnCountNum(0);
               playGoSE();
             } else {
-              if(val!==lastTick){lastTick=val;if(val>=1&&val<=3)playTickSE(val);}
+              if(val!==lastTick){lastTick=val;} // v40: カウント中は無音(GOだけ鳴らす)
               onCountNumR.current=val;setOnCountNum(val);
             }
           },100);
@@ -2520,8 +2251,8 @@ function App(){
           setCountNum(-1);countNumR.current=-1;
           aiFirstFastRef.current=Math.random()<0.90;
           startTimer(rn);
-          if(Math.random()<0.50){lockR.current=true;scheduleAi(rn,120);setTimeout(()=>{lockR.current=false;},400);}
-          else{lockR.current=false;scheduleAi(rn,120);}
+          lockR.current=false; // v40: 開始時のプレイヤーロック(50%で0.4秒)は撤廃
+          scheduleAi(rn);
         },650);
         return;
       }
@@ -2563,7 +2294,8 @@ function App(){
       const cf=fieldR.current,cs=fieldSumR.current,fl=cf.length;
       const canWin=dHR.current.some(v=>canPlay(v,cs,cf)&&cs+v===10);
       const diff=diffRef.current;
-      if(canWin)d=diff==='easy'?600+Math.random()*800:diff==='hard'?50+Math.random()*100:100+Math.random()*200;
+      // 10完成できる時も人間が反応できる程度の「間」を必ず空ける(v40)
+      if(canWin)d=diff==='easy'?900+Math.random()*600:diff==='hard'?300+Math.random()*250:450+Math.random()*350;
       else if(fl===0){if(diff==='easy')d=800+Math.random()*800;else if(diff==='hard')d=150+Math.random()*200;else d=aiFirstFastRef.current?300+Math.random()*300:1200+Math.random()*800;}
       else if(fl===1)d=diff==='easy'?1000+Math.random()*600:diff==='hard'?400+Math.random()*200:1000+Math.random()*400;
       else d=diff==='easy'?1200+Math.random()*800:diff==='hard'?600+Math.random()*300:1500+Math.random()*500;
@@ -2668,12 +2400,7 @@ function App(){
   function endGame(pp,dp){roundTokR.current++;stopBGM();setGameEndData({pPt:pp,dPt:dp,winner:pp>=WIN_PT?'player':'dealer',diff:diffRef.current});setPhase('gameEnd');}
   function goHome(){roundTokR.current++;clearTimers();stopBGM();setPhase('menu');}
 
-  if(phase==='menu')return h(MenuScreen,{onSolo:startGame,onOnline:showOnlineMenu,onCustomize:()=>setPhase('customize'),musicOn:musicEnabled,toggleMusic:toggleMusic});
-  if(phase==='customize')return h(CustomizeScreen,{
-    initialLayout:userLayout,
-    onSave:(newLayout)=>{saveUserLayout(newLayout);setPhase('menu');},
-    onCancel:()=>setPhase('menu')
-  });
+  if(phase==='menu')return h(MenuScreen,{onSolo:startGame,onOnline:showOnlineMenu,musicOn:musicEnabled,toggleMusic:toggleMusic});
   if(phase==='online_waiting')return h(WaitingScreen,{roomId,onCancel:goOnlineHome});
   if(phase==='online_end'&&onEndData)return h(OnlineEndScreen,{data:onEndData,onHome:goOnlineHome});
   if(phase==='gameEnd'&&gameEndData)return h(GameEndScreen,{data:gameEndData,onRestart:startGame,onHome:goHome});
