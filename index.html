@@ -1186,6 +1186,22 @@ function resumeAC(){if(AC.state==='suspended')AC.resume();}
 // PC Chrome対策：最初のタッチ/クリックでACを即座に起動
 document.addEventListener('pointerdown',()=>{resumeAC();},{once:true,capture:true});
 
+// ==== 端末性能の自動判定（演出の軽量化）====
+// 起動後1.8秒待ってから1秒間FPSを計測。低スペック端末では星の数を自動で間引く
+let FX_QUALITY=1; // 1=フル / 0.7=中 / 0.4=軽量
+(function(){
+  setTimeout(()=>{
+    let frames=0;
+    const t0=performance.now();
+    function loop(){
+      frames++;
+      if(performance.now()-t0<1000)requestAnimationFrame(loop);
+      else FX_QUALITY=frames>=55?1:frames>=40?0.7:0.4;
+    }
+    requestAnimationFrame(loop);
+  },1800);
+})();
+
 // ==== ホールリバーブ（幻想の残響・ver39）====
 const FXCONV=AC.createConvolver();
 (function(){
@@ -1532,7 +1548,14 @@ function CyberComboDisplay({combo}){
       4:{ac:'#ffc93c',rgb:'255,201,60', bs:42,sky:24,shoot:5,giant:230,rings:3,scale:1.16,pre:200,veil:.62,rays:true},          // スリーカード＝金
       5:{ac:'#ffd75e',rgb:'255,215,94', bs:58,sky:34,shoot:9,giant:290,rings:3,scale:1.26,pre:350,veil:.72,rays:true,myth:true} // ストレート＝虹金・流星群
     };
-    const p=RANKFX[lv];
+    const base=RANKFX[lv];
+    // 端末性能係数で星の数を間引く（構成・色・流れは変えない）
+    const Q=FX_QUALITY;
+    const p={...base,
+      bs:Math.max(8,Math.round(base.bs*Q)),
+      sky:Math.max(4,Math.round(base.sky*Q)),
+      shoot:Math.round(base.shoot*Q)
+    };
     const whoColor=combo.color||'#1bc0d8';
     const isMe=combo.who==='player'||combo.who==='host';
     const whoLabel=isMe?'YOU':'DEALER';
@@ -1557,7 +1580,7 @@ function CyberComboDisplay({combo}){
         ov.appendChild(dim);
         dim.animate([{opacity:0},{opacity:1,offset:.3},{opacity:1,offset:.85},{opacity:0}],{duration:D+180,easing:'ease-out',fill:'forwards'});
       }
-      const cvN=p.myth?20:(lv===4?12:7);
+      const cvN=Math.max(4,Math.round((p.myth?20:(lv===4?12:7))*FX_QUALITY));
       const W0=window.innerWidth,H0=window.innerHeight;
       for(let i=0;i<cvN;i++){
         const s=document.createElement('div');
@@ -1656,9 +1679,10 @@ function CyberComboDisplay({combo}){
       }
       // ⑦ 金以上：後光レイ
       if(p.rays){
-        for(let i=0;i<10;i++){
+        const rayN=FX_QUALITY<0.5?6:10;
+        for(let i=0;i<rayN;i++){
           const ray=document.createElement('div');
-          const deg=i*36;
+          const deg=i*(360/rayN);
           ray.style.cssText='position:absolute;left:50%;top:40%;width:5px;height:52vh;transform-origin:center top;border-radius:4px;background:linear-gradient(180deg,rgba('+p.rgb+',.45),transparent);opacity:0;';
           ov.appendChild(ray);
           ray.animate([
@@ -2169,6 +2193,9 @@ function App(){
   const onBurstAnimR=useRef(false);
   const timeupSEFiredR=useRef(false);
   const comboSEFiredR=useRef(false);
+  const comboSeenR=useRef(false);   // 星演出をtickの立ち上がりで1回だけ発火させる
+  const comboClearTR=useRef(null);  // 星演出の消滅タイマー（ローカル管理）
+  const comboSeqR=useRef(0);        // 演出ごとの通し番号（Reactのkey用）
   const onCdIntervalR=useRef(null);
   const onTimerIntervalR=useRef(null);
   const endTimeRef=useRef(0);
@@ -2282,10 +2309,26 @@ function App(){
           setOnFlashMsg({text:who2+'　'+lbl,who:fm.by});
           if(fm.voice&&!comboSEFiredR.current){comboSEFiredR.current=true;resumeAC();playComboSfx(fm.voice);}
         }else{setOnFlashMsg(null);comboSEFiredR.current=false;}
-        if(msg.comboShow)setOnComboShow(msg.comboShow);else setOnComboShow(null);
+        // 星演出：tickの立ち上がりで1回だけ発火。消滅はローカルタイマー管理（毎tickの再生成を防ぐ）
+        if(msg.comboShow){
+          if(!comboSeenR.current){
+            comboSeenR.current=true;
+            const by=(msg.flashMsg&&msg.flashMsg.by)||null;
+            setOnComboShow({...msg.comboShow,who:by===role?'player':'dealer',seq:++comboSeqR.current});
+            clearTimeout(comboClearTR.current);
+            comboClearTR.current=setTimeout(()=>setOnComboShow(null),2600);
+          }
+        }else{comboSeenR.current=false;}
         const prevBurst=onBurstAnimR.current;
         const newBurst=!!msg.burstAnim&&msg.phase==='resolving';
-        if(newBurst&&!prevBurst){resumeAC();playBurstSE();}
+        if(newBurst&&!prevBurst){
+          resumeAC();playBurstSE();
+          // バーストの星演出（サーバーはcomboを送らないのでローカルで発火）
+          const byB=(msg.flashMsg&&msg.flashMsg.by)||null;
+          setOnComboShow({text:'BURST',pts:-2,burst:true,color:'#ff4d4d',who:byB===role?'player':'dealer',seq:++comboSeqR.current});
+          clearTimeout(comboClearTR.current);
+          comboClearTR.current=setTimeout(()=>setOnComboShow(null),2200);
+        }
         if(newBurst!==prevBurst){setOnBurstAnim(newBurst);onBurstAnimR.current=newBurst;}
         setOnResetFA(!!msg.resetAnim);
         if(msg.phase==='timeup'&&!timeupSEFiredR.current){timeupSEFiredR.current=true;playMissSE();}
@@ -2624,7 +2667,7 @@ function App(){
     const myHandCount=onMyHand.filter(v=>v&&v!==0).length;
     return h('div',{className:'gp-screen'},
 
-      onComboShow&&h(CyberComboDisplay,{key:'oc_'+onComboShow.text+Date.now(),combo:onComboShow}),
+      onComboShow&&h(CyberComboDisplay,{key:'oc_'+(onComboShow.seq||onComboShow.text),combo:onComboShow}),
       // ── オーバーレイ（ローディング/Ready/カウントダウン/フラッシュ）──
       onLoadingPct>=0&&!onShowReady&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'#0a0a1aee',pointerEvents:'none'}},
         h('div',{style:{fontSize:22,fontWeight:900,color:'#00d4ff',letterSpacing:4,marginBottom:24,fontFamily:"'Fira Code',monospace"}},'LOADING...'),
