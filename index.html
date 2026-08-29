@@ -957,7 +957,7 @@ function canPlay(v,fieldSum,field){
 
 // ── BGM（2曲切り替え：1=Neon Strategy / 2=Cold Logic / 0=ミュート）v43 ──
 // GitHub Pagesのリポジトリ直下にmp3を置く前提
-const BGM_FILES={1:'Neon_Strategy.mp3',2:'Cold_Logic.mp3'};
+const BGM_FILES={1:'Neon%20Strategy.mp3',2:'Cold%20Logic.mp3'}; // v45: 実ファイル名(スペース入り)に一致させた
 let bgmAudio=null,bgmPlayingTrack=0;
 function stopBGM(){
   bgmPlayingTrack=0;
@@ -1622,7 +1622,7 @@ function OnlineEndScreen({data,onHome}){
 }
 
 // ── MenuScreen ──
-const APP_VER='v44';
+const APP_VER='v45';
 function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
   const btnBase={borderRadius:14,padding:'15px 0',fontSize:13,fontWeight:800,letterSpacing:2,cursor:'pointer',fontFamily:"'Inter',sans-serif",background:'rgba(255,255,255,.78)',boxShadow:'0 4px 16px rgba(70,100,150,.16), inset 0 1px 0 #fff'};
   return h('div',{style:{minHeight:'100vh',background:"url('img/title-bg.jpg') center/cover no-repeat, #eef2f8",display:'flex',alignItems:'center',justifyContent:'center',padding:16,position:'relative'}},
