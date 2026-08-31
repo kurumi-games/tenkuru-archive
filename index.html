@@ -850,6 +850,18 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 .fx-shake{animation:fxShake .42s cubic-bezier(.36,.07,.19,.97) both;}
 @keyframes fxShake{0%{transform:translate(0,0);}15%{transform:translate(-4px,2px);}30%{transform:translate(4px,-2px);}45%{transform:translate(-3px,1px);}60%{transform:translate(3px,-1px);}78%{transform:translate(-2px,1px);}100%{transform:translate(0,0);}}
 
+/* ===== 手札の状態表示 (v48) ===== */
+.card-stage.cs-win .card{border:1.5px solid #f0b429;animation:csWinGlow 1.3s ease-in-out infinite;}
+@keyframes csWinGlow{0%,100%{box-shadow:0 0 4px rgba(240,180,41,.7),0 0 10px rgba(240,180,41,.35);}50%{box-shadow:0 0 9px rgba(240,180,41,1),0 0 24px rgba(240,180,41,.6);}}
+.card-stage.cs-danger{opacity:.78;}
+.card-stage.cs-danger .card{border:1.5px solid rgba(235,90,90,.6);box-shadow:0 0 8px rgba(235,90,90,.28);filter:saturate(.65);}
+.card-stage.cs-locked{opacity:.32;filter:grayscale(.75);}
+.card-stage.cs-shake{animation:csShake .32s ease;}
+@keyframes csShake{0%,100%{transform:translateX(0);}22%{transform:translateX(-6px);}48%{transform:translateX(6px);}72%{transform:translateX(-4px);}}
+.fx2-hint{position:fixed;left:50%;bottom:26%;transform:translate(-50%,0);z-index:340;pointer-events:none;padding:9px 18px;border-radius:99px;border:1.5px solid rgba(140,165,200,.5);background:rgba(30,45,70,.88);color:#eaf2ff;font-size:clamp(12px,3.6vw,15px);font-weight:700;letter-spacing:1px;opacity:0;white-space:nowrap;}
+.fx2-hint.go{animation:fxHint 1.6s ease both;}
+@keyframes fxHint{0%{opacity:0;transform:translate(-50%,10px);}12%{opacity:1;transform:translate(-50%,0);}80%{opacity:1;}100%{opacity:0;transform:translate(-50%,-8px);}}
+
 /* ===== 幻想・光の演出 (ver39・音の世界観に同期) ===== */
 .fx2-impact{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.55),rgba(255,255,255,0) 70%);opacity:0;}
 .fx2-impact.red{background:radial-gradient(circle at 50% 40%,rgba(255,150,170,.45),rgba(255,150,170,0) 70%);}
@@ -1017,6 +1029,32 @@ document.addEventListener('pointerdown',()=>{resumeAC();},{once:true,capture:tru
 // ==== 軽量星画像（SVGを1枚焼いてbackgroundで使い回す）====
 // clip-path + drop-shadow をGPUに毎回計算させる代わりに、光のにじみ込みの星を画像化。
 // ミドル端末(OPPO等)でのカクつき対策
+// ==== 手札の状態判定 (v48) ====
+// 'win'=10完成 / 'danger'=出せるがバースト / 'locked'=ルール上出せない / null=通常
+function handCardState(v,sum,field){
+  if(!canPlay(v,sum,field))return 'locked';
+  const ns=sum+v;
+  return ns===10?'win':ns>10?'danger':null;
+}
+function lockReason(v,sum,field){
+  const filled=field.filter(x=>x!==null&&x!==0).length+1;
+  const ns=sum+v;
+  if(filled===3&&ns<5)return '3枚目は 合計5以上 になるカードだけ';
+  if(filled===4&&ns<10)return '4枚目は 合計10以上 になるカードだけ';
+  return '今は出せないカード';
+}
+// 出せないカードをタップした時の理由トースト
+function fxLockHint(text){
+  let el=document.querySelector('.fx2-hint');
+  if(el)el.remove();
+  el=document.createElement('div');
+  el.className='fx2-hint';
+  el.textContent='🔒 '+text;
+  document.body.appendChild(el);
+  void el.offsetWidth;el.classList.add('go');
+  setTimeout(()=>{if(el.parentNode)el.remove();},1600);
+}
+
 const starImgCache={};
 function starImg(core,glow){
   const k=core+'|'+glow;
@@ -1542,14 +1580,17 @@ function renderCardOverlay(){
   ];
 }
 
-function SlideCard({value,onPlay,disabled,cardRole}){
+function SlideCard({value,onPlay,disabled,cardRole,cardState,onLocked}){
   const[pressed,setPressed]=useState(false);
+  const[shaking,setShaking]=useState(false);
   const isBlue=cardRole==='player'||cardRole==='host';
   const colorClass=isBlue?'cyan':'magenta';
+  const locked=cardState==='locked';
+  const stateClass=cardState?' cs-'+cardState:'';
   return h('div',{
-    className:'card-stage '+colorClass+' n'+value,
+    className:'card-stage '+colorClass+' n'+value+stateClass+(shaking?' cs-shake':''),
     style:{
-      opacity:disabled?0.3:1,
+      opacity:(disabled&&!locked)?0.3:undefined, // lockedの見た目はCSSに任せる(カウントダウン中等の無効はここで薄く)
       animation:'dealIn 0.22s cubic-bezier(0.2,1.3,0.5,1) both',
       cursor:disabled?'default':'pointer',
       transform:pressed&&!disabled?'scale(0.93)':'scale(1)',
@@ -1561,7 +1602,11 @@ function SlideCard({value,onPlay,disabled,cardRole}){
     onPointerUp:()=>setPressed(false),
     onPointerCancel:()=>setPressed(false),
     onPointerLeave:()=>setPressed(false),
-    onClick:()=>{if(!disabled)onPlay();},
+    onClick:()=>{
+      if(!disabled){onPlay();return;}
+      // v48: 出せないカードは首を振って理由を教える
+      if(locked&&onLocked){setShaking(true);setTimeout(()=>setShaking(false),340);onLocked();}
+    },
   },
     h('div',{className:'card'},
       ...renderCardOverlay(),
@@ -1623,26 +1668,56 @@ function OnlineEndScreen({data,onHome}){
 }
 
 // ── MenuScreen ──
-const APP_VER='v47';
+const APP_VER='v49';
+// タイトルテーマ：0=光の輪(白) / 1=星夜の砂漠(紺)。切り替えは端末に保存
+const TITLE_THEMES=[
+  {bg:'img/title-bg.jpg', logo:'img/logo.webp', dark:false},
+  {bg:'img/title-bg2.jpg',logo:'img/logo2.webp',dark:true}
+];
+function loadTitleTheme(){try{const v=parseInt(localStorage.getItem('tenkuru_title_theme')||'0');return TITLE_THEMES[v]?v:0;}catch(e){return 0;}}
 function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
-  const btnBase={borderRadius:14,padding:'15px 0',fontSize:13,fontWeight:800,letterSpacing:2,cursor:'pointer',fontFamily:"'Inter',sans-serif",background:'rgba(255,255,255,.78)',boxShadow:'0 4px 16px rgba(70,100,150,.16), inset 0 1px 0 #fff'};
-  return h('div',{style:{minHeight:'100vh',background:"url('img/title-bg.jpg') center/cover no-repeat, #eef2f8",display:'flex',alignItems:'center',justifyContent:'center',padding:16,position:'relative'}},
+  const[theme,setTheme]=useState(loadTitleTheme);
+  const T=TITLE_THEMES[theme];
+  const switchTheme=()=>{const n=(theme+1)%TITLE_THEMES.length;setTheme(n);try{localStorage.setItem('tenkuru_title_theme',String(n));}catch(e){}};
+  // 明テーマ=白ガラス / 暗テーマ=紺ガラス
+  const glass=T.dark
+    ?{background:'rgba(12,18,48,.58)',boxShadow:'0 4px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.18)',backdropFilter:'blur(6px)'}
+    :{background:'rgba(255,255,255,.78)',boxShadow:'0 4px 16px rgba(70,100,150,.16), inset 0 1px 0 #fff'};
+  const btnBase={borderRadius:14,padding:'15px 0',fontSize:13,fontWeight:800,letterSpacing:2,cursor:'pointer',fontFamily:"'Inter',sans-serif",...glass};
+  const col=T.dark
+    ?{easy:'#7be0a8',normal:'#8cc8ff',hard:'#ffb066',master:'#d4b8ff',online:'#a9d8ff',dim:'#9fb0d8',bd:'rgba(255,255,255,.28)'}
+    :{easy:'#1e9a5f',normal:'#2e7fe8',hard:'#d97a12',master:'#7c3aed',online:'#2e7fe8',dim:'#8aa0be',bd:null};
+  const bd=(c)=>'1.5px solid '+(T.dark?col.bd:c);
+  const buttons=h('div',{style:{display:'flex',flexDirection:'column',gap:12,width:'100%'}},
+    h('div',{style:{display:'flex',gap:8}},
+      h('button',{onClick:()=>onSolo('easy'),style:{...btnBase,flex:1,border:bd('rgba(52,192,125,.55)'),color:col.easy}},'EASY'),
+      h('button',{onClick:()=>onSolo('normal'),style:{...btnBase,flex:1,border:bd('rgba(46,127,232,.55)'),color:col.normal}},'NORMAL'),
+      h('button',{onClick:()=>onSolo('hard'),style:{...btnBase,flex:1,border:bd('rgba(245,145,42,.6)'),color:col.hard}},'HARD')
+    ),
+    h('button',{onClick:()=>onSolo('master'),style:{...btnBase,width:'100%',padding:'13px 0',border:bd('rgba(139,92,246,.6)'),color:col.master}},'★ MASTER'),
+    h('button',{onClick:()=>onOnline(),style:{...btnBase,width:'100%',padding:'16px 0',fontSize:17,fontWeight:900,border:bd('rgba(46,127,232,.5)'),color:col.online}},'🌐 オンライン対戦')
+  );
+  const smallBtn={...glass,border:'1.5px solid '+(T.dark?col.bd:'rgba(120,150,190,.35)'),borderRadius:12,padding:'9px 13px',color:T.dark?'#dbe6ff':'#5a80ab',fontSize:14,cursor:'pointer'};
+  const footer=h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',width:'100%'}},
+    h('div',{style:{fontSize:10,letterSpacing:2,color:col.dim,fontFamily:"'Inter',sans-serif",fontWeight:700}},'TEN-KURU '+APP_VER),
+    h('div',{style:{display:'flex',gap:8}},
+      h('button',{onClick:switchTheme,title:'タイトルテーマ切替',style:smallBtn},'🎨'),
+      h('button',{onClick:toggleMusic,style:smallBtn},musicOn?'🎵':'🔇')
+    )
+  );
+  if(T.dark){
+    // 星夜テーマ：ロゴは上から30%の位置、ボタンは下部に沈めて月と宮殿を隠さない
+    return h('div',{style:{minHeight:'100vh',position:'relative',background:"url('"+T.bg+"') center/cover no-repeat, #0a0f2a",overflow:'hidden'}},
+      h('img',{src:T.logo,alt:'テンクル',style:{position:'absolute',top:'30%',left:'50%',width:'min(88vw, 560px)',height:'auto',transform:'translate(-50%,-50%)',zIndex:2,filter:'drop-shadow(0 8px 26px rgba(0,0,0,.45))',animation:'float 3.5s ease-in-out infinite'}}),
+      h('div',{style:{position:'absolute',left:16,right:16,bottom:'5%',maxWidth:340,margin:'0 auto',display:'flex',flexDirection:'column',gap:14,animation:'fadeUp 0.5s ease'}},buttons,footer)
+    );
+  }
+  return h('div',{style:{minHeight:'100vh',background:"url('"+T.bg+"') center/cover no-repeat, #eef2f8",display:'flex',alignItems:'center',justifyContent:'center',padding:16,position:'relative'}},
     h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:18,width:'100%',maxWidth:340,animation:'fadeUp 0.5s ease'}},
       h('div',{style:{fontSize:10,letterSpacing:8,color:'#5a80ab',fontWeight:700,fontFamily:"'Inter',sans-serif"}},'✦ CARD GAME ✦'),
-      h('img',{src:'img/logo.webp',alt:'テンクル',style:{width:'100%',maxWidth:330,height:'auto',filter:'drop-shadow(0 8px 22px rgba(80,110,160,.28))',animation:'float 3.5s ease-in-out infinite'}}),
-      h('div',{style:{display:'flex',flexDirection:'column',gap:12,width:'100%',marginTop:6}},
-        h('div',{style:{display:'flex',gap:8}},
-          h('button',{onClick:()=>onSolo('easy'),style:{...btnBase,flex:1,border:'1.5px solid rgba(52,192,125,.55)',color:'#1e9a5f'}},'EASY'),
-          h('button',{onClick:()=>onSolo('normal'),style:{...btnBase,flex:1,border:'1.5px solid rgba(46,127,232,.55)',color:'#2e7fe8'}},'NORMAL'),
-          h('button',{onClick:()=>onSolo('hard'),style:{...btnBase,flex:1,border:'1.5px solid rgba(245,145,42,.6)',color:'#d97a12'}},'HARD')
-        ),
-        h('button',{onClick:()=>onSolo('master'),style:{...btnBase,width:'100%',padding:'13px 0',border:'1.5px solid rgba(139,92,246,.6)',color:'#7c3aed',boxShadow:'0 5px 18px rgba(139,92,246,.22), inset 0 1px 0 #fff'}},'★ MASTER'),
-        h('button',{onClick:()=>onOnline(),style:{...btnBase,width:'100%',padding:'16px 0',fontSize:17,fontWeight:900,border:'1.5px solid rgba(46,127,232,.5)',color:'#2e7fe8',boxShadow:'0 6px 20px rgba(46,127,232,.2), inset 0 1px 0 #fff'}},'🌐 オンライン対戦')
-      ),
-      h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',width:'100%',marginTop:2}},
-        h('div',{style:{fontSize:10,letterSpacing:2,color:'#8aa0be',fontFamily:"'Inter',sans-serif",fontWeight:700}},'TEN-KURU '+APP_VER),
-        h('button',{onClick:toggleMusic,style:{background:'rgba(255,255,255,.7)',border:'1.5px solid rgba(120,150,190,.35)',borderRadius:12,padding:'9px 14px',color:'#5a80ab',fontSize:14,cursor:'pointer',boxShadow:'0 3px 10px rgba(70,100,150,.12)'}},musicOn?'🎵':'🔇')
-      )
+      h('img',{src:T.logo,alt:'テンクル',style:{width:'100%',maxWidth:330,height:'auto',filter:'drop-shadow(0 8px 22px rgba(80,110,160,.28))',animation:'float 3.5s ease-in-out infinite'}}),
+      h('div',{style:{width:'100%',marginTop:6}},buttons),
+      footer
     )
   );
 }
@@ -2225,10 +2300,10 @@ function App(){
         h('div',{className:'gp-area-label'},'YOU — '+myHandCount+'枚'),
         h('div',{className:'gp-hand-rows'},
           h('div',{className:'gp-hand-row'},
-            onMyHand.slice(0,5).map((v,i)=>(!v||v===0)?h('div',{key:i,style:{width:'var(--card-w)',height:'calc(var(--card-w) * 1.4)',flexShrink:0}}):h(SlideCard,{key:'c'+i+'_'+v,value:v,onPlay:()=>onlinePlayCard(i,v),disabled:isCardOff(v),cardRole:myColorRole}))
+            onMyHand.slice(0,5).map((v,i)=>(!v||v===0)?h('div',{key:i,style:{width:'var(--card-w)',height:'calc(var(--card-w) * 1.4)',flexShrink:0}}):h(SlideCard,{key:'c'+i+'_'+v,value:v,onPlay:()=>onlinePlayCard(i,v),disabled:isCardOff(v),cardState:(onCountNum>=0||onTimeLeft<=0)?null:handCardState(v,onFieldSum,onField),onLocked:()=>fxLockHint(lockReason(v,onFieldSum,onField)),cardRole:myColorRole}))
           ),
           h('div',{className:'gp-hand-row'},
-            onMyHand.slice(5).map((v,i)=>(!v||v===0)?h('div',{key:i+5,style:{width:'var(--card-w)',height:'calc(var(--card-w) * 1.4)',flexShrink:0}}):h(SlideCard,{key:'c'+(i+5)+'_'+v,value:v,onPlay:()=>onlinePlayCard(i+5,v),disabled:isCardOff(v),cardRole:myColorRole}))
+            onMyHand.slice(5).map((v,i)=>(!v||v===0)?h('div',{key:i+5,style:{width:'var(--card-w)',height:'calc(var(--card-w) * 1.4)',flexShrink:0}}):h(SlideCard,{key:'c'+(i+5)+'_'+v,value:v,onPlay:()=>onlinePlayCard(i+5,v),disabled:isCardOff(v),cardState:(onCountNum>=0||onTimeLeft<=0)?null:handCardState(v,onFieldSum,onField),onLocked:()=>fxLockHint(lockReason(v,onFieldSum,onField)),cardRole:myColorRole}))
           )
         )
       ),
@@ -2314,10 +2389,10 @@ function App(){
       h('div',{className:'gp-area-label'},'YOU — '+pH.filter(Boolean).length+'枚'),
       h('div',{className:'gp-hand-rows'},
         h('div',{className:'gp-hand-row'},
-          pH.slice(0,5).map((v,i)=>v===null?h('div',{key:i,style:{width:'var(--card-w)',height:'calc(var(--card-w) * 1.4)',flexShrink:0}}):h(SlideCard,{key:i+'_'+v,value:v,onPlay:()=>playCard(i),disabled:countNum>=0||!canPlay(v,fieldSum,field),cardRole:'player'}))
+          pH.slice(0,5).map((v,i)=>v===null?h('div',{key:i,style:{width:'var(--card-w)',height:'calc(var(--card-w) * 1.4)',flexShrink:0}}):h(SlideCard,{key:i+'_'+v,value:v,onPlay:()=>playCard(i),disabled:countNum>=0||!canPlay(v,fieldSum,field),cardState:countNum>=0?null:handCardState(v,fieldSum,field),onLocked:()=>fxLockHint(lockReason(v,fieldSum,field)),cardRole:'player'}))
         ),
         h('div',{className:'gp-hand-row'},
-          pH.slice(5).map((v,i)=>v===null?h('div',{key:i+5,style:{width:'var(--card-w)',height:'calc(var(--card-w) * 1.4)',flexShrink:0}}):h(SlideCard,{key:(i+5)+'_'+v,value:v,onPlay:()=>playCard(i+5),disabled:countNum>=0||!canPlay(v,fieldSum,field),cardRole:'player'}))
+          pH.slice(5).map((v,i)=>v===null?h('div',{key:i+5,style:{width:'var(--card-w)',height:'calc(var(--card-w) * 1.4)',flexShrink:0}}):h(SlideCard,{key:(i+5)+'_'+v,value:v,onPlay:()=>playCard(i+5),disabled:countNum>=0||!canPlay(v,fieldSum,field),cardState:countNum>=0?null:handCardState(v,fieldSum,field),onLocked:()=>fxLockHint(lockReason(v,fieldSum,field)),cardRole:'player'}))
         )
       )
     ),
