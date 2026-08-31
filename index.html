@@ -210,7 +210,6 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 }
 .gp-screen::before{content:none;}
 .gp-screen::after{content:none;}
-@keyframes roomBreath{0%,100%{opacity:.4;}50%{opacity:.9;}}
 .gp-screen > *{flex-shrink:0;position:relative;z-index:1;}
 .gp-spacer{flex:0;min-height:calc(var(--user-gap-df) * var(--u));}
 /* field→hand: user-gap-fh */
@@ -912,6 +911,98 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
   filter:drop-shadow(0 0 3px rgba(110,200,225,.45)) !important;
   backdrop-filter:none !important;-webkit-backdrop-filter:none !important;
 }
+/* ===== チュートリアル (v50) ===== */
+.tut-coach{
+  background:rgba(15,12,30,.66);
+  border:1px solid rgba(255,224,138,.38);
+  border-radius:calc(22 * var(--u));
+  padding:calc(11 * var(--u)) calc(14 * var(--u)) calc(12 * var(--u));
+  margin-top:calc(6 * var(--u));
+  min-height:calc(86 * var(--u));
+  box-shadow:inset 0 1px 0 rgba(255,224,138,.18), 0 calc(10 * var(--u)) calc(24 * var(--u)) rgba(0,0,0,.3);
+  backdrop-filter:blur(20px) saturate(120%);-webkit-backdrop-filter:blur(20px) saturate(120%);
+  color:#f4f1ff;
+  display:flex;flex-direction:column;gap:calc(7 * var(--u));
+  animation:fadeUp .3s ease;
+}
+.tut-coach-head{display:flex;align-items:center;gap:calc(6 * var(--u));font-size:calc(10 * var(--u));letter-spacing:calc(2 * var(--u));font-weight:700;color:#ffe08a;font-family:'Inter',sans-serif;line-height:1;}
+.tut-coach-head .cnt{color:rgba(255,224,138,.6);letter-spacing:calc(1 * var(--u));}
+.tut-coach-head .sp{flex:1;}
+.tut-coach-head .dealer{color:rgba(255,255,255,.5);letter-spacing:calc(1 * var(--u));font-weight:600;}
+.tut-skip{background:transparent;border:1px solid rgba(255,255,255,.28);color:rgba(255,255,255,.72);border-radius:999px;padding:calc(4 * var(--u)) calc(9 * var(--u));font-size:calc(9.5 * var(--u));letter-spacing:calc(1 * var(--u));cursor:pointer;font-family:'Inter',sans-serif;line-height:1;}
+.tut-coach-body{font-size:calc(13.5 * var(--u));line-height:1.55;font-weight:600;font-family:'Inter',sans-serif;animation:fadeUp .25s ease;}
+.tut-em{color:#ffe08a;font-weight:900;text-shadow:0 0 calc(8 * var(--u)) rgba(255,224,138,.5);}
+.tut-next{
+  align-self:flex-end;
+  background:linear-gradient(135deg,#ffe08a,#f5b52a);
+  border:none;border-radius:999px;
+  padding:calc(8 * var(--u)) calc(18 * var(--u));
+  color:#3a2a00;font-size:calc(12 * var(--u));font-weight:900;letter-spacing:calc(1.5 * var(--u));
+  cursor:pointer;box-shadow:0 calc(4 * var(--u)) calc(12 * var(--u)) rgba(245,181,42,.35);
+  font-family:'Inter',sans-serif;animation:fadeUp .25s ease;
+}
+/* タップ対象のカード：黄色いリング＋矢印 */
+.tut-target{position:relative;}
+.tut-target::before{
+  content:'';position:absolute;inset:calc(-5 * var(--u));border-radius:calc(14 * var(--u));
+  border:2px solid #ffe08a;
+  box-shadow:0 0 calc(14 * var(--u)) rgba(255,224,138,.85), inset 0 0 calc(10 * var(--u)) rgba(255,224,138,.35);
+  animation:tutRing 1.1s ease-in-out infinite;pointer-events:none;z-index:2;
+}
+.tut-target::after{
+  content:'▼';position:absolute;left:50%;top:calc(-24 * var(--u));
+  color:#ffe08a;font-size:calc(15 * var(--u));font-weight:900;
+  text-shadow:0 0 calc(8 * var(--u)) rgba(255,224,138,.95), 0 2px 4px rgba(0,0,0,.4);
+  animation:tutArrow .6s ease-in-out infinite alternate;pointer-events:none;z-index:2;
+}
+.tut-dim{filter:brightness(.55) saturate(.4);opacity:.55;transition:filter .3s,opacity .3s;}
+.tut-target-btn::before{border-radius:50%;inset:calc(-4 * var(--u));}
+.tut-target-btn::after{top:auto;bottom:calc(-24 * var(--u));content:'▲';}
+.tut-field-label{position:absolute;top:calc(8 * var(--u));left:50%;transform:translateX(-50%);white-space:nowrap;font-size:calc(10 * var(--u));letter-spacing:calc(1.5 * var(--u));font-weight:800;color:#8a6a00;background:rgba(255,224,138,.55);border:1px solid rgba(255,200,80,.6);border-radius:999px;padding:calc(3 * var(--u)) calc(10 * var(--u));z-index:2;font-family:'Inter',sans-serif;}
+@keyframes tutRing{0%,100%{opacity:.55;transform:scale(1);}50%{opacity:1;transform:scale(1.05);}}
+@keyframes tutArrow{from{transform:translate(-50%,0);}to{transform:translate(-50%,calc(-6 * var(--u)));}}
+/* モーダル */
+.tut-veil{
+  position:fixed;inset:0;z-index:250;
+  background:rgba(8,6,22,.62);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;
+  padding:calc(20 * var(--u));animation:fadeUp .3s ease;
+}
+.tut-modal{
+  width:100%;max-width:calc(320 * var(--u));
+  background:linear-gradient(180deg,rgba(28,22,58,.97),rgba(16,12,40,.97));
+  border:1px solid rgba(255,224,138,.4);border-radius:calc(24 * var(--u));
+  padding:calc(22 * var(--u)) calc(20 * var(--u));
+  color:#f4f1ff;text-align:center;
+  box-shadow:0 calc(20 * var(--u)) calc(50 * var(--u)) rgba(0,0,0,.5), inset 0 1px 0 rgba(255,224,138,.2);
+  display:flex;flex-direction:column;gap:calc(14 * var(--u));
+  font-family:'Inter',sans-serif;
+}
+.tut-modal .ttl{font-size:calc(22 * var(--u));font-weight:900;color:#ffe08a;letter-spacing:calc(2 * var(--u));font-family:'Playfair Display',serif;text-shadow:0 0 calc(12 * var(--u)) rgba(255,224,138,.4);}
+.tut-modal .body{font-size:calc(14 * var(--u));line-height:1.7;font-weight:600;}
+.tut-table{
+  display:grid;grid-template-columns:auto 1fr auto;
+  gap:calc(8 * var(--u)) calc(10 * var(--u));
+  align-items:center;text-align:left;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:calc(14 * var(--u));
+  padding:calc(12 * var(--u)) calc(14 * var(--u));
+  font-size:calc(12.5 * var(--u));
+}
+.tut-table .nm{font-weight:900;white-space:nowrap;}
+.tut-table .cd{color:rgba(255,255,255,.72);font-size:calc(11 * var(--u));font-weight:600;}
+.tut-table .st{font-size:calc(9 * var(--u));letter-spacing:1px;}
+.tut-table .pt{font-weight:900;color:#ffe08a;white-space:nowrap;}
+.tut-btn{
+  width:100%;border:none;border-radius:calc(14 * var(--u));
+  padding:calc(13 * var(--u)) 0;
+  background:linear-gradient(135deg,#ffe08a,#f5b52a);
+  color:#3a2a00;font-size:calc(15 * var(--u));font-weight:900;letter-spacing:calc(2 * var(--u));
+  cursor:pointer;box-shadow:0 calc(6 * var(--u)) calc(18 * var(--u)) rgba(245,181,42,.3);
+  font-family:'Inter',sans-serif;
+}
+.tut-btn.ghost{background:transparent;border:1.5px solid rgba(255,255,255,.35);color:rgba(255,255,255,.8);box-shadow:none;font-size:calc(13 * var(--u));font-weight:700;padding:calc(11 * var(--u)) 0;}
+
 </style>
 </head>
 <body>
@@ -925,7 +1016,6 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 </svg>
 <div id="root"></div>
 <script>
-const WS_URL='wss://4peace-server-vw1ezw.fly.dev';
 const h=React.createElement;
 const{useState,useEffect,useRef,useCallback}=React;
 
@@ -987,37 +1077,6 @@ function startBGM(track){
     bgmPlayingTrack=t;
     bgmAudio.play().catch(()=>{});
   }catch(e){bgmPlayingTrack=0;}
-}
-
-// ── サーバー時刻同期 ──
-// ping/pongで3回計測し平均オフセットを算出してからコールバックを呼ぶ
-function syncServerTime(ws, offsetRef, callback) {
-  let count = 0;
-  const offsets = [];
-  function doPing() {
-    if (!ws || ws.readyState !== WebSocket.OPEN) { callback(); return; }
-    ws.send(JSON.stringify({ type: 'ping', clientTime: Date.now() }));
-  }
-  const origOnMessage = ws.onmessage;
-  ws.onmessage = (e) => {
-    try {
-      const msg = JSON.parse(e.data);
-      if (msg.type === 'pong') {
-        const rtt = Date.now() - msg.clientTime;
-        offsets.push(msg.serverTime + (rtt / 2) - Date.now());
-        count++;
-        if (count < 3) { setTimeout(doPing, 50); }
-        else {
-          offsetRef.current = offsets.reduce((a, b) => a + b, 0) / offsets.length;
-          ws.onmessage = origOnMessage;
-          callback();
-        }
-        return;
-      }
-    } catch(e) {}
-    if (origOnMessage) origOnMessage(e);
-  };
-  doPing();
 }
 
 // SE用AudioContext（BGMとは独立）
@@ -1637,85 +1696,251 @@ function FieldCard({value,by,isComplete}){
 }
 
 
-// ── オンライン対戦 ──
-function WaitingScreen({roomId,onCancel}){
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a0035 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
-    h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:20}},
-      h('div',{style:{fontSize:48,animation:'float 1.5s ease-in-out infinite'}},'⏳'),
-      h('div',{style:{fontSize:14,color:DIM,fontFamily:"'Fira Code',monospace"}},'友達の入室を待っています...'),
-      h('div',{style:{background:PANEL,border:'2px solid '+PINK,borderRadius:16,padding:'20px 32px'}},
-        h('div',{style:{fontSize:11,color:DIM,fontFamily:"'Fira Code',monospace",marginBottom:8}},'ルームコード'),
-        h('div',{style:{fontSize:56,fontWeight:900,color:PINK,fontFamily:"'Fira Code',monospace",letterSpacing:8}},roomId)
+// ── チュートリアル (v50) ──
+// 初回プレイ時に強制で1回だけ通る。メニューの「あそびかた」からいつでも再生可能。
+// 盤面は台本（TUT_STEPS）で固定。本物のSlideCard/FieldCard/CyberComboDisplay/SEをそのまま使う。
+const TUT_KEY='tenkuru-tutorial-done';
+function isTutDone(){try{return localStorage.getItem(TUT_KEY)==='1';}catch(e){return false;}}
+function markTutDone(){try{localStorage.setItem(TUT_KEY,'1');}catch(e){}}
+const DIFF_LABEL={easy:'EASY',normal:'NORMAL',hard:'HARD',master:'MASTER'};
+
+// **強調** を黄色にして、\n で改行する
+function tutText(s){
+  return s.split('\n').map((line,li)=>h('span',{key:li,style:{display:'block'}},
+    line.split(/(\*\*[^*]+\*\*)/g).filter(Boolean).map((seg,i)=>seg.startsWith('**')?h('b',{key:i,className:'tut-em'},seg.slice(2,-2)):seg)
+  ));
+}
+
+const TUT_TABLE=[
+  {nm:'役なし',    cd:'10ぴったり',      pt:'+1',color:'#8fb8e8',lv:1},
+  {nm:'ワンペア',  cd:'同じ数字が2枚',   pt:'+2',color:'#4da6ff',lv:2},
+  {nm:'ツーペア',  cd:'ペアが2組',       pt:'+3',color:'#b06cff',lv:3},
+  {nm:'スリーカード',cd:'同じ数字が3枚', pt:'+4',color:'#ffc93c',lv:4},
+  {nm:'ストレート',cd:'1・2・3・4',      pt:'+5',color:'#ffd75e',lv:5},
+];
+
+// board: {field, colors, hand, dealer}  /  want: タップさせる数字  /  result: タップ後の演出
+// board:'keep' は前の盤面を残す。board:null はモーダルのみ。
+const TUT_STEPS=[
+  {id:'intro',board:null,title:'テンクルへようこそ',
+    msg:'ルールはひとつ。\n画面の真ん中「**場**」のカードの合計を **ぴったり10** に。\n先に **15pt** とったほうの勝ち。',next:'はじめる'},
+  {id:'ten',board:{field:[4,1],colors:['dealer','player'],hand:[2,3,5,1,4,3,2,1,4,2],dealer:8},
+    msg:'場の合計はいま **5**。\n下の手札から光る **5** を出して、10にしよう。',want:5,
+    result:{type:'combo',text:'役なし',pts:1},
+    after:'10ぴったり！ **+1pt**。\n最後の1枚を出した君に点が入った。\nもっと大きく稼ぐ方法もある。',next:'つぎへ'},
+  {id:'pair',board:{field:[3,3],colors:['dealer','player'],hand:[1,2,4,5,3,2,1,5,3,1],dealer:7},
+    msg:'場に **3** が2枚。\nここに **4** を出して10にすると…',want:4,
+    result:{type:'combo',text:'ワンペア',pts:2},
+    after:'**ワンペア**！ +2pt。\n同じ数字がそろうほど、点が上がる。',next:'役をぜんぶ見る'},
+  {id:'table',board:'keep',title:'役と点数',table:true,
+    msg:'10にした瞬間、場のカードで役が決まる。\nねらえるときは **ペア以上** をねらおう。',next:'つぎへ'},
+  {id:'burst',board:{field:[4,4],colors:['player','dealer'],hand:[2,1,3,5,4,1,5,2,4,1],dealer:7},
+    msg:'ただし、10を **超えたらバースト**。\n赤い **3** を出すとどうなる？ 試してみよう。',want:3,
+    result:{type:'burst'},
+    after:'バースト！ **-2pt**。\n赤いカードは「出すと10を超える」サイン。',next:'つぎへ'},
+  {id:'lock',board:{field:[1,1],colors:['dealer','dealer'],hand:[1,2,3,5,4,2,1,3,4,2],dealer:6},
+    msg:'いま出せないカードは暗くなる。\n3枚目は **5以上**、4枚目は **10以上** だけ。\n光る **5** をタップ。',want:5,
+    result:{type:'dealerSteal',card:3,text:'ワンペア',pts:2},
+    after:'ディーラーに取られた！\n相手も同じ場に **同時に** 出してくる。\n**最後の1枚を出したほう** が総取り。',next:'つぎへ'},
+  {id:'timer',board:'keep',timer:true,
+    msg:'上の **TIME** は10秒。\n0になると、場も手札もぜんぶリセット。\n考えすぎず、速く。',next:'つぎへ'},
+  {id:'bgm',board:'keep',bgm:true,
+    msg:'右上の丸いボタンが **BGM**。\n押すたびに **01 → 02 → OFF** と切り替わる。\n好きな曲でどうぞ。',next:'つぎへ'},
+  {id:'done',board:'keep',title:'準備OK',final:true,
+    msg:'10にした最後の1枚が得点。ペアで加点。\n超えたらバースト。先に15pt。\nあとは実戦で。'},
+];
+
+function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic}){
+  const[si,setSi]=useState(0);
+  const[board,setBoard]=useState({field:[],colors:[],hand:[],dealer:8});
+  const[pPt,setPPt]=useState(0);
+  const[dPt,setDPt]=useState(0);
+  const[stage,setStage]=useState('ask');   // ask=説明中/タップ待ち  busy=演出中  after=結果説明
+  const[combo,setCombo]=useState(null);
+  const[burstAnim,setBurstAnim]=useState(false);
+  const[resetFA,setResetFA]=useState(false);
+  const[timeLeft,setTimeLeft]=useState(10);
+  const timersR=useRef([]);
+  const later=(fn,ms)=>{const t=setTimeout(fn,ms);timersR.current.push(t);return t;};
+  useEffect(()=>()=>{timersR.current.forEach(clearTimeout);},[]);
+  const step=TUT_STEPS[si];
+
+  // ステップが変わったら盤面をセット
+  useEffect(()=>{
+    setStage('ask');setCombo(null);setBurstAnim(false);setResetFA(false);
+    if(step.board&&step.board!=='keep')setBoard({...step.board,hand:[...step.board.hand]});
+    if(step.timer){
+      let t=10;setTimeLeft(t);
+      const iv=setInterval(()=>{t--;setTimeLeft(t);if(t<=3)clearInterval(iv);},700);
+      timersR.current.push(iv);
+    }else setTimeLeft(10);
+  },[si]);
+
+  const fieldSum=board.field.reduce((a,b)=>a+b,0);
+  const lastColor=board.colors[board.colors.length-1];
+  const fieldCls=(fieldSum>=8&&fieldSum<10)?(lastColor==='player'?' alert-blue':' alert'):fieldSum>=5?' warn':'';
+
+  function tap(idx){
+    if(stage!=='ask'||!step.want)return;
+    const v=board.hand[idx];
+    if(v!==step.want)return;
+    setStage('busy');
+    resumeAC();later(()=>playPlaceSE(true),80);
+    const nf=[...board.field,v],nc=[...board.colors,'player'];
+    const nh=board.hand.map((x,i)=>i===idx?null:x);
+    setBoard(b=>({...b,field:nf,colors:nc,hand:nh}));
+    const r=step.result;
+    if(r.type==='combo'){
+      later(()=>{playComboSfx(r.text);setResetFA(true);setPPt(p=>p+r.pts);setCombo({text:r.text,pts:r.pts,color:'#2e7fe8',who:'player'});},350);
+      later(()=>{setCombo(null);setResetFA(false);setStage('after');},3000);
+    }else if(r.type==='burst'){
+      later(()=>{playBurstSE();setBurstAnim(true);setPPt(p=>Math.max(0,p-2));setCombo({text:'BURST',pts:-2,color:'#ff3b3b',who:'player',burst:true});},350);
+      later(()=>{setCombo(null);setBurstAnim(false);setStage('after');},3000);
+    }else if(r.type==='dealerSteal'){
+      later(()=>{playPlaceSE(false);setBoard(b=>({...b,field:[...b.field,r.card],colors:[...b.colors,'dealer'],dealer:Math.max(0,b.dealer-1)}));},900);
+      later(()=>{playComboSfx(r.text);setResetFA(true);setDPt(p=>p+r.pts);setCombo({text:r.text,pts:r.pts,color:'#f5912a',who:'dealer'});},1250);
+      later(()=>{setCombo(null);setResetFA(false);setStage('after');},3900);
+    }
+  }
+  function next(){setSi(i=>Math.min(i+1,TUT_STEPS.length-1));}
+
+  const isModal=!step.board||step.table||step.final;
+  const showNext=!isModal&&(stage==='after'||!step.want);
+  const bodyText=stage==='after'&&step.after?step.after:step.msg;
+  const isLesson=s=>s.board&&!s.table&&!s.final;
+  const boardSteps=TUT_STEPS.filter(isLesson).length;
+  const boardIdx=Math.max(1,TUT_STEPS.slice(0,si+1).filter(isLesson).length);
+
+  const hand=board.hand;
+  const cardEl=(v,i)=>{
+    if(v==null)return h('div',{key:i,style:{width:'var(--card-w)',height:'calc(var(--card-w) * 1.4)',flexShrink:0}});
+    const isTarget=stage==='ask'&&step.want===v;
+    const st=handCardState(v,fieldSum,board.field);
+    const card=h(SlideCard,{key:'t'+si+'_'+i+'_'+v,value:v,onPlay:()=>tap(i),disabled:!isTarget,cardState:st,onLocked:()=>fxLockHint(lockReason(v,fieldSum,board.field)),cardRole:'player'});
+    if(isTarget)return h('div',{key:'w'+i,className:'tut-target'},card);
+    // 狙うカードがある間は、それ以外を暗く落とす
+    return (stage==='ask'&&step.want)?h('div',{key:'d'+i,className:'tut-dim'},card):card;
+  };
+
+  return h('div',{className:'gp-screen'},
+    combo&&h(CyberComboDisplay,{key:'tc_'+si+'_'+combo.text,combo}),
+
+    // TOP BAR（本番と同じ）
+    h('div',{className:'gp-top-bar'},
+      h('div',{className:'gp-time-box'+(timeLeft<=5?' urgent':'')},
+        h('div',{className:'lbl'},'TIME'),
+        h('div',{className:'val'},timeLeft)
       ),
-      h('button',{onClick:onCancel,style:{background:'transparent',border:'1.5px solid '+DIM,borderRadius:12,padding:'10px 24px',color:DIM,fontSize:13,fontFamily:"'Fira Code',monospace",cursor:'pointer'}},'キャンセル')
+      h('div',{className:'gp-score you'},
+        h('div',{className:'lbl'},'YOU'),
+        h('div',{className:'val'},pPt),
+        h('div',{className:'sub'},'あと ',h('b',null,Math.max(0,WIN_PT-pPt)),'pt')
+      ),
+      h('div',{className:'gp-round-pill'},
+        h('span',{className:'lvl',style:{color:'#c98f00',fontWeight:900}},'TUTORIAL')
+      ),
+      h('div',{className:'gp-score dealer'},
+        h('div',{className:'lbl'},'DEALER'),
+        h('div',{className:'val'},dPt),
+        h('div',{className:'sub'},'あと ',h('b',null,Math.max(0,WIN_PT-dPt)),'pt')
+      ),
+      h('div',{className:'gp-icon-btn',onClick:onExit,title:'ホームに戻る'},h('span',null,'⌂')),
+      h('div',{className:'gp-track-btn'+(step.bgm?' tut-target tut-target-btn':''),onClick:toggleMusic,title:'曲を変更'},
+        h('span',{className:'num'},trackNum===0?'OFF':String(trackNum).padStart(2,'0'))
+      )
+    ),
+
+    // コーチ（ディーラーエリアの位置に置く）
+    h('div',{className:'tut-coach'},
+      h('div',{className:'tut-coach-head'},
+        h('span',null,'✦ あそびかた'),
+        h('span',{className:'cnt'},boardIdx+'/'+boardSteps),
+        h('span',{className:'sp'}),
+        h('span',{className:'dealer'},'DEALER '+board.dealer+'枚'),
+        h('button',{className:'tut-skip',onClick:onExit},'スキップ')
+      ),
+      h('div',{className:'tut-coach-body',key:'b'+si+stage},tutText(bodyText)),
+      showNext&&h('button',{className:'tut-next',onClick:next},step.next||'つぎへ')
+    ),
+
+    h('div',{className:'gp-spacer'}),
+
+    // FIELD（本番と同じ）
+    h('div',{className:'gp-field-area field-card-area'+fieldCls,style:{animation:resetFA?'resetAnim 0.5s ease':burstAnim?'burst 0.5s ease':'none'}},
+      h('div',{className:'field-planet'}),
+      h('div',{className:'tut-field-label'},'場 — ここの合計を10に'),
+      h('div',{className:'gp-field-cards'},
+        board.field.map((v,i)=>h(FieldCard,{key:'f'+si+'_'+i,value:v,by:board.colors[i],isComplete:fieldSum===10&&i===board.field.length-1}))
+      ),
+      h('div',{className:'gp-field-sum gp-field-sum-strong',style:{visibility:fieldSum>0?'visible':'hidden'}},
+        h('div',{className:'main'},
+          h('span',{className:'num'+fieldCls},fieldSum),
+          h('span',{className:'sep'},'/ 10')
+        ),
+        h('div',{className:'ato'},'あと ',h('b',null,10-fieldSum))
+      )
+    ),
+
+    h('div',{className:'gp-spacer'}),
+
+    // HAND（本番と同じ）
+    h('div',{className:'gp-hand-area hand-card-area'},
+      h('div',{className:'gp-area-label'},'YOU — '+hand.filter(Boolean).length+'枚'),
+      h('div',{className:'gp-hand-rows'},
+        h('div',{className:'gp-hand-row'},hand.slice(0,5).map((v,i)=>cardEl(v,i))),
+        h('div',{className:'gp-hand-row'},hand.slice(5).map((v,i)=>cardEl(v,i+5)))
+      )
+    ),
+    h('div',{className:'gp-spacer'}),
+
+    // モーダル（はじめ / 役一覧 / 準備OK）
+    isModal&&h('div',{className:'tut-veil'},
+      h('div',{className:'tut-modal'},
+        h('div',{className:'ttl'},step.title),
+        step.table&&h('div',{className:'tut-table'},
+          TUT_TABLE.map(r=>[
+            h('span',{key:r.nm+'n',className:'nm',style:{color:r.color}},r.nm),
+            h('span',{key:r.nm+'c',className:'cd'},r.cd,h('span',{className:'st',style:{color:r.color}},r.lv>=2?' '+'✦'.repeat(r.lv):'')),
+            h('span',{key:r.nm+'p',className:'pt'},r.pt+'pt')
+          ])
+        ),
+        h('div',{className:'body'},tutText(step.msg)),
+        step.final
+          ?h('div',{style:{display:'flex',flexDirection:'column',gap:'calc(8 * var(--u))'}},
+              h('button',{className:'tut-btn',onClick:()=>onFinish(pendingDiff||'easy')},(DIFF_LABEL[pendingDiff]||'EASY')+' で対戦する'),
+              h('button',{className:'tut-btn ghost',onClick:()=>onFinish(null)},'ホームへ戻る')
+            )
+          :h('button',{className:'tut-btn',onClick:next},step.next||'つぎへ')
+      )
     )
   );
 }
-function OnlineEndScreen({data,onHome}){
-  const win=data.winner==='me';
-  return h('div',{style:{minHeight:'100vh',background:'linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a0035 100%)',display:'flex',alignItems:'center',justifyContent:'center',padding:16}},
-    h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:18,width:'100%',maxWidth:320}},
-      h('div',{style:{fontSize:70,animation:'float 2s ease-in-out infinite'}},win?'🏆':'💀'),
-      h('div',{style:{fontSize:36,fontWeight:900,fontFamily:"'Playfair Display',serif",background:win?'linear-gradient(135deg,#00d4ff,#a020f0)':'linear-gradient(135deg,#ff2d6e,#a020f0)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}},win?'YOU WIN!':'YOU LOSE...'),
-      h('div',{style:{display:'flex',gap:20,background:PANEL,border:'1px solid '+BORDER,borderRadius:14,padding:'14px 24px'}},
-        h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'YOU'),h('div',{style:{fontSize:38,fontWeight:900,color:PINK,fontFamily:"'Playfair Display',serif"}},data.myPt+'pt')),
-        h('div',{style:{fontSize:16,color:DIM,alignSelf:'center',fontFamily:"'Fira Code',monospace"}},'vs'),
-        h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:9,color:DIM,fontFamily:"'Fira Code',monospace"}},'RIVAL'),h('div',{style:{fontSize:38,fontWeight:900,color:RED_C,fontFamily:"'Playfair Display',serif"}},data.opPt+'pt'))
-      ),
-      h('button',{onClick:onHome,style:{background:'linear-gradient(135deg,'+PINK+','+BLUE_C+')',border:'none',borderRadius:14,padding:'13px 40px',color:'#fff',fontSize:17,fontFamily:"'Playfair Display',serif",fontWeight:900,cursor:'pointer',letterSpacing:2,width:'100%'}},'🏠 ホームに戻る')
-    )
-  );
-}
+
 
 // ── MenuScreen ──
-const APP_VER='v52';
-// タイトルテーマ：0=光の輪(白) / 1=星夜の砂漠(紺)。切り替えは端末に保存
-const TITLE_THEMES=[
-  {bg:'img/title-bg.jpg', logo:'img/logo.webp', dark:false},
-  {bg:'img/title-bg2.jpg',logo:'img/logo2.webp',dark:true}
-];
-function loadTitleTheme(){try{const v=parseInt(localStorage.getItem('tenkuru_title_theme')||'0');return TITLE_THEMES[v]?v:0;}catch(e){return 0;}}
-function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
-  const[theme,setTheme]=useState(loadTitleTheme);
-  const T=TITLE_THEMES[theme];
-  const switchTheme=()=>{const n=(theme+1)%TITLE_THEMES.length;setTheme(n);try{localStorage.setItem('tenkuru_title_theme',String(n));}catch(e){}};
-  // 明テーマ=白ガラス / 暗テーマ=紺ガラス
-  const glass=T.dark
-    ?{background:'rgba(12,18,48,.58)',boxShadow:'0 4px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.18)',backdropFilter:'blur(6px)'}
-    :{background:'rgba(255,255,255,.78)',boxShadow:'0 4px 16px rgba(70,100,150,.16), inset 0 1px 0 #fff'};
-  const btnBase={borderRadius:14,padding:'15px 0',fontSize:13,fontWeight:800,letterSpacing:2,cursor:'pointer',fontFamily:"'Inter',sans-serif",...glass};
-  const col=T.dark
-    ?{easy:'#7be0a8',normal:'#8cc8ff',hard:'#ffb066',master:'#d4b8ff',online:'#a9d8ff',dim:'#9fb0d8',bd:'rgba(255,255,255,.28)'}
-    :{easy:'#1e9a5f',normal:'#2e7fe8',hard:'#d97a12',master:'#7c3aed',online:'#2e7fe8',dim:'#8aa0be',bd:null};
-  const bd=(c)=>'1.5px solid '+(T.dark?col.bd:c);
-  const buttons=h('div',{style:{display:'flex',flexDirection:'column',gap:12,width:'100%'}},
-    h('div',{style:{display:'flex',gap:8}},
-      h('button',{onClick:()=>onSolo('easy'),style:{...btnBase,flex:1,border:bd('rgba(52,192,125,.55)'),color:col.easy}},'EASY'),
-      h('button',{onClick:()=>onSolo('normal'),style:{...btnBase,flex:1,border:bd('rgba(46,127,232,.55)'),color:col.normal}},'NORMAL'),
-      h('button',{onClick:()=>onSolo('hard'),style:{...btnBase,flex:1,border:bd('rgba(245,145,42,.6)'),color:col.hard}},'HARD')
-    ),
-    h('button',{onClick:()=>onSolo('master'),style:{...btnBase,width:'100%',padding:'13px 0',border:bd('rgba(139,92,246,.6)'),color:col.master}},'★ MASTER'),
-    h('button',{onClick:()=>onOnline(),style:{...btnBase,width:'100%',padding:'16px 0',fontSize:17,fontWeight:900,border:bd('rgba(46,127,232,.5)'),color:col.online}},'🌐 オンライン対戦')
-  );
-  const smallBtn={...glass,border:'1.5px solid '+(T.dark?col.bd:'rgba(120,150,190,.35)'),borderRadius:12,padding:'9px 13px',color:T.dark?'#dbe6ff':'#5a80ab',fontSize:14,cursor:'pointer'};
-  const footer=h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',width:'100%'}},
-    h('div',{style:{fontSize:10,letterSpacing:2,color:col.dim,fontFamily:"'Inter',sans-serif",fontWeight:700}},'TEN-KURU '+APP_VER),
-    h('div',{style:{display:'flex',gap:8}},
-      h('button',{onClick:switchTheme,title:'タイトルテーマ切替',style:smallBtn},'🎨'),
-      h('button',{onClick:toggleMusic,style:smallBtn},musicOn?'🎵':'🔇')
-    )
-  );
-  // v52: 明暗どちらのテーマも同じ中央レイアウト（ロゴ直下にボタン）。色だけ切り替わる
-  return h('div',{style:{minHeight:'100vh',background:"url('"+T.bg+"') center/cover no-repeat, "+(T.dark?'#0a0f2a':'#eef2f8'),display:'flex',alignItems:'center',justifyContent:'center',padding:16,position:'relative'}},
+const APP_VER='v50'; // v50: チュートリアル追加（初回強制＋メニューの「あそびかた」）
+function MenuScreen({onSolo,onTutorial,musicOn,toggleMusic}){
+  const btnBase={borderRadius:14,padding:'15px 0',fontSize:13,fontWeight:800,letterSpacing:2,cursor:'pointer',fontFamily:"'Inter',sans-serif",background:'rgba(255,255,255,.78)',boxShadow:'0 4px 16px rgba(70,100,150,.16), inset 0 1px 0 #fff'};
+  return h('div',{style:{minHeight:'100vh',background:"url('img/title-bg.jpg') center/cover no-repeat, #eef2f8",display:'flex',alignItems:'center',justifyContent:'center',padding:16,position:'relative'}},
     h('div',{style:{textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:18,width:'100%',maxWidth:340,animation:'fadeUp 0.5s ease'}},
-      h('div',{style:{fontSize:10,letterSpacing:8,color:T.dark?'#aabbe8':'#5a80ab',fontWeight:700,fontFamily:"'Inter',sans-serif",textShadow:T.dark?'0 0 8px rgba(0,0,0,.6)':'none'}},'✦ CARD GAME ✦'),
-      h('img',{src:T.logo,alt:'テンクル',style:{width:'100%',maxWidth:330,height:'auto',filter:T.dark?'drop-shadow(0 8px 26px rgba(0,0,0,.5))':'drop-shadow(0 8px 22px rgba(80,110,160,.28))',animation:'float 3.5s ease-in-out infinite'}}),
-      h('div',{style:{width:'100%',marginTop:6}},buttons),
-      footer
+      h('div',{style:{fontSize:10,letterSpacing:8,color:'#5a80ab',fontWeight:700,fontFamily:"'Inter',sans-serif"}},'✦ CARD GAME ✦'),
+      h('img',{src:'img/logo.webp',alt:'テンクル',style:{width:'100%',maxWidth:330,height:'auto',filter:'drop-shadow(0 8px 22px rgba(80,110,160,.28))',animation:'float 3.5s ease-in-out infinite'}}),
+      h('div',{style:{display:'flex',flexDirection:'column',gap:12,width:'100%',marginTop:6}},
+        h('div',{style:{display:'flex',gap:8}},
+          h('button',{onClick:()=>onSolo('easy'),style:{...btnBase,flex:1,border:'1.5px solid rgba(52,192,125,.55)',color:'#1e9a5f'}},'EASY'),
+          h('button',{onClick:()=>onSolo('normal'),style:{...btnBase,flex:1,border:'1.5px solid rgba(46,127,232,.55)',color:'#2e7fe8'}},'NORMAL'),
+          h('button',{onClick:()=>onSolo('hard'),style:{...btnBase,flex:1,border:'1.5px solid rgba(245,145,42,.6)',color:'#d97a12'}},'HARD')
+        ),
+        h('button',{onClick:()=>onSolo('master'),style:{...btnBase,width:'100%',padding:'13px 0',border:'1.5px solid rgba(139,92,246,.6)',color:'#7c3aed',boxShadow:'0 5px 18px rgba(139,92,246,.22), inset 0 1px 0 #fff'}},'★ MASTER'),
+        h('button',{onClick:onTutorial,style:{...btnBase,width:'100%',padding:'10px 0',fontSize:11,fontWeight:700,background:'rgba(255,255,255,.55)',border:'1.5px solid rgba(120,150,190,.35)',color:'#5a80ab',boxShadow:'0 3px 10px rgba(70,100,150,.12)'}},'✦ あそびかた')
+      ),
+      h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',width:'100%',marginTop:2}},
+        h('div',{style:{fontSize:10,letterSpacing:2,color:'#8aa0be',fontFamily:"'Inter',sans-serif",fontWeight:700}},'TEN-KURU '+APP_VER),
+        h('button',{onClick:toggleMusic,style:{background:'rgba(255,255,255,.7)',border:'1.5px solid rgba(120,150,190,.35)',borderRadius:12,padding:'9px 14px',color:'#5a80ab',fontSize:14,cursor:'pointer',boxShadow:'0 3px 10px rgba(70,100,150,.12)'}},musicOn?'🎵':'🔇')
+      )
     )
   );
 }
-
 // ── GameEndScreen ──
 function GameEndScreen({data,onRestart,onHome}){
   const win=data.winner==='player';
@@ -1762,6 +1987,9 @@ function App(){
   const[difficulty,setDifficulty]=useState('normal');
   const diffRef=useRef('normal');
   useEffect(()=>{diffRef.current=difficulty;},[difficulty]);
+  // チュートリアル(v50)：初回はどの難易度を押しても先にチュートリアルへ
+  const tutDoneR=useRef(isTutDone());
+  const[pendingDiff,setPendingDiff]=useState(null);
 
   // ===== HUD カスタマイズ =====
   const[userLayout,setUserLayout]=useState(DEFAULT_LAYOUT);
@@ -1791,48 +2019,6 @@ function App(){
   },[userLayout]);
 
 
-  // オンライン対戦
-  const[onlinePhase,setOnlinePhase]=useState(''); // waiting|playing|end
-  const[roomId,setRoomId]=useState('');
-  const[onlineRole,setOnlineRole]=useState('');
-  const[onMyHand,setOnMyHand]=useState([]);
-  const[onOpHandCount,setOnOpHandCount]=useState(0);
-  const[onOpHandSum,setOnOpHandSum]=useState(0);
-  const[onField,setOnField]=useState([]);
-  const[onFieldColors,setOnFieldColors]=useState([]);
-  const[onFieldSum,setOnFieldSum]=useState(0);
-  const[onMyPt,setOnMyPt]=useState(0);
-  const[onOpPt,setOnOpPt]=useState(0);
-  const[onRNum,setOnRNum]=useState(1);
-  const[onTimeLeft,setOnTimeLeft]=useState(10);
-  const[onCountNum,setOnCountNum]=useState(-1);
-  const[onLoadingPct,setOnLoadingPct]=useState(-1);
-  const[onShowReady,setOnShowReady]=useState(false);
-  const[onFlashMsg,setOnFlashMsg]=useState(null);
-  const[onBurstAnim,setOnBurstAnim]=useState(false);
-  const[onResetFA,setOnResetFA]=useState(false);
-  const[onComboShow,setOnComboShow]=useState(null);
-  const[onEndData,setOnEndData]=useState(null);
-  const wsR=useRef(null);
-  const onRoleR=useRef('');
-  const onBurstAnimR=useRef(false);
-  const timeupSEFiredR=useRef(false);
-  const comboSEFiredR=useRef(false);
-  const comboSeenR=useRef(false);   // 星演出をtickの立ち上がりで1回だけ発火させる
-  const comboClearTR=useRef(null);  // 星演出の消滅タイマー（ローカル管理）
-  const comboSeqR=useRef(0);        // 演出ごとの通し番号（Reactのkey用）
-  const onCdIntervalR=useRef(null);
-  const onTimerIntervalR=useRef(null);
-  const endTimeRef=useRef(0);
-  const onMyHandR=useRef([]);
-  const onFieldR=useRef([]);
-  const onFieldSumR=useRef(0);
-  const onTimeLeftR=useRef(10);
-  const playingStartAtR=useRef(null);
-  const timerRAFR=useRef(null);
-  const serverTimeOffsetR=useRef(0); // サーバー時刻 - クライアント時刻
-  const onCountNumR=useRef(-1);
-  const onFieldAreaRef=useRef(null);
   const aiRef=useRef(null),timerRef=useRef(null),countRef=useRef(null);
   const pPtR=useRef(0),dPtR=useRef(0);
   const pHR=useRef([]),dHR=useRef([]);
@@ -1853,159 +2039,6 @@ function App(){
   useEffect(()=>{phaseR.current=phase;},[phase]);
 
 
-  // ── オンライン接続 ──
-  function onConnect(onOpen){
-    const ws=new WebSocket(WS_URL);
-    wsR.current=ws;
-    ws.onopen=()=>onOpen(ws);
-    ws.onmessage=(e)=>onMsg(JSON.parse(e.data));
-    ws.onclose=()=>{if(['online_waiting','online_playing'].includes(phaseR.current)){alert('接続が切れました');goOnlineHome();}};
-  }
-  function onMsg(msg){
-    switch(msg.type){
-      case 'created':setRoomId(msg.roomId);setPhase('online_waiting');phaseR.current='online_waiting';break;
-      case 'joined':setRoomId(msg.roomId);stopBGM();setPhase('online_playing');phaseR.current='online_playing';
-        // ping3回送ってオフセット計算してからreadyAck
-        syncServerTime(wsR.current,serverTimeOffsetR,()=>{
-          if(wsR.current&&wsR.current.readyState===WebSocket.OPEN)wsR.current.send(JSON.stringify({type:'readyAck'}));
-        });
-        break;
-      case 'guestJoined':stopBGM();setPhase('online_playing');phaseR.current='online_playing';
-        syncServerTime(wsR.current,serverTimeOffsetR,()=>{
-          if(wsR.current&&wsR.current.readyState===WebSocket.OPEN)wsR.current.send(JSON.stringify({type:'readyAck'}));
-        });
-        break;
-      case 'pong':{
-        const rtt=Date.now()-msg.clientTime;
-        serverTimeOffsetR.current=msg.serverTime+(rtt/2)-Date.now();
-        break;
-      }
-      case 'tick':{
-        const role=onRoleR.current;
-        setOnMyHand(msg.myHand||[]);onMyHandR.current=msg.myHand||[];
-        setOnOpHandCount(msg.opHandCount||0);
-        setOnOpHandSum(msg.opHandSum||0);
-        const newField=msg.field||[];
-        setOnField(newField);onFieldR.current=newField;
-        setOnFieldSum(msg.fieldSum||0);onFieldSumR.current=msg.fieldSum||0;
-        // サーバーから fieldOwners が届いた場合: host=青('player'), guest=赤('dealer') で固定
-        if(msg.fieldOwners){
-          const colors=msg.fieldOwners.map(o=>o===role?'player':'dealer'); // v42: 自分=青/相手=橙の視点固定
-          setOnFieldColors(colors);
-        } else if(newField.length===0){
-          setOnFieldColors([]);
-        }
-        setOnMyPt(role==='host'?msg.hostPt:msg.guestPt);
-        setOnOpPt(role==='host'?msg.guestPt:msg.hostPt);
-        setOnRNum(msg.rNum||1);
-        // playingStartAtを使ってリアルタイム計算
-        if(msg.phase==='playing'&&msg.playingStartAt){
-          if(playingStartAtR.current!==msg.playingStartAt){
-            playingStartAtR.current=msg.playingStartAt;
-            // RAFで滑らかにタイマー更新
-            if(timerRAFR.current)cancelAnimationFrame(timerRAFR.current);
-            function tickTimer(){
-              const serverNow=Date.now()+serverTimeOffsetR.current;
-              const elapsed=serverNow-playingStartAtR.current;
-              const left=Math.max(0,10-Math.floor(elapsed/1000));
-              setOnTimeLeft(left);onTimeLeftR.current=left;
-              if(left>0)timerRAFR.current=requestAnimationFrame(tickTimer);
-            }
-            timerRAFR.current=requestAnimationFrame(tickTimer);
-          }
-        } else if(msg.phase!=='playing'){
-          if(timerRAFR.current){cancelAnimationFrame(timerRAFR.current);timerRAFR.current=null;}
-          playingStartAtR.current=null;
-          setOnTimeLeft(msg.timeLeft||10);onTimeLeftR.current=msg.timeLeft||10;
-        }
-        // loading/readyフェーズ処理
-        if(msg.phase==='loading'){setOnLoadingPct(msg.loadingPct||0);setOnShowReady(false);}
-        else if(msg.phase==='ready'){setOnLoadingPct(100);setOnShowReady(true);if(trackNumR.current>0){resumeAC();startBGM(trackNumR.current);}}
-        else{setOnLoadingPct(-1);setOnShowReady(false);}
-        const cd=msg.phase==='countdown'?msg.countdown:-1;
-        const prevCd=onCountNumR.current;
-        if(cd!==prevCd){onCountNumR.current=cd;setOnCountNum(cd);
-          if(prevCd===0&&cd===-1){playGoSE();}
-        }
-        if(msg.flashMsg){const fm=msg.flashMsg;
-          // v41: 役・バーストは星演出に一本化。ピルは「4枚！強制リセット」等の中立メッセージだけ
-          if(fm.by==null){setOnFlashMsg({text:fm.text,who:null});}
-          else{setOnFlashMsg(null);}
-          if(fm.voice&&!comboSEFiredR.current){comboSEFiredR.current=true;resumeAC();playComboSfx(fm.voice);}
-        }else{setOnFlashMsg(null);comboSEFiredR.current=false;}
-        // 星演出：tickの立ち上がりで1回だけ発火。消滅はローカルタイマー管理（毎tickの再生成を防ぐ）
-        if(msg.comboShow){
-          if(!comboSeenR.current){
-            comboSeenR.current=true;
-            const by=(msg.flashMsg&&msg.flashMsg.by)||null;
-            setOnComboShow({...msg.comboShow,who:by===role?'player':'dealer',color:by===role?'#2e7fe8':'#f5912a',opp:'RIVAL',seq:++comboSeqR.current});
-            clearTimeout(comboClearTR.current);
-            comboClearTR.current=setTimeout(()=>setOnComboShow(null),2600);
-          }
-        }else{comboSeenR.current=false;}
-        const prevBurst=onBurstAnimR.current;
-        const newBurst=!!msg.burstAnim&&msg.phase==='resolving';
-        if(newBurst&&!prevBurst){
-          resumeAC();playBurstSE();
-          // バーストの星演出（サーバーはcomboを送らないのでローカルで発火）
-          const byB=(msg.flashMsg&&msg.flashMsg.by)||null;
-          setOnComboShow({text:'BURST',pts:-2,burst:true,color:'#ff4d4d',who:byB===role?'player':'dealer',opp:'RIVAL',seq:++comboSeqR.current});
-          clearTimeout(comboClearTR.current);
-          comboClearTR.current=setTimeout(()=>setOnComboShow(null),2200);
-        }
-        if(newBurst!==prevBurst){setOnBurstAnim(newBurst);onBurstAnimR.current=newBurst;}
-        setOnResetFA(!!msg.resetAnim);
-        if(msg.phase==='timeup'&&!timeupSEFiredR.current){timeupSEFiredR.current=true;playMissSE();}
-        if(msg.phase!=='timeup')timeupSEFiredR.current=false;
-        break;
-      }
-      case 'cardReturned':
-        // 返却システム：相手のカードが先に着弾していた等でカードが跳ね返された
-        // 手札は次のtickでサーバー正の状態に自動復元される
-        fxRejectStamp();
-        break;
-      case 'finish':
-        const isMe=msg.winner===onRoleR.current;
-        setOnEndData({winner:isMe?'me':'op',myPt:onRoleR.current==='host'?msg.hostPt:msg.guestPt,opPt:onRoleR.current==='host'?msg.guestPt:msg.hostPt});
-        stopBGM();setPhase('online_end');phaseR.current='online_end';break;
-      case 'opLeft':alert('相手が退出しました');goOnlineHome();break;
-      case 'error':alert(msg.msg);break;
-    }
-  }
-  function createRoom(){onRoleR.current='host';onConnect(ws=>ws.send(JSON.stringify({type:'create'})));}
-  function joinRoom(code){onRoleR.current='guest';onConnect(ws=>ws.send(JSON.stringify({type:'join',roomId:code})));}
-  function onlinePlayCard(idx,value){
-    if(onCountNumR.current>=0||onTimeLeftR.current<=0)return;
-    if(!wsR.current||wsR.current.readyState!==WebSocket.OPEN)return;
-    if(!onMyHandR.current[idx])return;
-    if(!canPlay(value,onFieldSumR.current,onFieldR.current))return;
-    const baseSum=onFieldSumR.current; // 返却判定用：出した瞬間の場の合計
-    resumeAC();setTimeout(()=>playPlaceSE(true),100);
-    const nh=[...onMyHandR.current];nh[idx]=0;setOnMyHand(nh);onMyHandR.current=nh;
-    const nf=[...onFieldR.current,value];const ns=onFieldSumR.current+value;
-    setOnField(nf);onFieldR.current=nf;setOnFieldSum(ns);onFieldSumR.current=ns;
-    // v42: 自分のカードは常に青('player')
-    setOnFieldColors(prev=>[...prev,'player']);
-    wsR.current.send(JSON.stringify({type:'play',idx,value,baseSum}));
-  }
-  function goOnlineHome(){
-    if(wsR.current){try{wsR.current.send(JSON.stringify({type:'leave'}));}catch(e){}wsR.current.close();wsR.current=null;}
-    if(onCdIntervalR.current){clearInterval(onCdIntervalR.current);onCdIntervalR.current=null;}
-    if(onTimerIntervalR.current){clearInterval(onTimerIntervalR.current);onTimerIntervalR.current=null;}
-    endTimeRef.current=0;
-    stopBGM();setPhase('menu');phaseR.current='menu';
-    setOnMyHand([]);setOnField([]);setOnFieldColors([]);setOnFieldSum(0);setOnMyPt(0);setOnOpPt(0);
-    setOnCountNum(-1);onCountNumR.current=-1;setOnFlashMsg(null);setOnEndData(null);setOnLoadingPct(-1);setOnShowReady(false);
-    if(timerRAFR.current){cancelAnimationFrame(timerRAFR.current);timerRAFR.current=null;}playingStartAtR.current=null;
-  }
-  function showOnlineMenu(){
-    // ルーム作成/入室選択
-    const code=window.prompt('ルームコードを入力（作る場合は空欄）');
-    if(code===null)return;
-    if(code.trim()===''){createRoom();}
-    else{joinRoom(code.trim());}
-  }
-
   // 曲サイクル：1 → 2 → 3 → ミュート(0) → 1 → …
   function toggleMusic(){
     setTrackNum(t=>{
@@ -2013,14 +2046,27 @@ function App(){
       trackNumR.current=next;
       musicEnabledR.current=next>0;setMusicEnabled(next>0);
       if(next===0)stopBGM();
-      else if(phaseR.current==='playing'||phaseR.current==='online_playing'){resumeAC();startBGM(next);}
+      else if(phaseR.current==='playing'||phaseR.current==='tutorial'){resumeAC();startBGM(next);}
       return next;
     });
   }
   function clearTimers(){clearTimeout(aiRef.current);clearInterval(timerRef.current);clearTimeout(countRef.current);}
   useEffect(()=>()=>clearTimers(),[]);
 
+  function openTutorial(diff){
+    clearTimers();roundTokR.current++;
+    setPendingDiff(diff||null);
+    setPhase('tutorial');phaseR.current='tutorial';
+    if(trackNumR.current>0){resumeAC();startBGM(trackNumR.current);}
+  }
+  function finishTutorial(diff){
+    markTutDone();tutDoneR.current=true;
+    setPendingDiff(null);
+    if(diff)startGame(diff);
+    else{stopBGM();setPhase('menu');phaseR.current='menu';}
+  }
   function startGame(diff){
+    if(diff&&!tutDoneR.current){openTutorial(diff);return;}
     if(diff){setDifficulty(diff);diffRef.current=diff;}
     clearTimers();lockR.current=false;
     const p=createDeck(),d=createDeck();
@@ -2203,110 +2249,9 @@ function App(){
   function endGame(pp,dp){roundTokR.current++;stopBGM();setGameEndData({pPt:pp,dPt:dp,winner:pp>=WIN_PT?'player':'dealer',diff:diffRef.current});setPhase('gameEnd');}
   function goHome(){roundTokR.current++;clearTimers();stopBGM();setPhase('menu');}
 
-  if(phase==='menu')return h(MenuScreen,{onSolo:startGame,onOnline:showOnlineMenu,musicOn:musicEnabled,toggleMusic:toggleMusic});
-  if(phase==='online_waiting')return h(WaitingScreen,{roomId,onCancel:goOnlineHome});
-  if(phase==='online_end'&&onEndData)return h(OnlineEndScreen,{data:onEndData,onHome:goOnlineHome});
+  if(phase==='menu')return h(MenuScreen,{onSolo:startGame,onTutorial:()=>openTutorial(null),musicOn:musicEnabled,toggleMusic:toggleMusic});
+  if(phase==='tutorial')return h(TutorialScreen,{pendingDiff,onFinish:finishTutorial,onExit:()=>finishTutorial(pendingDiff),trackNum,toggleMusic});
   if(phase==='gameEnd'&&gameEndData)return h(GameEndScreen,{data:gameEndData,onRestart:startGame,onHome:goHome});
-
-  if(phase==='online_playing'){
-    const role=onRoleR.current;
-    const myColorRole='player'; // v42: 自分の手札は常に青
-    const isCardOff=(v)=>onCountNum>=0||onTimeLeft<=0||!canPlay(v,onFieldSum,onField);
-    const myHandCount=onMyHand.filter(v=>v&&v!==0).length;
-    return h('div',{className:'gp-screen'},
-
-      onComboShow&&h(CyberComboDisplay,{key:'oc_'+(onComboShow.seq||onComboShow.text),combo:onComboShow}),
-      // ── オーバーレイ（ローディング/Ready/カウントダウン/フラッシュ）──
-      onLoadingPct>=0&&!onShowReady&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'#0a0a1aee',pointerEvents:'none'}},
-        h('div',{style:{fontSize:22,fontWeight:900,color:'#00d4ff',letterSpacing:4,marginBottom:24,fontFamily:"'Fira Code',monospace"}},'LOADING...'),
-        h('div',{style:{width:260,height:14,background:'#1a1a3a',borderRadius:8,border:'1px solid #00d4ff44',overflow:'hidden'}},
-          h('div',{style:{height:'100%',width:onLoadingPct+'%',background:'linear-gradient(90deg,#00d4ff,#a050ff)',borderRadius:8,transition:'width 0.1s linear',boxShadow:'0 0 12px #00d4ff88'}})
-        ),
-        h('div',{style:{marginTop:12,fontSize:14,color:'#00d4ff88',fontFamily:"'Fira Code',monospace"}},onLoadingPct+'%')
-      ),
-      onShowReady&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#0a0a1aee',pointerEvents:'none'}},
-        h('div',{style:{fontSize:72,fontWeight:900,color:'#00d4ff',animation:'countDown 0.4s ease both',textShadow:'0 0 40px #00d4ff',letterSpacing:8}},'Ready')
-      ),
-      onCountNum>=0&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#2a103066',pointerEvents:'none'}},
-        h('div',{key:onCountNum,style:{fontSize:onCountNum===0?96:120,fontWeight:900,color:onCountNum===0?'#50e080':'#fff',animation:'countDown 0.65s ease both',textShadow:onCountNum===0?'0 0 60px #50e080':'0 0 30px #fff'}},onCountNum===0?'GO!!':onCountNum)
-      ),
-      onFlashMsg&&h('div',{style:{position:'fixed',inset:0,zIndex:150,display:'flex',alignItems:onComboShow?'flex-start':'center',justifyContent:'center',paddingTop:onComboShow?'clamp(90px,20vh,140px)':'0',pointerEvents:'none'}},
-        h('div',{style:{background:'rgba(255,255,255,.34)',backdropFilter:'blur(8px)',borderRadius:14,padding:'14px 26px',fontSize:18,fontWeight:900,color:onFlashMsg.who==='host'?'#1c6fe0':onFlashMsg.who==='guest'?'#d2691e':'#2a3a4a',boxShadow:'0 4px 24px rgba(40,60,90,.18)',border:'1px solid rgba(255,255,255,.5)',animation:'slideIn 0.2s ease',maxWidth:'88vw',textAlign:'center'}},onFlashMsg.text)
-      ),
-
-      // TOP BAR（AIと同じ明るいHUD）
-      h('div',{className:'gp-top-bar',style:{visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}},
-        h('div',{className:'gp-time-box'+(onTimeLeft<=5?' urgent':'')},
-          h('div',{className:'lbl'},'TIME'),
-          h('div',{className:'val'},onTimeLeft)
-        ),
-        h('div',{className:'gp-score you'},
-          h('div',{className:'lbl'},'YOU'),
-          h('div',{className:'val'},onMyPt),
-          h('div',{className:'sub'},'あと ',h('b',null,Math.max(0,WIN_PT-onMyPt)),'pt')
-        ),
-        h('div',{className:'gp-round-pill'},
-          h('span',{className:'r'},'R'+onRNum)
-        ),
-        h('div',{className:'gp-score dealer'},
-          h('div',{className:'lbl'},'RIVAL'),
-          h('div',{className:'val'},onOpPt),
-          h('div',{className:'sub'},'あと ',h('b',null,Math.max(0,WIN_PT-onOpPt)),'pt')
-        ),
-        h('div',{className:'gp-icon-btn',onClick:goOnlineHome,title:'ホームに戻る'},h('span',null,'⌂')),
-        h('div',{className:'gp-track-btn',onClick:toggleMusic,title:'曲を変更（1→2→ミュート）'},
-          h('span',{className:'num'},trackNum===0?'OFF':String(trackNum).padStart(2,'0'))
-        )
-      ),
-
-      // 相手エリア（AIと同じ枠なし）
-      h('div',{className:'gp-dealer-area',style:{visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}},
-        h('div',{className:'gp-area-label'},'⚔ RIVAL — '+onOpHandCount+'枚'),
-        h('div',{className:'gp-dealer-cards'},
-          Array.from({length:Math.min(onOpHandCount,12)}).map((_,i)=>h('div',{key:i,className:'gp-dealer-card'}))
-        )
-      ),
-
-      h('div',{className:'gp-spacer'}),
-
-      // FIELD（AIと同じ）
-      h('div',{
-        ref:onFieldAreaRef,
-        className:'gp-field-area field-card-area'+((onFieldSum>=8&&onFieldSum<10)?(onFieldColors[onFieldColors.length-1]==='player'?' alert-blue':' alert'):onFieldSum>=5?' warn':''),
-        style:{animation:onResetFA?'resetAnim 0.5s ease':onBurstAnim?'burst 0.5s ease':'none',visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}
-      },
-        h('div',{className:'field-planet'}),
-        h('div',{className:'gp-field-cards'},
-          [0,1,2,3].map(i=>onField[i]?h(FieldCard,{key:i,value:onField[i],by:onFieldColors[i]||'player',isComplete:onFieldSum===10&&i===onFieldColors.length-1}):h('div',{key:i,style:{width:'var(--card-w)',height:'calc(var(--card-w) * 1.4)',flexShrink:0}}))
-        ),
-        h('div',{className:'gp-field-sum gp-field-sum-strong',style:{visibility:onFieldSum>0?'visible':'hidden'}},
-          h('div',{className:'main'},
-            h('span',{className:'num'+((onFieldSum>=8&&onFieldSum<10)?(onFieldColors[onFieldColors.length-1]==='player'?' alert-blue':' alert'):onFieldSum>=5?' warn':'')},onFieldSum),
-            h('span',{className:'sep'},'/ 10')
-          ),
-          h('div',{className:'ato'},'あと ',h('b',null,10-onFieldSum))
-        )
-      ),
-
-      h('div',{className:'gp-spacer'}),
-
-      // HAND（AIと同じ）
-      h('div',{className:'gp-hand-area hand-card-area',style:{visibility:(onLoadingPct>=0||onShowReady)?'hidden':'visible'}},
-        h('div',{className:'gp-area-label'},'YOU — '+myHandCount+'枚'),
-        h('div',{className:'gp-hand-rows'},
-          h('div',{className:'gp-hand-row'},
-            onMyHand.slice(0,5).map((v,i)=>(!v||v===0)?h('div',{key:i,style:{width:'var(--card-w)',height:'calc(var(--card-w) * 1.4)',flexShrink:0}}):h(SlideCard,{key:'c'+i+'_'+v,value:v,onPlay:()=>onlinePlayCard(i,v),disabled:isCardOff(v),cardState:(onCountNum>=0||onTimeLeft<=0)?null:handCardState(v,onFieldSum,onField),onLocked:()=>fxLockHint(lockReason(v,onFieldSum,onField)),cardRole:myColorRole}))
-          ),
-          h('div',{className:'gp-hand-row'},
-            onMyHand.slice(5).map((v,i)=>(!v||v===0)?h('div',{key:i+5,style:{width:'var(--card-w)',height:'calc(var(--card-w) * 1.4)',flexShrink:0}}):h(SlideCard,{key:'c'+(i+5)+'_'+v,value:v,onPlay:()=>onlinePlayCard(i+5,v),disabled:isCardOff(v),cardState:(onCountNum>=0||onTimeLeft<=0)?null:handCardState(v,onFieldSum,onField),onLocked:()=>fxLockHint(lockReason(v,onFieldSum,onField)),cardRole:myColorRole}))
-          )
-        )
-      ),
-
-      h('div',{className:'gp-spacer'})
-    );
-  }
-
 
   return h('div',{className:'gp-screen'},
     
