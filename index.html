@@ -1668,7 +1668,7 @@ function OnlineEndScreen({data,onHome}){
 }
 
 // ── MenuScreen ──
-const APP_VER='v49';
+const APP_VER='v50';
 // タイトルテーマ：0=光の輪(白) / 1=星夜の砂漠(紺)。切り替えは端末に保存
 const TITLE_THEMES=[
   {bg:'img/title-bg.jpg', logo:'img/logo.webp', dark:false},
@@ -1707,9 +1707,12 @@ function MenuScreen({onSolo,onOnline,musicOn,toggleMusic}){
   );
   if(T.dark){
     // 星夜テーマ：ロゴは上から30%の位置、ボタンは下部に沈めて月と宮殿を隠さない
-    return h('div',{style:{minHeight:'100vh',position:'relative',background:"url('"+T.bg+"') center/cover no-repeat, #0a0f2a",overflow:'hidden'}},
-      h('img',{src:T.logo,alt:'テンクル',style:{position:'absolute',top:'30%',left:'50%',width:'min(88vw, 560px)',height:'auto',transform:'translate(-50%,-50%)',zIndex:2,filter:'drop-shadow(0 8px 26px rgba(0,0,0,.45))',animation:'float 3.5s ease-in-out infinite'}}),
-      h('div',{style:{position:'absolute',left:16,right:16,bottom:'5%',maxWidth:340,margin:'0 auto',display:'flex',flexDirection:'column',gap:14,animation:'fadeUp 0.5s ease'}},buttons,footer)
+    // 中央寄せ(外側div)と浮遊アニメ(内側img)を分けてtransformの衝突を防ぐ / 高さは100dvhでアドレスバー分のズレを回避
+    return h('div',{style:{height:'100dvh',minHeight:'100vh',position:'relative',background:"url('"+T.bg+"') center/cover no-repeat, #0a0f2a",overflow:'hidden'}},
+      h('div',{style:{position:'absolute',top:'30%',left:'50%',width:'min(88vw, 560px)',transform:'translate(-50%,-50%)',zIndex:2}},
+        h('img',{src:T.logo,alt:'テンクル',style:{display:'block',width:'100%',height:'auto',filter:'drop-shadow(0 8px 26px rgba(0,0,0,.45))',animation:'float 3.5s ease-in-out infinite'}})
+      ),
+      h('div',{style:{position:'absolute',left:16,right:16,bottom:'calc(env(safe-area-inset-bottom, 0px) + 22px)',maxWidth:340,margin:'0 auto',display:'flex',flexDirection:'column',gap:12,animation:'fadeUp 0.5s ease'}},buttons,footer)
     );
   }
   return h('div',{style:{minHeight:'100vh',background:"url('"+T.bg+"') center/cover no-repeat, #eef2f8",display:'flex',alignItems:'center',justifyContent:'center',padding:16,position:'relative'}},
