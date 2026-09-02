@@ -2209,7 +2209,8 @@ function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic,coachN
 
 
 // ── MenuScreen ──
-const APP_VER='v59'; // v59: クロノリンクは最初の手札10枚から1枚付く（appearOnDeal:1）
+const APP_VER='v60'; // v60: クロノリンクの出現率を100%に（ST4以降は毎試合必ず1枚）
+// v59: クロノリンクは最初の手札10枚から1枚付く（appearOnDeal:1）
 // v58: クロノリンクは途中出現をやめ、2周目の手札10枚が配られた時点で最初から1枚に付く
 // v57: コア・シフトは変化後の3でも canPlay が通る時だけ発動（4枚目や合計5未満の穴を塞ぐ）
 // v56: クロノリンク（ST4〜解放・5枚使用後に1枚変化・1試合1回・時間停止演出/SE）、ST5=6秒、CHAMPION=コア・シフト、AREA CLEARはチャンピオン撃破後
@@ -2259,7 +2260,7 @@ const CHRONO_CONFIG={
   enabled:true,
   appearOnDeal:1,              // 1=最初の10枚から / 2=2周目から（使い切り・時間切れの配り直しどちらも1周と数える）
   maxPerMatch:1,
-  appearRate:0.75,             // 1試合の開始時に1回だけ判定（仮値）
+  appearRate:1.0,              // 1試合の開始時に1回だけ判定。1.0=毎試合必ず出る
   guaranteeFirstUnlock:true,   // 解放ステージ（AREA_01で最初に chrono:true のステージ）の初回は必ず出す
   timeStopBgmVolume:0.18,      // 時間停止中のBGM音量（通常0.45）
   autoRelease:true             // 追加で出せるカードが無い時は停止せず通常進行
