@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>テンクル (TEN-KURU)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Noto+Sans+JP:wght@400;500;600;700&family=Noto+Serif+JP:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <style>
@@ -1013,6 +1016,7 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 .sg-topbar{position:absolute;top:0;left:0;right:0;padding:max(env(safe-area-inset-top),calc(12 * var(--u))) calc(14 * var(--u)) 0;display:flex;justify-content:space-between;align-items:center;z-index:5;pointer-events:none;}
 .sg-topbar > *{pointer-events:auto;}
 .sg-pill{background:rgba(10,14,40,.7);border:1px solid rgba(255,255,255,.16);color:#dfe4ff;border-radius:999px;padding:calc(7 * var(--u)) calc(14 * var(--u));font-size:calc(12 * var(--u));font-weight:700;letter-spacing:1px;backdrop-filter:blur(8px);cursor:pointer;font-family:inherit;}
+.a1 .sg-pill{font-family:var(--f-jp-sans);font-weight:600;letter-spacing:.06em;}
 .sg-pill.gold{border-color:rgba(255,224,138,.4);color:#ffe08a;font-weight:800;}
 .sg-scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-top:calc(52 * var(--u));padding-bottom:calc(110 * var(--u));}
 .sg-scroll::-webkit-scrollbar{display:none;}
@@ -1089,11 +1093,19 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 .a1-st.big{background:radial-gradient(circle,#fff 0%,rgba(160,210,255,.9) 35%,rgba(120,180,255,0) 70%);box-shadow:none;}
 @keyframes a1Twinkle{0%{opacity:.15;}100%{opacity:.95;}}
 @keyframes a1Drift{0%{transform:translate(0,0);}100%{transform:translate(var(--dx,4px),var(--dy,-10px));}}
+/* v55: 書体は役割ごとに設計。--f-en 英字 / --f-jp-serif 見出し / --f-jp-sans 本文 */
+.sg-screen.a1{--f-en:'Cinzel','Times New Roman',serif;--f-jp-serif:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho',serif;--f-jp-sans:'Noto Sans JP','Hiragino Sans','Yu Gothic',sans-serif;}
 .a1-head{position:relative;z-index:2;text-align:center;padding:calc(56 * var(--u)) calc(16 * var(--u)) 0;padding-top:max(calc(env(safe-area-inset-top,0px) + calc(44 * var(--u))),calc(56 * var(--u)));flex-shrink:0;}
-.a1-head .k{font-size:calc(10 * var(--u));letter-spacing:calc(5 * var(--u));color:rgba(190,215,255,.75);font-weight:700;}
-.a1-head .n{font-size:calc(22 * var(--u));font-weight:900;letter-spacing:calc(3 * var(--u));color:#fff;margin-top:calc(3 * var(--u));text-shadow:0 0 calc(18 * var(--u)) rgba(120,190,255,.55),0 2px 6px rgba(0,0,0,.6);}
-.a1-head .s{font-size:calc(11 * var(--u));color:rgba(200,225,255,.78);margin-top:calc(4 * var(--u));letter-spacing:1px;text-shadow:0 1px 4px rgba(0,0,0,.7);}
-.a1-head .p{font-size:calc(9.5 * var(--u));color:rgba(255,224,138,.85);margin-top:calc(5 * var(--u));letter-spacing:2px;font-weight:700;}
+.a1-head .k{font-family:var(--f-en);font-weight:700;font-size:calc(11.5 * var(--u));letter-spacing:.32em;text-indent:.32em;color:#dff6ff;text-shadow:0 0 calc(6 * var(--u)) rgba(150,225,255,.55),0 1px 2px rgba(0,0,0,.5);}
+.a1-head .n{font-family:var(--f-jp-serif);font-weight:800;font-size:calc(33 * var(--u));letter-spacing:.07em;text-indent:.07em;line-height:1.2;margin-top:calc(2 * var(--u));
+  background:linear-gradient(180deg,#ffffff 0%,#f4fbff 45%,#bfe4ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 calc(10 * var(--u)) rgba(110,190,255,.28)) drop-shadow(0 2px 3px rgba(0,0,0,.55));}
+.a1-head .s{font-family:var(--f-jp-sans);font-weight:500;font-size:calc(14 * var(--u));letter-spacing:.08em;line-height:1.7;color:#b8c6dc;margin-top:calc(2 * var(--u));text-shadow:0 1px 3px rgba(0,0,0,.6);}
+.a1-head .p{font-family:var(--f-en);font-weight:700;font-size:calc(10.5 * var(--u));letter-spacing:.24em;text-indent:.24em;color:#f6d77a;margin-top:calc(4 * var(--u));display:inline-flex;align-items:center;gap:calc(10 * var(--u));text-shadow:0 0 calc(8 * var(--u)) rgba(255,205,90,.35),0 1px 2px rgba(0,0,0,.6);}
+.a1-head .p::before,.a1-head .p::after{content:'';width:calc(22 * var(--u));height:1px;background:linear-gradient(90deg,transparent,rgba(246,215,122,.9));}
+.a1-head .p::after{background:linear-gradient(90deg,rgba(246,215,122,.9),transparent);}
+.a1-head .p.clear{color:#ffd970;}
+.a1-head .p.clear::before,.a1-head .p.clear::after{width:calc(5 * var(--u));height:calc(5 * var(--u));background:#ffd970;transform:rotate(45deg);box-shadow:0 0 6px rgba(255,205,90,.7);}
 .a1-map{position:relative;z-index:2;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;}
 .a1-mapbox{position:relative;width:calc(360 * var(--u));height:calc(360 * var(--u));max-height:100%;}
 .a1-core{position:absolute;left:50%;top:52%;width:calc(276 * var(--u));height:calc(276 * var(--u));margin:calc(-138 * var(--u)) 0 0 calc(-138 * var(--u));pointer-events:none;z-index:0;
@@ -1143,23 +1155,29 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 .a1-info .ic.gold{color:#ffe08a;border-color:rgba(255,224,138,.5);background:radial-gradient(circle,rgba(200,150,40,.45),rgba(60,40,10,.6));box-shadow:0 0 calc(12 * var(--u)) rgba(255,214,120,.35);}
 .a1-info .ic.dim{color:rgba(200,215,240,.5);box-shadow:none;}
 .a1-info .tx{flex:1;min-width:0;text-align:left;}
-.a1-info .no{font-size:calc(9.5 * var(--u));letter-spacing:calc(3 * var(--u));color:#8fd6ff;font-weight:800;}
+.a1-info .no{font-family:var(--f-en);font-weight:700;font-size:calc(11.5 * var(--u));letter-spacing:.28em;color:#8fe3ff;text-shadow:0 0 6px rgba(120,220,255,.35);}
 .a1-info .no.gold{color:#ffe08a;}
-.a1-info .nm{font-size:calc(16 * var(--u));font-weight:900;color:#fff;letter-spacing:1px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.a1-info .ds{font-size:calc(10.5 * var(--u));color:rgba(210,225,255,.78);margin-top:calc(2 * var(--u));line-height:1.35;}
-.a1-info .mt{display:flex;gap:calc(6 * var(--u));flex-wrap:wrap;margin-top:calc(5 * var(--u));}
-.a1-info .chip{font-size:calc(9.5 * var(--u));padding:calc(3 * var(--u)) calc(8 * var(--u));border-radius:999px;border:1px solid rgba(255,255,255,.2);color:rgba(230,240,255,.9);font-weight:700;white-space:nowrap;}
+.a1-info .nm{font-family:var(--f-jp-serif);font-weight:700;font-size:calc(23 * var(--u));letter-spacing:.04em;line-height:1.25;margin-top:calc(1 * var(--u));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background:linear-gradient(180deg,#ffffff 0%,#d8ecff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.5));}
+.a1-info .ds{font-family:var(--f-jp-sans);font-weight:400;font-size:calc(13 * var(--u));letter-spacing:.04em;color:#b4c3da;margin-top:0;line-height:1.45;}
+.a1-info .mt{display:flex;gap:calc(6 * var(--u));flex-wrap:wrap;margin-top:calc(6 * var(--u));}
+.a1-info .chip{font-family:var(--f-jp-sans);font-weight:600;font-size:calc(10.5 * var(--u));line-height:1;padding:0 calc(9 * var(--u));height:calc(21 * var(--u));display:inline-flex;align-items:center;border-radius:999px;border:1px solid rgba(255,255,255,.2);color:rgba(230,240,255,.92);white-space:nowrap;}
 .a1-info .chip.pt{color:#ffe08a;border-color:rgba(255,224,138,.45);}
-.a1-info .stars{font-size:calc(12 * var(--u));letter-spacing:2px;color:rgba(255,255,255,.22);white-space:nowrap;}
+.a1-info .row{display:flex;align-items:center;justify-content:space-between;gap:calc(8 * var(--u));}
+.a1-info .stars{font-size:calc(12 * var(--u));letter-spacing:2px;color:rgba(255,255,255,.22);white-space:nowrap;line-height:1;}
 .a1-info .stars.on{color:#ffe08a;text-shadow:0 0 8px rgba(255,224,138,.6);}
-.a1-go{margin-top:calc(8 * var(--u));width:100%;border:none;border-radius:calc(16 * var(--u));padding:calc(12 * var(--u)) 0;
-  background:linear-gradient(135deg,#ffe08a,#f5b52a);color:#3a2a00;cursor:pointer;font-family:inherit;
-  box-shadow:0 10px 28px rgba(245,181,42,.4),inset 0 1px 0 rgba(255,255,255,.5);
-  display:flex;flex-direction:column;align-items:center;gap:calc(1 * var(--u));transition:transform .1s,opacity .2s;}
-.a1-go:active{transform:scale(.98);}
-.a1-go .l{font-size:calc(9.5 * var(--u));letter-spacing:calc(4 * var(--u));font-weight:800;opacity:.7;}
-.a1-go .v{font-size:calc(17 * var(--u));letter-spacing:calc(4 * var(--u));font-weight:900;}
-.a1-go:disabled{background:linear-gradient(135deg,rgba(120,130,160,.55),rgba(80,90,120,.55));color:rgba(230,235,255,.55);box-shadow:none;cursor:default;}
+.a1-go{margin-top:calc(9 * var(--u));width:100%;border-radius:calc(20 * var(--u));padding:calc(11 * var(--u)) 0 calc(12 * var(--u));cursor:pointer;font-family:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.36) 0%,transparent 34%),linear-gradient(135deg,#f7d96f 0%,#ffc53d 58%,#e9a820 100%);
+  border:1px solid rgba(255,239,170,.95);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72),inset 0 -4px 10px rgba(125,65,0,.22),0 0 28px rgba(255,190,45,.25),0 10px 26px rgba(0,0,0,.42);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(4 * var(--u));transition:transform .08s,box-shadow .2s;}
+.a1-go:active{transform:translateY(2px) scale(.99);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -2px 6px rgba(125,65,0,.25),0 0 16px rgba(255,190,45,.2),0 4px 12px rgba(0,0,0,.4);}
+.a1-go .l{font-family:var(--f-en);font-weight:700;font-size:calc(11.5 * var(--u));letter-spacing:.38em;text-indent:.38em;line-height:1;color:#7a4a08;}
+.a1-go .v{font-family:var(--f-jp-serif);font-weight:800;font-size:calc(24 * var(--u));letter-spacing:.12em;text-indent:.12em;line-height:1.15;color:#3d2405;}
+.a1-go:disabled{background:linear-gradient(180deg,rgba(255,255,255,.08) 0%,transparent 34%),linear-gradient(135deg,rgba(120,130,160,.5),rgba(70,80,110,.55));border-color:rgba(200,210,235,.25);box-shadow:0 6px 16px rgba(0,0,0,.3);cursor:default;}
+.a1-go:disabled .l{color:rgba(225,232,250,.55);}
+.a1-go:disabled .v{color:rgba(230,236,255,.6);}
 .a1-go:disabled:active{transform:none;}
 
 /* ===== v54: LINK CARD（特殊カードの渦）※既存のカードCSSは変更せず追加のみ ===== */
@@ -1169,6 +1187,8 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 @keyframes svSpin{to{transform:rotate(360deg);}}
 @keyframes svPulse{0%,100%{opacity:.72;filter:brightness(1);}50%{opacity:1;filter:brightness(1.35);}}
 .card-stage.sv-placed .sv-wrap{animation:svPop .55s cubic-bezier(.2,1.4,.4,1) both;}
+.card-stage.sv-born .sv-wrap{animation:svBorn .9s cubic-bezier(.2,1.3,.4,1) both;}
+@keyframes svBorn{0%{transform:scale(0) rotate(-120deg);opacity:0;}60%{transform:scale(1.3) rotate(10deg);opacity:1;}100%{transform:scale(1) rotate(0);opacity:1;}}
 @keyframes svPop{0%{transform:scale(.6);}55%{transform:scale(1.35);}100%{transform:scale(1);}}
 .card-stage .sv-flash{position:absolute;inset:0;z-index:7;pointer-events:none;background:#fff;border-radius:calc(var(--card-w) * 0.083);animation:svFlash .5s ease-out both;}
 @keyframes svFlash{0%{opacity:.95;}100%{opacity:0;}}
@@ -1177,13 +1197,46 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 /* LINK（時間停止）中：選べるカードだけ明るく */
 .card-stage.link-pick .card{box-shadow:0 0 0 2px rgba(170,240,255,.9),0 0 18px rgba(120,220,255,.75);animation:linkPick 1s ease-in-out infinite;}
 @keyframes linkPick{0%,100%{filter:brightness(1);}50%{filter:brightness(1.25);}}
-.link-banner{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + calc(74 * var(--u)));transform:translateX(-50%);z-index:160;pointer-events:none;
+.chrono-veil{position:fixed;inset:0;z-index:140;pointer-events:none;
+  background:linear-gradient(180deg,rgba(10,40,90,.62) 0%,rgba(40,90,160,.32) 38%,rgba(150,215,255,.10) 62%,rgba(150,215,255,.04) 100%);
+  animation:chVeilIn .32s ease both;}
+.chrono-veil.out{animation:chVeilOut .38s ease both;}
+@keyframes chVeilIn{0%{opacity:0;}100%{opacity:1;}}
+@keyframes chVeilOut{0%{opacity:1;filter:brightness(1);}30%{opacity:1;filter:brightness(1.8);}100%{opacity:0;filter:brightness(1);}}
+.chrono-burst{position:fixed;z-index:141;pointer-events:none;width:calc(120 * var(--u));height:calc(120 * var(--u));margin:calc(-60 * var(--u)) 0 0 calc(-60 * var(--u));
+  background:url('img/special-vortex.png') center/contain no-repeat;animation:chBurst .55s cubic-bezier(.1,.8,.3,1) both;}
+@keyframes chBurst{0%{transform:scale(.4) rotate(0deg);opacity:1;}100%{transform:scale(9) rotate(60deg);opacity:0;}}
+.chrono-ring{position:fixed;z-index:141;pointer-events:none;width:calc(120 * var(--u));height:calc(120 * var(--u));margin:calc(-60 * var(--u)) 0 0 calc(-60 * var(--u));border-radius:50%;
+  border:3px solid rgba(255,255,255,.95);box-shadow:0 0 30px rgba(140,225,255,.9),inset 0 0 30px rgba(140,225,255,.6);animation:chRing .5s ease-out both;}
+.chrono-ring.r2{animation-delay:.08s;border-color:rgba(150,230,255,.8);}
+@keyframes chRing{0%{transform:scale(.2);opacity:1;}100%{transform:scale(7);opacity:0;}}
+.chrono-title{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);z-index:161;pointer-events:none;
+  font-family:'Cinzel','Times New Roman',serif;font-weight:700;font-size:calc(30 * var(--u));letter-spacing:.22em;text-indent:.22em;white-space:nowrap;
+  color:#fff;text-shadow:0 0 2px rgba(0,40,90,.9),0 0 12px rgba(160,235,255,1),0 0 34px rgba(90,200,255,.9),0 2px 4px rgba(0,20,60,.7);animation:chTitle 1.05s cubic-bezier(.2,1.2,.3,1) both;}
+@keyframes chTitle{0%{opacity:0;transform:translate(-50%,-50%) scale(.5);filter:blur(6px);}22%{opacity:1;transform:translate(-50%,-50%) scale(1.08);filter:blur(0);}60%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(-50%,-62%) scale(1.06);}}
+.chrono-flash{position:fixed;inset:0;z-index:142;pointer-events:none;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.95),rgba(190,240,255,.5) 40%,rgba(190,240,255,0) 75%);animation:chFlash .38s ease-out both;}
+@keyframes chFlash{0%{opacity:1;}100%{opacity:0;}}
+.card-stage.link-pick .card{transform:translateY(-6%);transition:transform .25s cubic-bezier(.2,1.2,.4,1);}
+.link-banner{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + calc(74 * var(--u)));transform:translateX(-50%);z-index:160;pointer-events:none;animation-delay:.42s;
   background:rgba(4,20,40,.78);border:1.5px solid rgba(140,230,255,.9);border-radius:999px;padding:calc(7 * var(--u)) calc(18 * var(--u));
   color:#c8f6ff;font-size:calc(13 * var(--u));font-weight:900;letter-spacing:calc(2 * var(--u));white-space:nowrap;
   box-shadow:0 0 22px rgba(120,220,255,.55);backdrop-filter:blur(8px);animation:linkBan .28s ease both;}
-.link-banner b{color:#fff;margin-right:calc(8 * var(--u));text-shadow:0 0 8px rgba(160,240,255,1);}
+.link-banner b{color:#fff;margin-right:calc(8 * var(--u));text-shadow:0 0 8px rgba(160,240,255,1);font-family:'Cinzel','Times New Roman',serif;letter-spacing:.14em;}
+.link-banner{opacity:0;}
 @keyframes linkBan{0%{opacity:0;transform:translateX(-50%) translateY(-8px);}100%{opacity:1;transform:translateX(-50%) translateY(0);}}
-.gp-time-box.frozen .val{color:#1a9fd6;text-shadow:0 0 10px rgba(80,200,255,.8);}
+.gp-time-box.frozen .val{color:#1a9fd6;text-shadow:0 0 10px rgba(80,200,255,.8);animation:chFrozen 1.2s ease-in-out infinite;}
+@keyframes chFrozen{0%,100%{text-shadow:0 0 8px rgba(80,200,255,.6);}50%{text-shadow:0 0 16px rgba(120,230,255,1);}}
+/* v56: チャンピオン能力（コア・シフト）HUD */
+.ability-pill{align-self:center;margin-top:calc(-6 * var(--u));margin-bottom:calc(2 * var(--u));display:inline-flex;align-items:center;gap:calc(8 * var(--u));padding:calc(4 * var(--u)) calc(12 * var(--u));border-radius:999px;
+  background:rgba(60,10,30,.55);border:1px solid rgba(255,120,150,.55);color:#ffd7e0;font-size:calc(10 * var(--u));font-weight:700;letter-spacing:.06em;box-shadow:0 0 14px rgba(255,90,120,.35);backdrop-filter:blur(6px);transition:opacity .4s,filter .4s;}
+.ability-pill .en{font-family:'Cinzel','Times New Roman',serif;letter-spacing:.2em;color:#ff9fb4;font-size:calc(9.5 * var(--u));}
+.ability-pill.used{opacity:.35;filter:grayscale(.8);}
+.card-stage.cs-shift .card{animation:csShift .7s cubic-bezier(.2,.9,.3,1) both;}
+@keyframes csShift{0%{filter:brightness(1);}15%{filter:brightness(2.2) contrast(1.4);transform:translateX(-2px) rotate(-2deg);}30%{filter:brightness(1.6);transform:translateX(2px) rotate(2deg);}45%{filter:brightness(1.3) hue-rotate(-25deg);transform:none;}100%{filter:none;}}
+.card-stage .shift-crack{position:absolute;inset:0;z-index:7;pointer-events:none;
+  background:linear-gradient(115deg,transparent 46%,rgba(255,255,255,.95) 48%,transparent 50%),linear-gradient(35deg,transparent 58%,rgba(255,255,255,.85) 60%,transparent 62%),linear-gradient(160deg,transparent 30%,rgba(255,255,255,.8) 31.5%,transparent 33%);
+  animation:shiftCrack .9s ease-out both;}
+@keyframes shiftCrack{0%{opacity:0;}20%{opacity:1;}100%{opacity:0;}}
 
 /* ===== v54: 選手・チャンピオン画像の受け皿（画像未配置なら何も出ない） ===== */
 .gp-screen > .champ-layer{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
@@ -1303,6 +1356,12 @@ function fxLockHint(text){
   setTimeout(()=>{if(el.parentNode)el.remove();},1600);
 }
 
+function fxChronoToast(text){
+  let el=document.querySelector('.fx2-hint');if(el)el.remove();
+  el=document.createElement('div');el.className='fx2-hint';el.textContent='✦ '+text;
+  document.body.appendChild(el);void el.offsetWidth;el.classList.add('go');
+  setTimeout(()=>{if(el.parentNode)el.remove();},1500);
+}
 const starImgCache={};
 function starImg(core,glow){
   const k=core+'|'+glow;
@@ -1512,6 +1571,43 @@ function playBurstSE(){
       start: 0
     });
   }, 95);
+}
+// ── v56 クロノリンクSE（低音ではなく「振動する高音」）──
+function playChronoTapSE(){ // タップ：短い結晶音「キィン」
+  try{resumeAC();fxBell({f:2637,v:0.13,d:0.45,bright:1.3,rev:0.6});fxTone({f:5274,type:'sine',v:0.05,a:0.002,d:0.12,rev:0.4});}catch(e){}
+}
+function playChronoStopSE(){ // 時間停止：高音が上昇 → 空間が吸い込まれる
+  try{
+    resumeAC();
+    fxTone({f:1600,f2:4400,type:'sine',v:0.11,a:0.02,d:0.34,rev:0.55});
+    fxTone({f:2400,f2:6600,type:'triangle',v:0.05,a:0.02,d:0.34,rev:0.55});
+    fxAir({v:0.05,a:0.25,d:0.12,hp:6500,rev:0.5});
+    fxTone({f:3600,f2:380,type:'sine',v:0.09,a:0.005,d:0.26,t:0.34,rev:0.7});   // 吸い込み
+    fxBell({f:4186,v:0.06,d:1.2,t:0.42,bright:1.2,rev:0.85});                       // 止まった余韻
+  }catch(e){}
+}
+let chronoHum=null;
+function startChronoHum(){ // 停止中：ごく小さい高音の揺れ
+  try{
+    stopChronoHum();resumeAC();
+    const o=AC.createOscillator(),g=AC.createGain(),lfo=AC.createOscillator(),lg=AC.createGain();
+    o.type='sine';o.frequency.value=3520;lfo.type='sine';lfo.frequency.value=5.5;lg.gain.value=9;
+    lfo.connect(lg);lg.connect(o.frequency);
+    g.gain.setValueAtTime(0.0001,AC.currentTime);g.gain.linearRampToValueAtTime(0.012,AC.currentTime+0.4);
+    o.connect(g);fxOut(g,0.5);o.start();lfo.start();
+    chronoHum={o,g,lfo};
+  }catch(e){}
+}
+function stopChronoHum(){
+  const hm=chronoHum;chronoHum=null;if(!hm)return;
+  try{const t=AC.currentTime;hm.g.gain.cancelScheduledValues(t);hm.g.gain.setValueAtTime(hm.g.gain.value,t);hm.g.gain.linearRampToValueAtTime(0.0001,t+0.25);hm.o.stop(t+0.3);hm.lfo.stop(t+0.3);}catch(e){}
+}
+function playChronoReleaseSE(){ // 解除：「パチッ」＋光が戻る音（着地音は playPlaceSE 側）
+  try{resumeAC();fxTone({f:3200,f2:1400,type:'triangle',v:0.06,a:0.002,d:0.05,rev:0.3});fxBell({f:3136,v:0.09,d:0.9,t:0.06,bright:1.25,rev:0.75});fxAir({v:0.03,a:0.01,d:0.3,t:0.06,hp:8000,rev:0.7});}catch(e){}
+}
+function duckBGM(on){try{if(bgmAudio)bgmAudio.volume=on?CHRONO_CONFIG.timeStopBgmVolume:0.45;}catch(e){}}
+function playCoreShiftSE(){ // 4が結晶のように割れて3へ
+  try{resumeAC();noise({vol:0.12,dur:0.07,start:0,lpFreq:5200,q:0.7});fxTone({f:2900,f2:900,type:'sine',v:0.1,a:0.002,d:0.18,rev:0.5});fxBell({f:1975,v:0.07,d:0.6,t:0.08,bright:1.1,rev:0.6});}catch(e){}
 }
 // ── 10完成音の道具（osc/noise/sweep/reverb）──
 function osc({freq=220,type='sine',vol=0.15,attack=0.01,decay=0.2,start=0,end=0,detune=0,curve='exp'}){
@@ -1836,7 +1932,7 @@ function SlideCard({value,onPlay,disabled,cardRole,cardState,onLocked,isSpecial,
   const locked=cardState==='locked';
   const stateClass=cardState?' cs-'+cardState:'';
   return h('div',{
-    className:'card-stage '+colorClass+' n'+value+stateClass+(shaking?' cs-shake':'')+(isSpecial?' sv-card':'')+(linkPick?' link-pick':''),
+    className:'card-stage '+colorClass+' n'+value+stateClass+(shaking?' cs-shake':'')+(isSpecial?' sv-card sv-born':'')+(linkPick?' link-pick':''),
     style:{
       opacity:(disabled&&!locked)?0.3:undefined, // lockedの見た目はCSSに任せる(カウントダウン中等の無効はここで薄く)
       animation:'dealIn 0.22s cubic-bezier(0.2,1.3,0.5,1) both',
@@ -1866,16 +1962,17 @@ function SlideCard({value,onPlay,disabled,cardRole,cardState,onLocked,isSpecial,
     !disabled&&h('div',{className:'ext-bottom-line'})
   );
 }
-function FieldCard({value,by,isComplete,isSpecial}){
+function FieldCard({value,by,isComplete,isSpecial,shifted}){
   const isBlue=by==='player'||by==='host';
   const colorClass=isBlue?'cyan':'magenta';
   const stateClass=isComplete?'complete':'field';
   return h('div',{
-    className:'card-stage '+colorClass+' n'+value+' '+stateClass+(isSpecial?' sv-card sv-placed':''),
+    className:'card-stage '+colorClass+' n'+value+' '+stateClass+(isSpecial?' sv-card sv-placed':'')+(shifted?' cs-shift':''),
     style:{animation:'dealIn 0.25s cubic-bezier(0.2,1.3,0.5,1) both'},
   },
     isComplete&&h('div',{className:'plasma'}),
     h('div',{className:'card'},
+      shifted&&h('div',{className:'shift-crack'}),
       ...renderCardOverlay(),
       isSpecial&&h('div',{className:'sv-wrap'},h('div',{className:'sv'})),
       isSpecial&&h('div',{className:'sv-flash'}),   // 置いた瞬間だけ：白閃光
@@ -2112,7 +2209,10 @@ function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic,coachN
 
 
 // ── MenuScreen ──
-const APP_VER='v54'; // v54: AREA01本格マップ（背景/コア/マス外装）・LINK CARD（渦＋時間停止）・選手画像の受け皿
+const APP_VER='v57'; // v57: コア・シフトは変化後の3でも canPlay が通る時だけ発動（4枚目や合計5未満の穴を塞ぐ）
+// v56: クロノリンク（ST4〜解放・5枚使用後に1枚変化・1試合1回・時間停止演出/SE）、ST5=6秒、CHAMPION=コア・シフト、AREA CLEARはチャンピオン撃破後
+// v55: ステージ選択画面の文字・ボタンを書体設計で高品質化（Cinzel/Noto Serif JP/Noto Sans JP）
+// v54: AREA01本格マップ（背景/コア/マス外装）・LINK CARD（渦＋時間停止）・選手画像の受け皿
 // ═══════════════════════════════════════════════════════════
 //  ステージモード (v54)  ── AREA 01 星環アリーナ
 //  ゲーム本体（calcPts, canPlay, createDeck, getComboLevel, カードCSS）は触らない
@@ -2130,9 +2230,10 @@ const AREA_01={
     {no:1,name:'ファースト・リンク',description:'基本ルールで10を目指す',icon:'check',winPt:10,diff:'easy',rule:'normal',tutorial:true},
     {no:2,name:'シャッフル・ライン',description:'手札の流れが変化するステージ',icon:'shuffle',winPt:10,diff:'easy',rule:'shuffle'},
     {no:3,name:'フロスト・ロック',description:'一部の手札が一時的に凍結',icon:'snow',winPt:10,diff:'easy',rule:'frost'},
-    {no:4,name:'???',description:'準備中',icon:'clock',winPt:10,diff:'normal',rule:'normal',comingSoon:true},
-    {no:5,name:'???',description:'準備中',icon:'card',winPt:10,diff:'normal',rule:'normal',comingSoon:true},
-    {no:6,name:'チャンピオン',description:'準備中',icon:'crown',winPt:15,diff:'hard',rule:'normal',boss:true,comingSoon:true},
+    // v56: ST4以降は仮名。chrono:true=クロノリンク登場 / timeLimit=ラウンド秒 / ability=チャンピオン能力
+    {no:4,name:'クロノ・アウェイク',description:'クロノリンク解放。時間を止め、もう1枚つなぐ',icon:'clock',winPt:10,diff:'normal',rule:'normal',chrono:true},
+    {no:5,name:'シックス・セカンド',description:'制限時間6秒。クロノリンクを実戦で使え',icon:'card',winPt:10,diff:'normal',rule:'normal',chrono:true,timeLimit:6},
+    {no:6,name:'チャンピオン',description:'コア・シフト：最初に置いた4が3に変わる',icon:'crown',winPt:15,diff:'hard',rule:'normal',boss:true,chrono:true,ability:'coreShift'},
   ]
 };
 const STAGES={
@@ -2148,30 +2249,19 @@ const RULE_HOOKS={
   frost:{onStart:null},   // TODO: 手札の一時凍結（枚数・秒数は未定）
 };
 
-// ── LINK CARD（特殊カード）設定：数値はここだけで管理（仮値）──
-const SPECIAL_CONFIG={
+// ── クロノリンク（CHRONO LINK）設定：数値はここだけで管理（仮値）──
+// 出現：stage.chrono のステージのみ。試合開始時には出さず、プレイヤーが通常カードを afterNormalPlays 枚使った後、
+//       残り手札のうち1枚がクロノリンクへ変化。1試合 maxPerMatch 枚。手札補充・時間切れの配り直しでも増えない。
+const CHRONO_CONFIG={
   enabled:true,
-  testMode:true,               // true: 初期手札10枚のうち必ず testCountPerPlayerHand 枚が特殊
-  testCountPerPlayerHand:1,
-  productionRate:0.05,         // testMode:false のとき、1枚ごとにこの確率（仮値・未確定）
-  maxPerHand:1,
-  applyOnRefill:true,          // 手札10枚を使い切って配り直す時にも同じ規則で付与
-  dealerEnabled:false          // 相手側の特殊カードは今回は未実装（受け皿のみ）
+  afterNormalPlays:5,
+  maxPerMatch:1,
+  appearRate:0.75,             // 1試合の開始時に1回だけ判定（仮値）
+  guaranteeFirstUnlock:true,   // 解放ステージ（AREA_01で最初に chrono:true のステージ）の初回は必ず出す
+  timeStopBgmVolume:0.18,      // 時間停止中のBGM音量（通常0.45）
+  autoRelease:true             // 追加で出せるカードが無い時は停止せず通常進行
 };
-// 手札スロットごとに特殊フラグを付与（数字ではなくカード1枚ごと）
-function assignSpecial(hand){
-  const n=hand.length;const flags=new Array(n).fill(false);
-  if(!SPECIAL_CONFIG.enabled)return flags;
-  if(SPECIAL_CONFIG.testMode){
-    const cnt=Math.min(SPECIAL_CONFIG.testCountPerPlayerHand,SPECIAL_CONFIG.maxPerHand,n);
-    const idx=[...Array(n).keys()].sort(()=>Math.random()-0.5).slice(0,cnt);
-    idx.forEach(i=>{flags[i]=true;});
-    return flags;
-  }
-  let c=0;
-  for(let i=0;i<n&&c<SPECIAL_CONFIG.maxPerHand;i++){if(Math.random()<SPECIAL_CONFIG.productionRate){flags[i]=true;c++;}}
-  return flags;
-}
+const CHRONO_TEXT={name:'クロノリンク',en:'CHRONO LINK',hint:'もう1枚選べ'};
 
 // ── 選手・チャンピオン画像の受け皿（画像は未生成。enabled:false なら何も描かない）──
 const CHARACTER_ASSETS={
@@ -2219,7 +2309,7 @@ const DIFF_STARS={easy:'★☆☆',normal:'★★☆',hard:'★★★',master:'�
 const SAVE_KEY='tenkuru-save';
 function loadSave(){
   const base={stars:{}};
-  try{const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');return {...base,stars:{...(s.stars||{})}};}
+  try{const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');return {...base,stars:{...(s.stars||{})},chronoIntro:!!s.chronoIntro};}
   catch(e){return base;}
 }
 function writeSave(s){try{localStorage.setItem(SAVE_KEY,JSON.stringify(s));}catch(e){}}
@@ -2229,7 +2319,10 @@ function areaProgress(save,area){
   // v54: comingSoon（準備中）は進行度に数えない
   const playable=area.stages.filter(st=>!st.comingSoon);
   const clearedCount=playable.filter(st=>save.stars[st.no]).length;
-  return {current,clearedCount,n:playable.length,allClear:clearedCount>=playable.length};
+  // v56: AREA CLEAR はチャンピオン（boss）撃破後だけ
+  const boss=playable.find(st=>st.boss);
+  const allClear=boss?!!save.stars[boss.no]:clearedCount>=playable.length;
+  return {current,clearedCount,n:playable.length,allClear};
 }
 function isStagePlayable(save,area,i){
   const st=area.stages[i];if(!st||st.comingSoon)return false;
@@ -2350,7 +2443,7 @@ function MapScreen({area,save,onSelect,onBack}){
       h('div',{className:'k'},area.label),
       h('div',{className:'n'},area.name),
       h('div',{className:'s'},area.tagline),
-      h('div',{className:'p'},prog.allClear?'AREA CLEAR':prog.clearedCount+' / '+prog.n+' CLEAR')
+      h('div',{className:'p'+(prog.allClear?' clear':'')},prog.allClear?'AREA CLEAR':prog.clearedCount+' / '+prog.n+' CLEAR')
     ),
     // マップ本体
     h('div',{className:'a1-map'},
@@ -2377,7 +2470,10 @@ function MapScreen({area,save,onSelect,onBack}){
       h('div',{className:'a1-info'},
         h('div',{className:'ic'+(selState==='clear'?' gold':selPlayable?'':' dim')},Icon(selState==='soon'||selState==='locked'?'lock':s.boss?'crown':s.icon,22)),
         h('div',{className:'tx'},
-          h('div',{className:'no'+(s.boss?' gold':'')},s.boss?area.label+'  BOSS':'STAGE '+String(s.no).padStart(2,'0')),
+          h('div',{className:'row'},
+            h('div',{className:'no'+(s.boss?' gold':'')},s.boss?area.label+'  BOSS':'STAGE '+String(s.no).padStart(2,'0')),
+            h('div',{className:'stars'+(selStars?' on':'')},starStr(selStars))
+          ),
           h('div',{className:'nm'},s.comingSoon&&!s.boss?'準備中':s.name),
           h('div',{className:'ds'},s.description),
           h('div',{className:'mt'},
@@ -2386,11 +2482,10 @@ function MapScreen({area,save,onSelect,onBack}){
             h('span',{className:'chip'},DIFF_STARS[s.diff]||''),
             s.tutorial&&!isTutDone()&&h('span',{className:'chip'},'あそびかた つき')
           )
-        ),
-        h('div',{className:'stars'+(selStars?' on':'')},starStr(selStars))
+        )
       ),
       h('button',{className:'a1-go',disabled:!selPlayable,onClick:go},
-        h('span',{className:'l'},selPlayable?'CHALLENGE':s.comingSoon?'COMING SOON':'LOCKED'),
+        h('span',{className:'l'},selPlayable?(selStars?'REPLAY':'CHALLENGE'):s.comingSoon?'COMING SOON':'LOCKED'),
         h('span',{className:'v'},selPlayable?(selStars?'もう一度':'対戦開始'):s.comingSoon?'準備中':'未解放')
       )
     )
@@ -2452,6 +2547,14 @@ function App(){
   const[fieldSp,setFieldSp]=useState([]);
   const[linkMode,setLinkMode]=useState(false);const linkR=useRef(false);
   const timeLeftR=useRef(10);   // 時間停止→再開のための残り秒
+  const roundSecR=useRef(10);   // v56: ラウンド秒（ステージで変更可）
+  const stageOptsR=useRef(null);// v56: {chrono, timeLimit, ability}
+  const chronoR=useRef({armed:false,count:0,pending:false,plays:0}); // 1試合ぶんのクロノリンク状態
+  const[chronoFx,setChronoFx]=useState(null); // 'in' | 'out' | null
+  const[burstPos,setBurstPos]=useState({x:'50%',y:'45%'});
+  const coreShiftR=useRef({active:false,used:false});
+  const[coreShiftUsed,setCoreShiftUsed]=useState(false);
+  const[fieldShift,setFieldShift]=useState([]);
   const[pPt,setPPt]=useState(0);
   const[dPt,setDPt]=useState(0);
   const[rNum,setRNum]=useState(1);
@@ -2543,11 +2646,33 @@ function App(){
   }
   function clearTimers(){clearTimeout(aiRef.current);clearInterval(timerRef.current);clearTimeout(countRef.current);}
   // v54: プレイヤー手札を配る（特殊フラグも同時に付与）
-  function dealPlayer(hand,withSpecial){
-    const sp=withSpecial?assignSpecial(hand):new Array(hand.length).fill(false);
+  function dealPlayer(hand){
+    const sp=new Array(hand.length).fill(false);
+    // 変化済みで未使用のクロノリンクは、配り直しても消えない（新しい手札の1枚へ引き継ぐ）
+    if(chronoR.current.pending&&hand.length){sp[Math.floor(Math.random()*hand.length)]=true;}
     setPH(hand);pHR.current=hand;setPSp(sp);pSpR.current=sp;
   }
-  function exitLink(){linkR.current=false;setLinkMode(false);}
+  // 通常カードを afterNormalPlays 枚使った後、残り手札の1枚をクロノリンクへ変化させる
+  function maybeAwakenChrono(newPH,newSp){
+    const c=chronoR.current;
+    if(!c.armed||c.count>=CHRONO_CONFIG.maxPerMatch||c.plays<CHRONO_CONFIG.afterNormalPlays)return newSp;
+    const cand=newPH.map((v,i)=>v?i:-1).filter(i=>i>=0);
+    if(!cand.length)return newSp;
+    const k=cand[Math.floor(Math.random()*cand.length)];
+    const sp=newSp.slice();sp[k]=true;c.count++;c.pending=true;c.plays=0;
+    setTimeout(()=>{playChronoTapSE();fxChronoToast(CHRONO_TEXT.en+'　'+CHRONO_TEXT.name+'出現');},60);
+    return sp;
+  }
+  function exitLink(){
+    const was=linkR.current;
+    linkR.current=false;setLinkMode(false);stopChronoHum();duckBGM(false);
+    if(was){setChronoFx('out');setTimeout(()=>setChronoFx(f=>f==='out'?null:f),420);}
+  }
+  function enterLink(){
+    linkR.current=true;setLinkMode(true);
+    try{const r=fieldAreaRef.current&&fieldAreaRef.current.getBoundingClientRect();if(r)setBurstPos({x:(r.left+r.width/2)+'px',y:(r.top+r.height/2)+'px'});}catch(e){}
+    setChronoFx('in');playChronoStopSE();duckBGM(true);setTimeout(()=>{if(linkR.current)startChronoHum();},350);
+  }
   useEffect(()=>()=>clearTimers(),[]);
 
   function openTutorial(diff){
@@ -2564,7 +2689,7 @@ function App(){
     else{stopBGM();setPhase('menu');phaseR.current='menu';}
   }
   // ── ストーリー進行 ──
-  function goMap(){roundTokR.current++;clearTimers();exitLink();stopBGM();stageR.current=null;setStageCtx(null);setPhase('map');phaseR.current='map';}
+  function goMap(){roundTokR.current++;clearTimers();exitLink();stopBGM();stageR.current=null;stageOptsR.current=null;setStageCtx(null);setPhase('map');phaseR.current='map';}
   function startStage(arIdx,stIdx){
     const ar=STAGES.areas[arIdx],st=ar.stages[stIdx];
     if(!st||st.comingSoon){goMap();return;} // v54: 準備中は開始しない
@@ -2572,6 +2697,14 @@ function App(){
     stageR.current={ar:arIdx,st:stIdx};setStageCtx({ar:arIdx,st:stIdx});
     winPtR.current=st.winPt||WIN_PT;setWinPt(st.winPt||WIN_PT);
     const hook=RULE_HOOKS[st.rule];if(hook&&typeof hook.onStart==='function')hook.onStart(st); // ギミック差し込み口（未実装）
+    // v56: ステージ固有オプション
+    const firstChrono=ar.stages.find(x=>x.chrono);
+    let chrono=false;
+    if(CHRONO_CONFIG.enabled&&st.chrono){
+      if(CHRONO_CONFIG.guaranteeFirstUnlock&&firstChrono&&st.no===firstChrono.no&&!saveR.current.chronoIntro){chrono=true;updSave(s=>{s.chronoIntro=true;return s;});}
+      else chrono=Math.random()<CHRONO_CONFIG.appearRate;
+    }
+    stageOptsR.current={chrono,timeLimit:st.timeLimit||10,ability:st.ability||null};
     if(st.tutorial&&!tutDoneR.current){openTutorial(st.diff);return;}
     startGame(st.diff);
   }
@@ -2584,7 +2717,11 @@ function App(){
     if(diff){setDifficulty(diff);diffRef.current=diff;}
     clearTimers();lockR.current=false;
     const p=createDeck(),d=createDeck();
-    dealPlayer(p,true);setDH(d);dHR.current=d;exitLink();
+    const opts=stageR.current?(stageOptsR.current||{}):{};
+    chronoR.current={armed:!!opts.chrono,count:0,pending:false,plays:0};
+    roundSecR.current=opts.timeLimit||10;
+    coreShiftR.current={active:opts.ability==='coreShift',used:false};setCoreShiftUsed(false);
+    dealPlayer(p);setDH(d);dHR.current=d;exitLink();
     setPPt(0);setDPt(0);pPtR.current=0;dPtR.current=0;
     setRNum(1);setField([]);setFieldSum(0);fieldR.current=[];fieldSumR.current=0;
     setFlashMsg(null);setBurstAnim(false);setResetFA(false);setGameEndData(null);
@@ -2598,7 +2735,7 @@ function App(){
     setPhase('playing');phaseR.current='playing';
     setField([]);setFieldSum(0);fieldR.current=[];fieldSumR.current=0;setFieldSp([]);
     setFieldColors([]); // v46: 時間切れ後に前ラウンドの色記録が残って自分のカードがオレンジになるバグ修正
-    setFlashMsg(null);setTimeLeft(10);setComboShow(null);setTimeUpShow(false);
+    setFlashMsg(null);setTimeLeft(roundSecR.current);setComboShow(null);setTimeUpShow(false);setFieldShift([]);
     let c=5;setCountNum(c);countNumR.current=c;
     function tick(){
       setCountNum(c);countNumR.current=c;
@@ -2622,7 +2759,7 @@ function App(){
 
   function startTimer(rn,from){
     clearInterval(timerRef.current);
-    let t=(from==null)?10:from;setTimeLeft(t);timeLeftR.current=t;
+    let t=(from==null)?roundSecR.current:from;setTimeLeft(t);timeLeftR.current=t;
     timerRef.current=setInterval(()=>{
       t--;setTimeLeft(t);timeLeftR.current=t;
       if(t<=0){clearInterval(timerRef.current);clearTimeout(aiRef.current);doTimeUp(rn);}
@@ -2634,7 +2771,7 @@ function App(){
     resumeAC();playMissSE();
     setTimeUpShow(true);
     const newP=createDeck(),newD=createDeck();
-    dealPlayer(newP,SPECIAL_CONFIG.applyOnRefill);setDH(newD);dHR.current=newD;
+    dealPlayer(newP);setDH(newD);dHR.current=newD;
     const tok=roundTokR.current;
     setTimeout(()=>{
       if(tok!==roundTokR.current)return; // 別の遷移が先に走ってたら中止
@@ -2710,17 +2847,28 @@ function App(){
     }
     // 判定はstateでなくrefを使う（同時タイミングで相手の直前プレイが消えるのを防ぐ）
     const cf=fieldR.current,cs=fieldSumR.current;
-    const value=pH[idx];
+    let value=pH[idx];
     if(!value||!canPlay(value,cs,cf))return;
     const isSp=!!pSpR.current[idx];
     const wasLink=linkR.current;   // 時間停止中の「追加の1枚」か
-    clearTimeout(aiRef.current);resumeAC();setTimeout(()=>playPlaceSE(true),100);
+    clearTimeout(aiRef.current);resumeAC();
+    if(isSp){playChronoTapSE();chronoR.current.pending=false;}
+    setTimeout(()=>playPlaceSE(true),100);
     const newPH=pH.map((v,i)=>i===idx?null:v);
-    const newSp=pSpR.current.map((f,i)=>i===idx?false:f);
+    let newSp=pSpR.current.map((f,i)=>i===idx?false:f);
+    if(!isSp){chronoR.current.plays++;newSp=maybeAwakenChrono(newPH,newSp);}
     setPH(newPH);pHR.current=newPH;setPSp(newSp);pSpR.current=newSp;
     const emptied=!newPH.filter(Boolean).length;
-    if(emptied){const nd=createDeck();setTimeout(()=>{dealPlayer(nd,SPECIAL_CONFIG.applyOnRefill);},100);}
-    const ended=resolvePlay(value,cf,cs,'player',rNum,isSp);
+    if(emptied){const nd=createDeck();setTimeout(()=>{dealPlayer(nd);},100);}
+    // v56 チャンピオン能力「コア・シフト」：最初に置いた4が3に変わる（得点確定より先）
+    let shifted=false;
+    // ※変化後の3でも既存ルール(canPlay)が通る時だけ。4枚目で10未満、3枚目で5未満になる場合は発動せず、4のまま置く
+    if(coreShiftR.current.active&&!coreShiftR.current.used&&value===4&&canPlay(3,cs,cf)){
+      coreShiftR.current.used=true;setCoreShiftUsed(true);shifted=true;value=3;
+      playCoreShiftSE();setFlashMsg({text:'CORE SHIFT　4 → 3',who:'dealer'});setTimeout(()=>setFlashMsg(m=>m&&m.text.startsWith('CORE SHIFT')?null:m),1300);
+    }
+    if(wasLink){playChronoReleaseSE();}
+    const ended=resolvePlay(value,cf,cs,'player',rNum,isSp,shifted);
     if(ended){exitLink();return;} // 10完成/バースト/4枚 → 既存の終了処理が優先
     const nf=fieldR.current,ns=fieldSumR.current;
     if(wasLink){
@@ -2730,20 +2878,21 @@ function App(){
       clearTimeout(aiRef.current);scheduleAi(rNum);
       return;
     }
-    if(isSp&&SPECIAL_CONFIG.enabled&&!emptied&&newPH.some(v=>v&&canPlay(v,ns,nf))){
-      // LINK：ラウンド継続かつ追加で出せるカードがある時だけ時間停止
+    if(isSp&&CHRONO_CONFIG.enabled&&!emptied&&newPH.some(v=>v&&canPlay(v,ns,nf))){
+      // CHRONO LINK：ラウンド継続かつ追加で出せるカードがある時だけ時間停止
       clearInterval(timerRef.current);clearTimeout(aiRef.current);
-      linkR.current=true;setLinkMode(true);
+      enterLink();
       return;
     }
     clearTimeout(aiRef.current);scheduleAi(rNum);
   }
 
-  function resolvePlay(value,curField,curSum,who,rn,isSp){
+  function resolvePlay(value,curField,curSum,who,rn,isSp,shifted){
     const nf=[...curField,value],ns=curSum+value;
     setField(nf);setFieldSum(ns);fieldR.current=nf;fieldSumR.current=ns;
     setFieldColors(prev=>[...prev,who]);
     setFieldSp(prev=>[...prev,!!isSp]);
+    setFieldShift(prev=>[...prev,!!shifted]);
     if(ns>10){
       clearTimers();lockR.current=true;resolvingR.current=true;playBurstSE();setBurstAnim(true);
       const newPP=who==='player'?Math.max(0,pPtR.current-2):pPtR.current;
@@ -2780,7 +2929,7 @@ function App(){
     return false;
   }
 
-  function resetField(){setField([]);setFieldSum(0);fieldR.current=[];fieldSumR.current=0;setFieldColors([]);setFieldSp([]);}
+  function resetField(){setField([]);setFieldSum(0);fieldR.current=[];fieldSumR.current=0;setFieldColors([]);setFieldSp([]);setFieldShift([]);}
   function endGame(pp,dp){
     roundTokR.current++;stopBGM();
     let stars=0;
@@ -2802,7 +2951,15 @@ function App(){
 
   return h('div',{className:'gp-screen'},
     h(ChampionLayer), // v54: 選手画像の受け皿（enabled:false なら何も出ない）
-    linkMode&&h('div',{className:'link-banner'},h('b',null,'LINK'),'もう1枚選べ'),
+    // v56 クロノリンク演出（すべて pointer-events:none）
+    chronoFx==='in'&&h('div',{key:'chv'+rNum,className:'chrono-veil'}),
+    chronoFx==='out'&&h('div',{className:'chrono-veil out'}),
+    chronoFx==='in'&&h('div',{className:'chrono-burst',style:{left:burstPos.x,top:burstPos.y}}),
+    chronoFx==='in'&&h('div',{className:'chrono-ring',style:{left:burstPos.x,top:burstPos.y}}),
+    chronoFx==='in'&&h('div',{className:'chrono-ring r2',style:{left:burstPos.x,top:burstPos.y}}),
+    chronoFx==='in'&&h('div',{className:'chrono-title',style:{top:burstPos.y}},CHRONO_TEXT.en),
+    chronoFx==='out'&&h('div',{className:'chrono-flash'}),
+    linkMode&&h('div',{className:'link-banner'},h('b',null,CHRONO_TEXT.en),CHRONO_TEXT.hint),
     comboShow&&h(CyberComboDisplay,{key:'c_'+comboShow.text+Date.now(),combo:comboShow}),
     timeUpShow&&h(TimeUpDisplay,{key:'tu_'+Date.now(),show:true}),
     countNum>=0&&h('div',{style:{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',background:'#2a103066',pointerEvents:'none'}},
@@ -2838,6 +2995,9 @@ function App(){
       )
     ),
 
+    // v56 チャンピオン能力の表示（使用後は暗くなる）
+    coreShiftR.current.active&&h('div',{className:'ability-pill'+(coreShiftUsed?' used':'')},h('span',{className:'en'},'CORE SHIFT'),h('span',null,coreShiftUsed?'使用済み':'最初に置く 4 → 3')),
+
     // DEALER 手札
     h('div',{className:'gp-dealer-area'},
       h('div',{className:'gp-area-label'},'💀 DEALER — '+dH.length+'枚'),
@@ -2857,7 +3017,7 @@ function App(){
     },
       h('div',{className:'field-planet'}),
       h('div',{className:'gp-field-cards'},
-        field.map((v,i)=>h(FieldCard,{key:i,value:v,by:fieldColors[i],isComplete:fieldSum===10&&i===field.length-1,isSpecial:!!fieldSp[i]}))
+        field.map((v,i)=>h(FieldCard,{key:i,value:v,by:fieldColors[i],isComplete:fieldSum===10&&i===field.length-1,isSpecial:!!fieldSp[i],shifted:!!fieldShift[i]}))
       ),
       // FIELD SUM（場のカードの下・前の配置に戻す＋少し強化）
       h('div',{className:'gp-field-sum gp-field-sum-strong',style:{visibility:fieldSum>0?'visible':'hidden'}},
