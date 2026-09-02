@@ -2209,7 +2209,8 @@ function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic,coachN
 
 
 // ── MenuScreen ──
-const APP_VER='v58'; // v58: クロノリンクは途中出現をやめ、2周目の手札10枚が配られた時点で最初から1枚に付く
+const APP_VER='v59'; // v59: クロノリンクは最初の手札10枚から1枚付く（appearOnDeal:1）
+// v58: クロノリンクは途中出現をやめ、2周目の手札10枚が配られた時点で最初から1枚に付く
 // v57: コア・シフトは変化後の3でも canPlay が通る時だけ発動（4枚目や合計5未満の穴を塞ぐ）
 // v56: クロノリンク（ST4〜解放・5枚使用後に1枚変化・1試合1回・時間停止演出/SE）、ST5=6秒、CHAMPION=コア・シフト、AREA CLEARはチャンピオン撃破後
 // v55: ステージ選択画面の文字・ボタンを書体設計で高品質化（Cinzel/Noto Serif JP/Noto Sans JP）
@@ -2251,12 +2252,12 @@ const RULE_HOOKS={
 };
 
 // ── クロノリンク（CHRONO LINK）設定：数値はここだけで管理（仮値）──
-// 出現：stage.chrono のステージのみ。1周目（最初の手札10枚）には出ない。
-//       appearOnDeal 周目の手札10枚が配られた時点で、そのうち1枚が最初からクロノリンク。途中で突然変化はしない。
+// 出現：stage.chrono のステージのみ。appearOnDeal 周目の手札10枚が配られた時点で、そのうち1枚が最初からクロノリンク。
+//       途中で突然変化はしない。1=最初の10枚から。
 //       1試合 maxPerMatch 枚。未使用のまま配り直しになった時だけ次の手札へ引き継ぐ。
 const CHRONO_CONFIG={
   enabled:true,
-  appearOnDeal:2,              // 2=2周目の10枚から（使い切り・時間切れの配り直しどちらも1周と数える）
+  appearOnDeal:1,              // 1=最初の10枚から / 2=2周目から（使い切り・時間切れの配り直しどちらも1周と数える）
   maxPerMatch:1,
   appearRate:0.75,             // 1試合の開始時に1回だけ判定（仮値）
   guaranteeFirstUnlock:true,   // 解放ステージ（AREA_01で最初に chrono:true のステージ）の初回は必ず出す
