@@ -2209,7 +2209,8 @@ function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic,coachN
 
 
 // ── MenuScreen ──
-const APP_VER='v57'; // v57: コア・シフトは変化後の3でも canPlay が通る時だけ発動（4枚目や合計5未満の穴を塞ぐ）
+const APP_VER='v58'; // v58: クロノリンクは途中出現をやめ、2周目の手札10枚が配られた時点で最初から1枚に付く
+// v57: コア・シフトは変化後の3でも canPlay が通る時だけ発動（4枚目や合計5未満の穴を塞ぐ）
 // v56: クロノリンク（ST4〜解放・5枚使用後に1枚変化・1試合1回・時間停止演出/SE）、ST5=6秒、CHAMPION=コア・シフト、AREA CLEARはチャンピオン撃破後
 // v55: ステージ選択画面の文字・ボタンを書体設計で高品質化（Cinzel/Noto Serif JP/Noto Sans JP）
 // v54: AREA01本格マップ（背景/コア/マス外装）・LINK CARD（渦＋時間停止）・選手画像の受け皿
@@ -2250,11 +2251,12 @@ const RULE_HOOKS={
 };
 
 // ── クロノリンク（CHRONO LINK）設定：数値はここだけで管理（仮値）──
-// 出現：stage.chrono のステージのみ。試合開始時には出さず、プレイヤーが通常カードを afterNormalPlays 枚使った後、
-//       残り手札のうち1枚がクロノリンクへ変化。1試合 maxPerMatch 枚。手札補充・時間切れの配り直しでも増えない。
+// 出現：stage.chrono のステージのみ。1周目（最初の手札10枚）には出ない。
+//       appearOnDeal 周目の手札10枚が配られた時点で、そのうち1枚が最初からクロノリンク。途中で突然変化はしない。
+//       1試合 maxPerMatch 枚。未使用のまま配り直しになった時だけ次の手札へ引き継ぐ。
 const CHRONO_CONFIG={
   enabled:true,
-  afterNormalPlays:5,
+  appearOnDeal:2,              // 2=2周目の10枚から（使い切り・時間切れの配り直しどちらも1周と数える）
   maxPerMatch:1,
   appearRate:0.75,             // 1試合の開始時に1回だけ判定（仮値）
   guaranteeFirstUnlock:true,   // 解放ステージ（AREA_01で最初に chrono:true のステージ）の初回は必ず出す
@@ -2549,7 +2551,7 @@ function App(){
   const timeLeftR=useRef(10);   // 時間停止→再開のための残り秒
   const roundSecR=useRef(10);   // v56: ラウンド秒（ステージで変更可）
   const stageOptsR=useRef(null);// v56: {chrono, timeLimit, ability}
-  const chronoR=useRef({armed:false,count:0,pending:false,plays:0}); // 1試合ぶんのクロノリンク状態
+  const chronoR=useRef({armed:false,count:0,pending:false,deals:0}); // 1試合ぶんのクロノリンク状態
   const[chronoFx,setChronoFx]=useState(null); // 'in' | 'out' | null
   const[burstPos,setBurstPos]=useState({x:'50%',y:'45%'});
   const coreShiftR=useRef({active:false,used:false});
@@ -2646,22 +2648,19 @@ function App(){
   }
   function clearTimers(){clearTimeout(aiRef.current);clearInterval(timerRef.current);clearTimeout(countRef.current);}
   // v54: プレイヤー手札を配る（特殊フラグも同時に付与）
+  // プレイヤーへ手札10枚を配る。何周目かを数え、appearOnDeal 周目からクロノリンクを1枚付ける
   function dealPlayer(hand){
+    const c=chronoR.current;c.deals++;
     const sp=new Array(hand.length).fill(false);
-    // 変化済みで未使用のクロノリンクは、配り直しても消えない（新しい手札の1枚へ引き継ぐ）
-    if(chronoR.current.pending&&hand.length){sp[Math.floor(Math.random()*hand.length)]=true;}
+    if(hand.length){
+      if(c.pending){ // 未使用のまま配り直し → 引き継ぐ
+        sp[Math.floor(Math.random()*hand.length)]=true;
+      }else if(c.armed&&c.count<CHRONO_CONFIG.maxPerMatch&&c.deals>=CHRONO_CONFIG.appearOnDeal){
+        sp[Math.floor(Math.random()*hand.length)]=true;c.count++;c.pending=true;
+        setTimeout(()=>{playChronoTapSE();fxChronoToast(CHRONO_TEXT.en+'　'+CHRONO_TEXT.name);},200);
+      }
+    }
     setPH(hand);pHR.current=hand;setPSp(sp);pSpR.current=sp;
-  }
-  // 通常カードを afterNormalPlays 枚使った後、残り手札の1枚をクロノリンクへ変化させる
-  function maybeAwakenChrono(newPH,newSp){
-    const c=chronoR.current;
-    if(!c.armed||c.count>=CHRONO_CONFIG.maxPerMatch||c.plays<CHRONO_CONFIG.afterNormalPlays)return newSp;
-    const cand=newPH.map((v,i)=>v?i:-1).filter(i=>i>=0);
-    if(!cand.length)return newSp;
-    const k=cand[Math.floor(Math.random()*cand.length)];
-    const sp=newSp.slice();sp[k]=true;c.count++;c.pending=true;c.plays=0;
-    setTimeout(()=>{playChronoTapSE();fxChronoToast(CHRONO_TEXT.en+'　'+CHRONO_TEXT.name+'出現');},60);
-    return sp;
   }
   function exitLink(){
     const was=linkR.current;
@@ -2718,7 +2717,7 @@ function App(){
     clearTimers();lockR.current=false;
     const p=createDeck(),d=createDeck();
     const opts=stageR.current?(stageOptsR.current||{}):{};
-    chronoR.current={armed:!!opts.chrono,count:0,pending:false,plays:0};
+    chronoR.current={armed:!!opts.chrono,count:0,pending:false,deals:0};
     roundSecR.current=opts.timeLimit||10;
     coreShiftR.current={active:opts.ability==='coreShift',used:false};setCoreShiftUsed(false);
     dealPlayer(p);setDH(d);dHR.current=d;exitLink();
@@ -2855,8 +2854,7 @@ function App(){
     if(isSp){playChronoTapSE();chronoR.current.pending=false;}
     setTimeout(()=>playPlaceSE(true),100);
     const newPH=pH.map((v,i)=>i===idx?null:v);
-    let newSp=pSpR.current.map((f,i)=>i===idx?false:f);
-    if(!isSp){chronoR.current.plays++;newSp=maybeAwakenChrono(newPH,newSp);}
+    const newSp=pSpR.current.map((f,i)=>i===idx?false:f);
     setPH(newPH);pHR.current=newPH;setPSp(newSp);pSpR.current=newSp;
     const emptied=!newPH.filter(Boolean).length;
     if(emptied){const nd=createDeck();setTimeout(()=>{dealPlayer(nd);},100);}
