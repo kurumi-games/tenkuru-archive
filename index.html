@@ -1238,6 +1238,47 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
   animation:shiftCrack .9s ease-out both;}
 @keyframes shiftCrack{0%{opacity:0;}20%{opacity:1;}100%{opacity:0;}}
 
+/* ===== v61: チャンピオン登場画面・試合中のキャラクター＆セリフ ===== */
+.ci-screen{position:fixed;inset:0;overflow:hidden;background:#0a1030 url('img/area01-bg.png') center/cover no-repeat;display:flex;flex-direction:column;--u:min(calc(100vw / 360), calc(100dvh / 640));
+  --f-en:'Cinzel','Times New Roman',serif;--f-jp-serif:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho',serif;--f-jp-sans:'Noto Sans JP','Hiragino Sans','Yu Gothic',sans-serif;}
+.ci-screen::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,9,30,.55),rgba(6,9,30,.15) 35%,rgba(6,9,30,.35) 70%,rgba(4,6,22,.92) 100%);pointer-events:none;}
+.ci-char{position:absolute;left:50%;bottom:calc(205 * var(--u));width:calc(270 * var(--u));height:calc(405 * var(--u));margin-left:calc(-135 * var(--u));
+  background:url('img/champion-lux.png') center bottom/contain no-repeat;
+  filter:drop-shadow(0 0 calc(22 * var(--u)) rgba(110,200,255,.45)) drop-shadow(0 12px 18px rgba(0,0,0,.6));
+  animation:ciIn .7s cubic-bezier(.2,1,.3,1) both, a1Float 5s ease-in-out .7s infinite;}
+@keyframes ciIn{0%{opacity:0;transform:translateY(24px) scale(.92);filter:blur(8px) brightness(2);}100%{opacity:1;transform:translateY(0) scale(1);}}
+.ci-halo{position:absolute;left:50%;bottom:calc(230 * var(--u));width:calc(340 * var(--u));height:calc(340 * var(--u));margin-left:calc(-170 * var(--u));border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(130,210,255,.32),rgba(130,210,255,.08) 45%,transparent 70%);animation:a1Breath 4s ease-in-out infinite;}
+.ci-top{position:relative;z-index:2;text-align:center;padding-top:max(calc(env(safe-area-inset-top,0px) + calc(26 * var(--u))),calc(36 * var(--u)));}
+.ci-top .k{font-family:var(--f-en);font-weight:700;font-size:calc(11 * var(--u));letter-spacing:.34em;text-indent:.34em;color:#ff9fb4;text-shadow:0 0 8px rgba(255,120,150,.55);}
+.ci-top .t{font-family:var(--f-en);font-weight:700;font-size:calc(26 * var(--u));letter-spacing:.18em;text-indent:.18em;color:#fff;margin-top:calc(4 * var(--u));text-shadow:0 0 14px rgba(255,140,170,.55),0 2px 4px rgba(0,0,0,.7);}
+.ci-bottom{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:0 calc(16 * var(--u)) max(env(safe-area-inset-bottom),calc(14 * var(--u)));}
+.ci-name{display:flex;align-items:baseline;gap:calc(10 * var(--u));margin-bottom:calc(8 * var(--u));padding-left:calc(6 * var(--u));}
+.ci-name .n{font-family:var(--f-jp-serif);font-weight:800;font-size:calc(26 * var(--u));letter-spacing:.1em;color:#fff;text-shadow:0 0 12px rgba(120,200,255,.5),0 2px 4px rgba(0,0,0,.7);}
+.ci-name .r{font-family:var(--f-jp-sans);font-weight:500;font-size:calc(12 * var(--u));letter-spacing:.08em;color:#9fd6ff;}
+.ci-box{position:relative;background:linear-gradient(180deg,rgba(14,22,60,.86),rgba(6,10,36,.92));border:1px solid rgba(160,200,255,.3);border-radius:calc(16 * var(--u));padding:calc(14 * var(--u)) calc(16 * var(--u));min-height:calc(74 * var(--u));
+  font-family:var(--f-jp-serif);font-weight:600;font-size:calc(16 * var(--u));line-height:1.75;letter-spacing:.04em;color:#f2f7ff;backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,.5);cursor:pointer;}
+.ci-box .line{animation:fadeUp .35s ease both;}
+.ci-box .tap{position:absolute;right:calc(14 * var(--u));bottom:calc(8 * var(--u));font-family:var(--f-jp-sans);font-size:calc(10 * var(--u));color:rgba(200,220,255,.55);letter-spacing:.1em;animation:a1Twinkle 1.1s ease-in-out infinite alternate;}
+.ci-ab{display:flex;align-items:center;gap:calc(12 * var(--u));margin-top:calc(10 * var(--u));padding:calc(10 * var(--u)) calc(14 * var(--u));border-radius:calc(14 * var(--u));background:rgba(60,10,30,.6);border:1px solid rgba(255,120,150,.5);box-shadow:0 0 18px rgba(255,90,120,.25);animation:fadeUp .4s ease both;}
+.ci-ab .en{font-family:var(--f-en);font-weight:700;font-size:calc(11 * var(--u));letter-spacing:.24em;color:#ff9fb4;white-space:nowrap;}
+.ci-ab .jp{font-family:var(--f-jp-sans);font-weight:600;font-size:calc(12.5 * var(--u));color:#ffe3ea;letter-spacing:.04em;}
+.ci-go{margin-top:calc(10 * var(--u));}
+/* 試合中：キャラクター＋吹き出し */
+.champ-layer .champ-img{position:absolute;right:-12%;top:10%;width:46%;height:42%;background:url('img/champion-lux.png') center top/contain no-repeat;opacity:.95;
+  filter:drop-shadow(0 0 10px rgba(120,200,255,.35)) drop-shadow(0 6px 10px rgba(0,0,0,.35));animation:champIn .6s cubic-bezier(.2,1,.3,1) both;}
+@keyframes champIn{0%{opacity:0;transform:translateX(30px);}100%{opacity:.95;transform:none;}}
+.gp-screen > .champ-bubble{position:absolute;right:36%;top:21%;z-index:130;max-width:50%;pointer-events:none;
+  background:rgba(255,255,255,.96);border:1.5px solid rgba(60,110,200,.35);border-radius:calc(14 * var(--u));padding:calc(8 * var(--u)) calc(12 * var(--u));
+  font-family:'Noto Serif JP','Hiragino Mincho ProN',serif;font-weight:700;font-size:calc(13 * var(--u));line-height:1.5;color:#1c2b4a;letter-spacing:.03em;
+  box-shadow:0 6px 18px rgba(0,30,90,.25);animation:bubbleIn .28s cubic-bezier(.2,1.3,.4,1) both;}
+.champ-bubble::after{content:'';position:absolute;right:calc(-9 * var(--u));top:calc(14 * var(--u));border:calc(7 * var(--u)) solid transparent;border-left-color:rgba(255,255,255,.96);border-right:0;}
+@keyframes bubbleIn{0%{opacity:0;transform:scale(.7) translateY(6px);}100%{opacity:1;transform:none;}}
+.gp-screen.dark .champ-bubble{background:rgba(20,30,70,.94);color:#eaf2ff;border-color:rgba(140,200,255,.4);}
+.gp-screen.dark .champ-bubble::after{border-left-color:rgba(20,30,70,.94);}
+.sg-end-card .champ-say{font-family:'Noto Serif JP','Hiragino Mincho ProN',serif;font-weight:600;font-size:calc(13 * var(--u));color:#cfe2ff;line-height:1.6;margin:calc(2 * var(--u)) 0 calc(4 * var(--u));}
+.sg-end-card .champ-say b{color:#9fd6ff;font-weight:700;margin-right:calc(6 * var(--u));}
+
 /* ===== v54: 選手・チャンピオン画像の受け皿（画像未配置なら何も出ない） ===== */
 .gp-screen > .champ-layer{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
 .champ-layer img{position:absolute;object-fit:contain;pointer-events:none;display:block;}
@@ -2209,7 +2250,8 @@ function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic,coachN
 
 
 // ── MenuScreen ──
-const APP_VER='v60'; // v60: クロノリンクの出現率を100%に（ST4以降は毎試合必ず1枚）
+const APP_VER='v61'; // v61: チャンピオン戦にキャラクター（ルクス）を表示。対戦前の登場画面＋試合中のセリフ
+// v60: クロノリンクの出現率を100%に（ST4以降は毎試合必ず1枚）
 // v59: クロノリンクは最初の手札10枚から1枚付く（appearOnDeal:1）
 // v58: クロノリンクは途中出現をやめ、2周目の手札10枚が配られた時点で最初から1枚に付く
 // v57: コア・シフトは変化後の3でも canPlay が通る時だけ発動（4枚目や合計5未満の穴を塞ぐ）
@@ -2236,7 +2278,7 @@ const AREA_01={
     // v56: ST4以降は仮名。chrono:true=クロノリンク登場 / timeLimit=ラウンド秒 / ability=チャンピオン能力
     {no:4,name:'クロノ・アウェイク',description:'クロノリンク解放。時間を止め、もう1枚つなぐ',icon:'clock',winPt:10,diff:'normal',rule:'normal',chrono:true},
     {no:5,name:'シックス・セカンド',description:'制限時間6秒。クロノリンクを実戦で使え',icon:'card',winPt:10,diff:'normal',rule:'normal',chrono:true,timeLimit:6},
-    {no:6,name:'チャンピオン',description:'コア・シフト：最初に置いた4が3に変わる',icon:'crown',winPt:15,diff:'hard',rule:'normal',boss:true,chrono:true,ability:'coreShift'},
+    {no:6,name:'チャンピオン',description:'コア・シフト：最初に置いた4が3に変わる',icon:'crown',winPt:15,diff:'hard',rule:'normal',boss:true,chrono:true,ability:'coreShift',champion:'lux'},
   ]
 };
 const STAGES={
@@ -2267,6 +2309,31 @@ const CHRONO_CONFIG={
 };
 const CHRONO_TEXT={name:'クロノリンク',en:'CHRONO LINK',hint:'もう1枚選べ'};
 
+// ── v61 チャンピオン（キャラクター）：名前・セリフはここだけで変更 ──
+// stage.champion にキーを書くと、登場画面→試合中の立ち絵＋セリフ→結果画面の一言 が出る
+const CHAMPIONS={
+  lux:{
+    name:'ルクス',
+    title:'星環のチャンピオン',
+    img:'img/champion-lux.png',
+    intro:[
+      'ここまで来たんだ。',
+      '僕はルクス。この星環を守るチャンピオン。',
+      '先に言っておく。君が最初に置く「4」は、僕がもらう。',
+    ],
+    lines:{
+      start:'始めよう。',
+      coreShift:'その4、もらった。',
+      chrono:'時間を……止めた？',
+      scoreSelf:'まだまだ。',
+      scoreYou:'へえ、やるね。',
+      burstYou:'焦ったね。',
+      burstSelf:'……しまった。',
+    },
+    win:'また挑んでおいで。星環は逃げない。',
+    lose:'……完敗だ。星環は、君のものだ。',
+  }
+};
 // ── 選手・チャンピオン画像の受け皿（画像は未生成。enabled:false なら何も描かない）──
 const CHARACTER_ASSETS={
   enabled:false,
@@ -2278,8 +2345,13 @@ const CHARACTER_ASSETS={
     opponent:{right:'-4%', top:'9%',   width:'30%', opacity:.85, flip:true}
   }
 };
-function ChampionLayer(){
+function ChampionLayer({champ,line}){
   const[bad,setBad]=useState({});
+  if(champ){ // v61 チャンピオン戦：立ち絵＋吹き出し
+    return h('div',{className:'champ-layer'},
+      h('div',{className:'champ-img',style:{backgroundImage:'url('+champ.img+')'}})
+    );
+  }
   if(!CHARACTER_ASSETS.enabled)return null;
   const mk=(key)=>{
     const src=CHARACTER_ASSETS[key],lo=CHARACTER_ASSETS.layout[key]||{};
@@ -2496,13 +2568,40 @@ function MapScreen({area,save,onSelect,onBack}){
   );
 }
 
+// ── v61 チャンピオン登場画面 ──
+function ChampionIntroScreen({champ,stage,onStart}){
+  const[i,setI]=useState(0);
+  const last=i>=champ.intro.length-1;
+  useEffect(()=>{try{resumeAC();fxBell({f:1319,v:0.08,d:1.4,bright:1.1,rev:0.8});}catch(e){}},[]);
+  function tap(){if(!last)setI(i+1);}
+  return h('div',{className:'ci-screen',onClick:tap},
+    h('div',{className:'ci-halo'}),
+    h('div',{className:'ci-char'}),
+    h('div',{className:'ci-top'},
+      h('div',{className:'k'},'AREA 01  ·  CHAMPION'),
+      h('div',{className:'t'},'FINAL BATTLE')
+    ),
+    h('div',{className:'ci-bottom',onClick:e=>e.stopPropagation()},
+      h('div',{className:'ci-name'},h('span',{className:'n'},champ.name),h('span',{className:'r'},champ.title)),
+      h('div',{className:'ci-box',onClick:tap},
+        h('div',{key:i,className:'line'},champ.intro[i]),
+        !last&&h('div',{className:'tap'},'タップ ▸')
+      ),
+      last&&h('div',{className:'ci-ab'},h('span',{className:'en'},'CORE SHIFT'),h('span',{className:'jp'},'最初に置いた 4 が 3 に変わる（1試合1回）')),
+      last&&h('button',{className:'a1-go ci-go',onClick:onStart},h('span',{className:'l'},'FINAL BATTLE'),h('span',{className:'v'},'挑む'))
+    )
+  );
+}
+
 // ── 結果 ──
 function StageEndScreen({data,stage,stars,onNext,onRetry,onMap,isLast}){
   const win=data.winner==='player';
+  const champ=stage.champion&&CHAMPIONS[stage.champion];
   return h('div',{className:'sg-screen sg-end'},
     h('div',{className:'sg-end-card'},
-      h('div',{className:'ttl'},stage.boss?'BOSS':'ステージ '+stage.no),
+      h('div',{className:'ttl'},stage.boss?'CHAMPION':'ステージ '+stage.no),
       h('div',{className:'badge'+(win?' win':'')},win?'クリア！':'まけ…'),
+      champ&&h('div',{className:'champ-say'},h('b',null,champ.name),win?champ.lose:champ.win),
       win&&h('div',{className:'bigstars on'},starStr(stars)),
       h('div',{className:'score'},
         h('div',null,h('div',{className:'l'},'YOU'),h('div',{className:'v you'},data.pPt)),
@@ -2557,6 +2656,13 @@ function App(){
   const[chronoFx,setChronoFx]=useState(null); // 'in' | 'out' | null
   const[burstPos,setBurstPos]=useState({x:'50%',y:'45%'});
   const coreShiftR=useRef({active:false,used:false});
+  const[champLine,setChampLine]=useState(null);const champLineT=useRef(null);
+  function sayChamp(key,ms){ // v61 チャンピオンのセリフ（吹き出し）
+    const opts=stageOptsR.current;const champ=opts&&opts.champion&&CHAMPIONS[opts.champion];
+    const text=champ&&champ.lines[key];if(!text)return;
+    clearTimeout(champLineT.current);setChampLine({id:Date.now(),text});
+    champLineT.current=setTimeout(()=>setChampLine(null),ms||2200);
+  }
   const[coreShiftUsed,setCoreShiftUsed]=useState(false);
   const[fieldShift,setFieldShift]=useState([]);
   const[pPt,setPPt]=useState(0);
@@ -2672,7 +2778,7 @@ function App(){
   function enterLink(){
     linkR.current=true;setLinkMode(true);
     try{const r=fieldAreaRef.current&&fieldAreaRef.current.getBoundingClientRect();if(r)setBurstPos({x:(r.left+r.width/2)+'px',y:(r.top+r.height/2)+'px'});}catch(e){}
-    setChronoFx('in');playChronoStopSE();duckBGM(true);setTimeout(()=>{if(linkR.current)startChronoHum();},350);
+    setChronoFx('in');playChronoStopSE();duckBGM(true);sayChamp('chrono',3000);setTimeout(()=>{if(linkR.current)startChronoHum();},350);
   }
   useEffect(()=>()=>clearTimers(),[]);
 
@@ -2705,7 +2811,8 @@ function App(){
       if(CHRONO_CONFIG.guaranteeFirstUnlock&&firstChrono&&st.no===firstChrono.no&&!saveR.current.chronoIntro){chrono=true;updSave(s=>{s.chronoIntro=true;return s;});}
       else chrono=Math.random()<CHRONO_CONFIG.appearRate;
     }
-    stageOptsR.current={chrono,timeLimit:st.timeLimit||10,ability:st.ability||null};
+    stageOptsR.current={chrono,timeLimit:st.timeLimit||10,ability:st.ability||null,champion:st.champion||null};
+    if(st.champion&&CHAMPIONS[st.champion]){setPendingDiff(st.diff);setPhase('champIntro');phaseR.current='champIntro';return;} // v61 登場画面を挟む
     if(st.tutorial&&!tutDoneR.current){openTutorial(st.diff);return;}
     startGame(st.diff);
   }
@@ -2750,6 +2857,7 @@ function App(){
           startTimer(rn);
           lockR.current=false; // v40: 開始時のプレイヤーロック(50%で0.4秒)は撤廃
           scheduleAi(rn);
+          if(rn===1)sayChamp('start'); // v61
         },650);
         return;
       }
@@ -2865,7 +2973,7 @@ function App(){
     // ※変化後の3でも既存ルール(canPlay)が通る時だけ。4枚目で10未満、3枚目で5未満になる場合は発動せず、4のまま置く
     if(coreShiftR.current.active&&!coreShiftR.current.used&&value===4&&canPlay(3,cs,cf)){
       coreShiftR.current.used=true;setCoreShiftUsed(true);shifted=true;value=3;
-      playCoreShiftSE();setFlashMsg({text:'CORE SHIFT　4 → 3',who:'dealer'});setTimeout(()=>setFlashMsg(m=>m&&m.text.startsWith('CORE SHIFT')?null:m),1300);
+      playCoreShiftSE();sayChamp('coreShift');setFlashMsg({text:'CORE SHIFT　4 → 3',who:'dealer'});setTimeout(()=>setFlashMsg(m=>m&&m.text.startsWith('CORE SHIFT')?null:m),1300);
     }
     if(wasLink){playChronoReleaseSE();}
     const ended=resolvePlay(value,cf,cs,'player',rNum,isSp,shifted);
@@ -2898,7 +3006,7 @@ function App(){
       const newPP=who==='player'?Math.max(0,pPtR.current-2):pPtR.current;
       const newDP=who==='dealer'?Math.max(0,dPtR.current-2):dPtR.current;
       setPPt(newPP);setDPt(newDP);pPtR.current=newPP;dPtR.current=newDP;
-      setComboShow({text:'BURST',pts:-2,color:'#ff3b3b',who,burst:true});
+      setComboShow({text:'BURST',pts:-2,color:'#ff3b3b',who,burst:true});sayChamp(who==='player'?'burstYou':'burstSelf');
       setTimeout(()=>setComboShow(null),4000);
       const tokB=roundTokR.current;
       setTimeout(()=>{if(tokB!==roundTokR.current)return;setBurstAnim(false);resetField();if(newPP>=winPtR.current||newDP>=winPtR.current){endGame(newPP,newDP);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,newPP,newDP,nr);},4000);
@@ -2913,7 +3021,7 @@ function App(){
       playComboSfx(pts.voice||'役なし');
       setResetFA(true);
       const color=who==='player'?'#2e7fe8':'#f5912a';
-      setComboShow({text:pts.voice||'10達成！',pts:pts.total,color,who});
+      setComboShow({text:pts.voice||'10達成！',pts:pts.total,color,who});sayChamp(who==='player'?'scoreYou':'scoreSelf');
       setTimeout(()=>setComboShow(null),4000);
       const tokS=roundTokR.current;
       setTimeout(()=>{if(tokS!==roundTokR.current)return;setResetFA(false);resetField();if(newPP>=winPtR.current||newDP>=winPtR.current){endGame(newPP,newDP);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,newPP,newDP,nr);},4000);
@@ -2942,6 +3050,7 @@ function App(){
 
   const curStage=stageCtx?STAGES.areas[stageCtx.ar].stages[stageCtx.st]:null;
   if(phase==='menu')return h(TitleScreen,{onPlay:()=>{setPhase('map');phaseR.current='map';},onTutorial:()=>openTutorial(null),musicOn:musicEnabled,toggleMusic});
+  if(phase==='champIntro'&&curStage&&curStage.champion)return h(ChampionIntroScreen,{champ:CHAMPIONS[curStage.champion],stage:curStage,onStart:()=>startGame(pendingDiff)});
   if(phase==='map')return h(MapScreen,{area:STAGES.areas[0],save,onSelect:i=>startStage(0,i),onBack:()=>{setPhase('menu');phaseR.current='menu';}});
   if(phase==='tutorial')return h(TutorialScreen,{pendingDiff,onFinish:finishTutorial,onExit:()=>finishTutorial(pendingDiff),trackNum,toggleMusic,coachName:null,startLabel:curStage?'ステージ '+curStage.no+' をはじめる':null,bg:null,winPt:curStage?curStage.winPt:null});
   if(phase==='gameEnd'&&gameEndData){
@@ -2950,7 +3059,8 @@ function App(){
   }
 
   return h('div',{className:'gp-screen'},
-    h(ChampionLayer), // v54: 選手画像の受け皿（enabled:false なら何も出ない）
+    h(ChampionLayer,{champ:stageOptsR.current&&stageOptsR.current.champion?CHAMPIONS[stageOptsR.current.champion]:null}), // v61 チャンピオン戦は立ち絵
+    champLine&&stageOptsR.current&&stageOptsR.current.champion&&h('div',{key:'cl'+champLine.id,className:'champ-bubble'},champLine.text), // 吹き出し（最前面）
     // v56 クロノリンク演出（すべて pointer-events:none）
     chronoFx==='in'&&h('div',{key:'chv'+rNum,className:'chrono-veil'}),
     chronoFx==='out'&&h('div',{className:'chrono-veil out'}),
