@@ -1406,12 +1406,13 @@ function stopBGM(){
   bgmPlayingTrack=0;
   if(bgmAudio){bgmAudio.pause();bgmAudio.currentTime=0;}
 }
-function startBGM(track){
-  const t=BGM_FILES[track]?track:1;
+// v67: file を渡すとその曲（ステージ専用BGM）。無ければ track 番号の曲
+function startBGM(track,file){
+  const t=file?('file:'+file):(BGM_FILES[track]?track:1);
   if(bgmPlayingTrack===t&&bgmAudio&&!bgmAudio.paused)return; // 同じ曲が再生中なら何もしない
   try{
     if(bgmAudio)bgmAudio.pause();
-    bgmAudio=new Audio(BGM_FILES[t]);
+    bgmAudio=new Audio(file||BGM_FILES[t]);
     bgmAudio.loop=true;
     bgmAudio.volume=0.45;
     bgmPlayingTrack=t;
@@ -2307,7 +2308,8 @@ function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic,coachN
 
 
 // ── MenuScreen ──
-const APP_VER='v66'; // v66: 第7 キャラを蝶の妖精に変更（場の上・上半身）、上部UI透明化、合計表示ピンク、手札マットにカードを収める
+const APP_VER='v67'; // v67: 第7ステージ専用BGM（Iridescent_Trap.mp3）
+// v66: 第7 キャラを蝶の妖精に変更（場の上・上半身）、上部UI透明化、合計表示ピンク、手札マットにカードを収める
 // v65: 手札（マット）を画面の一番下に固定。端末の縦サイズに関係なく下端基準
 // v64: 第7ステージ 場のカードの後ろにルナの立ち絵（試し置き）
 // v63: 第7ステージ ルナの表向きカード（場に出た時）をピンクの蝶カードに
@@ -2342,7 +2344,7 @@ const AREA_01={
     {no:5,name:'シックス・セカンド',description:'制限時間6秒。クロノリンクを実戦で使え',icon:'card',winPt:10,diff:'normal',rule:'normal',chrono:true,timeLimit:6},
     {no:6,name:'チャンピオン',description:'コア・シフト：最初に置いた4が3に変わる',icon:'crown',winPt:15,diff:'hard',rule:'normal',boss:true,chrono:true,ability:'coreShift',champion:'lux'},
     // v62: お試しチャレンジ。ST6クリアで解放。本編の進行・AREA CLEARには数えない。次のステージは解放しない
-    {no:7,name:'ルナ',description:'お試しチャレンジ。通常ルールで先取15pt',icon:'card',winPt:15,diff:'hard',rule:'normal',challenge:true,rivalName:'ルナ'},
+    {no:7,name:'ルナ',description:'お試しチャレンジ。通常ルールで先取15pt',icon:'card',winPt:15,diff:'hard',rule:'normal',challenge:true,rivalName:'ルナ',bgm:'Iridescent_Trap.mp3'},
   ]
 };
 const STAGES={
@@ -2814,13 +2816,14 @@ function App(){
 
 
   // 曲サイクル：1 → 2 → 3 → ミュート(0) → 1 → …
+  function stageBgm(){return stageOptsR.current&&stageOptsR.current.bgm||null;} // v67 ステージ専用BGM
   function toggleMusic(){
     setTrackNum(t=>{
-      const next=t===2?0:(t===0?1:t+1); // v43: 2曲サイクル 1→2→ミュート→1
+      const next=stageBgm()?(t===0?1:0):(t===2?0:(t===0?1:t+1)); // 専用BGMのステージは ON↔OFF、他は 1→2→ミュート→1
       trackNumR.current=next;
       musicEnabledR.current=next>0;setMusicEnabled(next>0);
       if(next===0)stopBGM();
-      else if(phaseR.current==='playing'||phaseR.current==='tutorial'){resumeAC();startBGM(next);}
+      else if(phaseR.current==='playing'||phaseR.current==='tutorial'){resumeAC();startBGM(next,stageBgm());}
       return next;
     });
   }
@@ -2856,7 +2859,7 @@ function App(){
     clearTimers();roundTokR.current++;
     setPendingDiff(diff||null);
     setPhase('tutorial');phaseR.current='tutorial';
-    if(trackNumR.current>0){resumeAC();startBGM(trackNumR.current);}
+    if(trackNumR.current>0){resumeAC();startBGM(trackNumR.current,stageBgm());}
   }
   function finishTutorial(diff){
     markTutDone();tutDoneR.current=true;
@@ -2881,7 +2884,7 @@ function App(){
       if(CHRONO_CONFIG.guaranteeFirstUnlock&&firstChrono&&st.no===firstChrono.no&&!saveR.current.chronoIntro){chrono=true;updSave(s=>{s.chronoIntro=true;return s;});}
       else chrono=Math.random()<CHRONO_CONFIG.appearRate;
     }
-    stageOptsR.current={chrono,timeLimit:st.timeLimit||10,ability:st.ability||null,champion:st.champion||null,challenge:!!st.challenge,rivalName:st.rivalName||null};
+    stageOptsR.current={chrono,timeLimit:st.timeLimit||10,ability:st.ability||null,champion:st.champion||null,challenge:!!st.challenge,rivalName:st.rivalName||null,bgm:st.bgm||null};
     if(st.champion&&CHAMPIONS[st.champion]){setPendingDiff(st.diff);setPhase('champIntro');phaseR.current='champIntro';return;} // v61 登場画面を挟む
     if(st.tutorial&&!tutDoneR.current){openTutorial(st.diff);return;}
     startGame(st.diff);
@@ -2904,7 +2907,7 @@ function App(){
     setPPt(0);setDPt(0);pPtR.current=0;dPtR.current=0;
     setRNum(1);setField([]);setFieldSum(0);fieldR.current=[];fieldSumR.current=0;
     setFlashMsg(null);setBurstAnim(false);setResetFA(false);setGameEndData(null);
-    if(trackNumR.current>0)startBGM(trackNumR.current);doCountdown(p,d,0,0,1);
+    if(trackNumR.current>0)startBGM(trackNumR.current,stageBgm());doCountdown(p,d,0,0,1);
   }
 
   function doCountdown(pHand,dHand,pp,dp,rn){
