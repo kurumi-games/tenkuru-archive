@@ -1148,6 +1148,8 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 .a1-nd.sel .sel-ring{opacity:.95;stroke-dasharray:4 5;animation:a1SelSpin 8s linear infinite;}
 @keyframes a1SelSpin{to{stroke-dashoffset:-90;}}
 .a1-nd.boss .lbl{font-size:8px;}
+.a1-nd .lbl.chal{font-size:6.5px;letter-spacing:1.5px;fill:#ffd7e0;opacity:.9;}
+.a1-nd.locked .lbl.chal{fill:rgba(255,215,224,.45);}
 /* 下部ステージ情報欄＋対戦開始 */
 .a1-panel{position:relative;z-index:3;flex-shrink:0;padding:calc(6 * var(--u)) calc(14 * var(--u)) max(env(safe-area-inset-bottom),calc(12 * var(--u)));}
 .a1-info{display:flex;align-items:center;gap:calc(12 * var(--u));background:linear-gradient(180deg,rgba(18,26,70,.82),rgba(8,12,40,.9));border:1px solid rgba(160,200,255,.28);border-radius:calc(18 * var(--u));padding:calc(11 * var(--u)) calc(14 * var(--u));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08);}
@@ -1237,6 +1239,24 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
   background:linear-gradient(115deg,transparent 46%,rgba(255,255,255,.95) 48%,transparent 50%),linear-gradient(35deg,transparent 58%,rgba(255,255,255,.85) 60%,transparent 62%),linear-gradient(160deg,transparent 30%,rgba(255,255,255,.8) 31.5%,transparent 33%);
   animation:shiftCrack .9s ease-out both;}
 @keyframes shiftCrack{0%{opacity:0;}20%{opacity:1;}100%{opacity:0;}}
+
+/* ===== v62: 第7チャレンジステージ専用スキン（.gp-screen.ch7 の時だけ有効。他ステージは無変更） ===== */
+.gp-screen.ch7{background-image:url('img/challenge07-bg.png');background-size:cover;background-position:center;background-color:#170a33;}
+/* 手札マット：手札の枠を透明にして、その後ろへ画像を敷く（タップは通す） */
+.gp-screen.ch7 .gp-hand-rows{position:relative;background:transparent;border:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;}
+.gp-screen.ch7 .gp-hand-rows::before{content:'';position:absolute;left:50%;top:50%;width:100%;aspect-ratio:1735/906;transform:translate(-50%,-50%);
+  background:url('img/challenge07-hand-mat.png') center/100% 100% no-repeat;pointer-events:none;z-index:0;}
+.gp-screen.ch7 .gp-hand-row{position:relative;z-index:1;}
+/* プレイヤーの表カード：地の画像だけ差し替え。数字・状態表示・タップ領域は既存のまま（数字は濃い紫で明瞭に） */
+.gp-screen.ch7 .card-stage.cyan{--cardimg:url('img/challenge07-player-card.png');--nc:#2b1a4d;}
+/* ルナの表カード（場に出た時）：地の画像だけ差し替え。数字は濃い紫で明瞭に */
+.gp-screen.ch7 .card-stage.magenta{--cardimg:url('img/challenge07-rival-card-front.png');--nc:#4a1a3e;}
+/* 相手の裏カード：既存の並び・枚数管理はそのまま、見た目だけ画像に */
+.gp-screen.ch7 .gp-dealer-card{aspect-ratio:2/3;border-radius:0;border:none;box-shadow:none;background:url('img/challenge07-rival-card.png') center/contain no-repeat;}
+.gp-screen.ch7 .gp-dealer-area .gp-area-label,.gp-screen.ch7 .gp-hand-area .gp-area-label,.gp-screen.ch7 .gp-field-sum .sep{color:#ecdfff;text-shadow:0 1px 3px rgba(0,0,0,.6);}
+.gp-screen.ch7 .gp-field-sum .ato{color:rgba(236,223,255,.75) !important;text-shadow:0 1px 3px rgba(0,0,0,.6);}
+.gp-screen.ch7 .gp-field-sum .ato b{color:#fff !important;}
+.gp-screen.ch7 .gp-field-sum .num:not(.alert):not(.warn):not(.alert-blue){color:#fff;text-shadow:0 0 10px rgba(200,150,255,.8),0 1px 3px rgba(0,0,0,.6);}
 
 /* ===== v61: チャンピオン登場画面・試合中のキャラクター＆セリフ ===== */
 .ci-screen{position:fixed;inset:0;overflow:hidden;background:#0a1030 url('img/area01-bg.png') center/cover no-repeat;display:flex;flex-direction:column;--u:min(calc(100vw / 360), calc(100dvh / 640));
@@ -2250,7 +2270,9 @@ function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic,coachN
 
 
 // ── MenuScreen ──
-const APP_VER='v61'; // v61: チャンピオン戦にキャラクター（ルクス）を表示。対戦前の登場画面＋試合中のセリフ
+const APP_VER='v63'; // v63: 第7ステージ ルナの表向きカード（場に出た時）をピンクの蝶カードに
+// v62: 第7チャレンジステージ（ルナ・先取15pt・ST6クリアで解放）＋専用背景/手札マット/カード表・裏
+// v61: チャンピオン戦にキャラクター（ルクス）を表示。対戦前の登場画面＋試合中のセリフ
 // v60: クロノリンクの出現率を100%に（ST4以降は毎試合必ず1枚）
 // v59: クロノリンクは最初の手札10枚から1枚付く（appearOnDeal:1）
 // v58: クロノリンクは途中出現をやめ、2周目の手札10枚が配られた時点で最初から1枚に付く
@@ -2279,12 +2301,14 @@ const AREA_01={
     {no:4,name:'クロノ・アウェイク',description:'クロノリンク解放。時間を止め、もう1枚つなぐ',icon:'clock',winPt:10,diff:'normal',rule:'normal',chrono:true},
     {no:5,name:'シックス・セカンド',description:'制限時間6秒。クロノリンクを実戦で使え',icon:'card',winPt:10,diff:'normal',rule:'normal',chrono:true,timeLimit:6},
     {no:6,name:'チャンピオン',description:'コア・シフト：最初に置いた4が3に変わる',icon:'crown',winPt:15,diff:'hard',rule:'normal',boss:true,chrono:true,ability:'coreShift',champion:'lux'},
+    // v62: お試しチャレンジ。ST6クリアで解放。本編の進行・AREA CLEARには数えない。次のステージは解放しない
+    {no:7,name:'ルナ',description:'お試しチャレンジ。通常ルールで先取15pt',icon:'card',winPt:15,diff:'hard',rule:'normal',challenge:true,rivalName:'ルナ'},
   ]
 };
 const STAGES={
   areas:[AREA_01],
   // マップ上の座標（viewBox 360×360、下から上へ。AREA_01.stages と同じ順）
-  pos:[[64,318],[152,272],[262,244],[228,158],[114,116],[200,44]],
+  pos:[[64,318],[152,272],[262,244],[228,158],[114,116],[200,44],[304,96]], // [6]=第7チャレンジ（BOSSの右）
 };
 const RULE_LABEL={normal:'ノーマル',shuffle:'シャッフル',frost:'フロスト'};
 // rule ごとのゲーム内処理の差し込み口（ギミック未確定のため中身は空。startStage から呼ぶ）
@@ -2393,7 +2417,7 @@ function areaProgress(save,area){
   const n=area.stages.length;let current=n;
   for(let i=0;i<n;i++){if(!save.stars[area.stages[i].no]){current=i;break;}}
   // v54: comingSoon（準備中）は進行度に数えない
-  const playable=area.stages.filter(st=>!st.comingSoon);
+  const playable=area.stages.filter(st=>!st.comingSoon&&!st.challenge); // v62: チャレンジは本編の進行に数えない
   const clearedCount=playable.filter(st=>save.stars[st.no]).length;
   // v56: AREA CLEAR はチャンピオン（boss）撃破後だけ
   const boss=playable.find(st=>st.boss);
@@ -2402,6 +2426,7 @@ function areaProgress(save,area){
 }
 function isStagePlayable(save,area,i){
   const st=area.stages[i];if(!st||st.comingSoon)return false;
+  if(st.challenge){const boss=area.stages.find(x=>x.boss);return !!(boss&&save.stars[boss.no]);} // v62: ST6(boss)クリアで解放。既存セーブの stars から判定
   if(save.stars[st.no])return true;                 // クリア済みは再挑戦OK
   return i===0||!!save.stars[area.stages[i-1].no];  // 直前がクリア済みなら解放
 }
@@ -2458,7 +2483,8 @@ function StageNode({st,x,y,state,stars,selected,onTap}){
     h('circle',{className:'sel-ring',r:r*0.98}),
     h('text',{className:'lbl',y:-inner*0.55},st.boss?'BOSS':String(st.no).padStart(2,'0')),
     Icon(iconName,isz,{className:'ico',x:-isz/2,y:-isz/2+inner*0.22}),
-    state==='clear'&&h('g',{transform:'translate(0,'+(r+11)+')'},
+    st.challenge&&h('text',{className:'lbl chal',y:r+10},'CHALLENGE'), // v62
+    state==='clear'&&h('g',{transform:'translate(0,'+(r+(st.challenge?21:11))+')'},
       [0,1,2].map(k=>h('polygon',{key:k,className:'star'+(k<stars?' on':''),transform:'translate('+((k-1)*12)+',0) scale(.55)',points:'0,-8 2.4,-2.6 8,-2.6 3.6,1.2 5,7 0,3.6 -5,7 -3.6,1.2 -8,-2.6 -2.4,-2.6'}))
     ),
     h('circle',{r:r*1.15,fill:'transparent'})
@@ -2475,17 +2501,20 @@ function MapScreen({area,save,onSelect,onBack}){
   const litRef=useRef(null);
   const startingR=useRef(false); // 連打による二重開始防止
   const[lit,setLit]=useState({total:0,len:0});
+  const mainN=area.stages.filter(s=>!s.challenge).length; // v62: 本編の道はチャレンジを含まない
   const pathD=useMemo(()=>{
     let d='M'+pos[0][0]+' '+pos[0][1];
-    for(let k=1;k<pos.length;k++){const a=pos[k-1],b=pos[k];const my=(a[1]+b[1])/2;d+=' C '+a[0]+' '+my+', '+b[0]+' '+my+', '+b[0]+' '+b[1];}
+    for(let k=1;k<mainN;k++){const a=pos[k-1],b=pos[k];const my=(a[1]+b[1])/2;d+=' C '+a[0]+' '+my+', '+b[0]+' '+my+', '+b[0]+' '+b[1];}
     return d;
   },[]);
+  const chIdx=area.stages.findIndex(s=>s.challenge);
+  const chPathD=chIdx>=0?('M'+pos[mainN-1][0]+' '+pos[mainN-1][1]+' L '+pos[chIdx][0]+' '+pos[chIdx][1]):null;
   // 道の光：最後にクリアしたマスの次（＝現在地）まで
   React.useLayoutEffect(()=>{
     const el=litRef.current;if(!el)return;
     const total=el.getTotalLength();let best=0,bd=1e9;
     // 光る道は現在地まで。全クリア時は最後の解放済みマスまで（準備中には伸ばさない）
-    const litIdx=prog.allClear?Math.max(0,area.stages.filter(s=>!s.comingSoon).length-1):Math.min(curIdx,pos.length-1);
+    const litIdx=prog.allClear?Math.max(0,area.stages.filter(s=>!s.comingSoon&&!s.challenge).length-1):Math.min(curIdx,mainN-1);
     const [cx,cy]=pos[litIdx];
     for(let l=0;l<=total;l+=4){const pt=el.getPointAtLength(l);const d=(pt.x-cx)**2+(pt.y-cy)**2;if(d<bd){bd=d;best=l;}}
     setLit({total,len:best});
@@ -2532,6 +2561,7 @@ function MapScreen({area,save,onSelect,onBack}){
           ),
           h('path',{className:'rd-bg',d:pathD}),
           h('path',{className:'rd',d:pathD}),
+          chPathD&&h('path',{className:'rd',d:chPathD}),
           h('path',{ref:litRef,className:'rd-lit',d:pathD,style:{strokeDasharray:lit.total||1,strokeDashoffset:(lit.total||1)-lit.len}}),
           area.stages.map((st,i)=>{
             const state=stateOf(i);
@@ -2547,7 +2577,7 @@ function MapScreen({area,save,onSelect,onBack}){
         h('div',{className:'ic'+(selState==='clear'?' gold':selPlayable?'':' dim')},Icon(selState==='soon'||selState==='locked'?'lock':s.boss?'crown':s.icon,22)),
         h('div',{className:'tx'},
           h('div',{className:'row'},
-            h('div',{className:'no'+(s.boss?' gold':'')},s.boss?area.label+'  BOSS':'STAGE '+String(s.no).padStart(2,'0')),
+            h('div',{className:'no'+(s.boss?' gold':'')},s.boss?area.label+'  BOSS':s.challenge?'CHALLENGE 07':'STAGE '+String(s.no).padStart(2,'0')),
             h('div',{className:'stars'+(selStars?' on':'')},starStr(selStars))
           ),
           h('div',{className:'nm'},s.comingSoon&&!s.boss?'準備中':s.name),
@@ -2599,14 +2629,14 @@ function StageEndScreen({data,stage,stars,onNext,onRetry,onMap,isLast}){
   const champ=stage.champion&&CHAMPIONS[stage.champion];
   return h('div',{className:'sg-screen sg-end'},
     h('div',{className:'sg-end-card'},
-      h('div',{className:'ttl'},stage.boss?'CHAMPION':'ステージ '+stage.no),
+      h('div',{className:'ttl'},stage.boss?'CHAMPION':stage.challenge?'CHALLENGE':'ステージ '+stage.no),
       h('div',{className:'badge'+(win?' win':'')},win?'クリア！':'まけ…'),
       champ&&h('div',{className:'champ-say'},h('b',null,champ.name),win?champ.lose:champ.win),
       win&&h('div',{className:'bigstars on'},starStr(stars)),
       h('div',{className:'score'},
         h('div',null,h('div',{className:'l'},'YOU'),h('div',{className:'v you'},data.pPt)),
         h('div',{className:'vs'},'vs'),
-        h('div',null,h('div',{className:'l'},'DEALER'),h('div',{className:'v'},data.dPt))
+        h('div',null,h('div',{className:'l'},stage.rivalName||'DEALER'),h('div',{className:'v'},data.dPt))
       ),
       win
         ?h('button',{className:'sg-btn',onClick:onNext},isLast?'マップへ':'つぎへ')
@@ -2811,7 +2841,7 @@ function App(){
       if(CHRONO_CONFIG.guaranteeFirstUnlock&&firstChrono&&st.no===firstChrono.no&&!saveR.current.chronoIntro){chrono=true;updSave(s=>{s.chronoIntro=true;return s;});}
       else chrono=Math.random()<CHRONO_CONFIG.appearRate;
     }
-    stageOptsR.current={chrono,timeLimit:st.timeLimit||10,ability:st.ability||null,champion:st.champion||null};
+    stageOptsR.current={chrono,timeLimit:st.timeLimit||10,ability:st.ability||null,champion:st.champion||null,challenge:!!st.challenge,rivalName:st.rivalName||null};
     if(st.champion&&CHAMPIONS[st.champion]){setPendingDiff(st.diff);setPhase('champIntro');phaseR.current='champIntro';return;} // v61 登場画面を挟む
     if(st.tutorial&&!tutDoneR.current){openTutorial(st.diff);return;}
     startGame(st.diff);
@@ -2819,7 +2849,8 @@ function App(){
   function stageNext(){
     const c=stageR.current;if(!c){goMap();return;}
     const ar=STAGES.areas[c.ar];
-    if(c.st+1<ar.stages.length&&!ar.stages[c.st+1].comingSoon)startStage(c.ar,c.st+1);else goMap();
+    const nx=ar.stages[c.st+1];
+    if(nx&&!nx.comingSoon&&!nx.challenge)startStage(c.ar,c.st+1);else goMap(); // v62: チャレンジへは自動で進まない
   }
   function startGame(diff){
     if(diff){setDifficulty(diff);diffRef.current=diff;}
@@ -3006,7 +3037,7 @@ function App(){
       const newPP=who==='player'?Math.max(0,pPtR.current-2):pPtR.current;
       const newDP=who==='dealer'?Math.max(0,dPtR.current-2):dPtR.current;
       setPPt(newPP);setDPt(newDP);pPtR.current=newPP;dPtR.current=newDP;
-      setComboShow({text:'BURST',pts:-2,color:'#ff3b3b',who,burst:true});sayChamp(who==='player'?'burstYou':'burstSelf');
+      setComboShow({text:'BURST',pts:-2,color:'#ff3b3b',who,burst:true,opp:stageOptsR.current&&stageOptsR.current.rivalName||undefined});sayChamp(who==='player'?'burstYou':'burstSelf');
       setTimeout(()=>setComboShow(null),4000);
       const tokB=roundTokR.current;
       setTimeout(()=>{if(tokB!==roundTokR.current)return;setBurstAnim(false);resetField();if(newPP>=winPtR.current||newDP>=winPtR.current){endGame(newPP,newDP);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,newPP,newDP,nr);},4000);
@@ -3021,7 +3052,7 @@ function App(){
       playComboSfx(pts.voice||'役なし');
       setResetFA(true);
       const color=who==='player'?'#2e7fe8':'#f5912a';
-      setComboShow({text:pts.voice||'10達成！',pts:pts.total,color,who});sayChamp(who==='player'?'scoreYou':'scoreSelf');
+      setComboShow({text:pts.voice||'10達成！',pts:pts.total,color,who,opp:stageOptsR.current&&stageOptsR.current.rivalName||undefined});sayChamp(who==='player'?'scoreYou':'scoreSelf');
       setTimeout(()=>setComboShow(null),4000);
       const tokS=roundTokR.current;
       setTimeout(()=>{if(tokS!==roundTokR.current)return;setResetFA(false);resetField();if(newPP>=winPtR.current||newDP>=winPtR.current){endGame(newPP,newDP);return;}const nr=rn+1;setRNum(nr);doCountdown(pHR.current,dHR.current,newPP,newDP,nr);},4000);
@@ -3054,11 +3085,13 @@ function App(){
   if(phase==='map')return h(MapScreen,{area:STAGES.areas[0],save,onSelect:i=>startStage(0,i),onBack:()=>{setPhase('menu');phaseR.current='menu';}});
   if(phase==='tutorial')return h(TutorialScreen,{pendingDiff,onFinish:finishTutorial,onExit:()=>finishTutorial(pendingDiff),trackNum,toggleMusic,coachName:null,startLabel:curStage?'ステージ '+curStage.no+' をはじめる':null,bg:null,winPt:curStage?curStage.winPt:null});
   if(phase==='gameEnd'&&gameEndData){
-    if(stageCtx)return h(StageEndScreen,{data:gameEndData,stage:curStage,stars:gameEndData.stars||0,onNext:stageNext,onRetry:()=>startStage(stageCtx.ar,stageCtx.st),onMap:goMap,isLast:!(STAGES.areas[stageCtx.ar].stages[stageCtx.st+1])||!!STAGES.areas[stageCtx.ar].stages[stageCtx.st+1].comingSoon});
+    if(stageCtx)return h(StageEndScreen,{data:gameEndData,stage:curStage,stars:gameEndData.stars||0,onNext:stageNext,onRetry:()=>startStage(stageCtx.ar,stageCtx.st),onMap:goMap,isLast:(()=>{const nx=STAGES.areas[stageCtx.ar].stages[stageCtx.st+1];return !nx||!!nx.comingSoon||!!nx.challenge;})()});
     return h(GameEndScreen,{data:gameEndData,onRestart:startGame,onHome:goHome});
   }
 
-  return h('div',{className:'gp-screen'},
+  const so=stageOptsR.current||{};
+  const rival=so.rivalName||'DEALER'; // v62: 第7は「ルナ」
+  return h('div',{className:'gp-screen'+(so.challenge?' ch7':'')},
     h(ChampionLayer,{champ:stageOptsR.current&&stageOptsR.current.champion?CHAMPIONS[stageOptsR.current.champion]:null}), // v61 チャンピオン戦は立ち絵
     champLine&&stageOptsR.current&&stageOptsR.current.champion&&h('div',{key:'cl'+champLine.id,className:'champ-bubble'},champLine.text), // 吹き出し（最前面）
     // v56 クロノリンク演出（すべて pointer-events:none）
@@ -3095,7 +3128,7 @@ function App(){
         h('span',{className:'lvl'},curStage?(curStage.boss?'BOSS':'ST '+curStage.no):(difficulty==='easy'?'EASY':difficulty==='hard'?'HARD':difficulty==='master'?'MASTER':'NORMAL'))
       ),
       h('div',{className:'gp-score dealer'},
-        h('div',{className:'lbl'},'DEALER'),
+        h('div',{className:'lbl'},rival),
         h('div',{className:'val'},dPt),
         h('div',{className:'sub'},'あと ',h('b',null,Math.max(0,winPt-dPt)),'pt')
       ),
@@ -3110,7 +3143,7 @@ function App(){
 
     // DEALER 手札
     h('div',{className:'gp-dealer-area'},
-      h('div',{className:'gp-area-label'},'💀 DEALER — '+dH.length+'枚'),
+      h('div',{className:'gp-area-label'},(so.rivalName?'✦ ':'💀 ')+rival+' — '+dH.length+'枚'),
       h('div',{className:'gp-dealer-cards'},
         dH.slice(0,12).map((_,i)=>h('div',{key:i,className:'gp-dealer-card'}))
       )
