@@ -800,8 +800,14 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 
 /* 手札エリアそのものを上へ移動して場に近づける。
    !important でカスタマイズ保存値(--user-hand-y)に負けないようにする */
-.gp-hand-area{
-  transform:translateY(calc(-40 * var(--u))) !important;
+/* v65: 手札は画面下端に固定（端末サイズで位置が変わらない）。上の余白は gp-screen の padding-bottom で確保 */
+.gp-screen > .gp-hand-area{
+  position:absolute !important;
+  left:0;right:0;
+  bottom:max(env(safe-area-inset-bottom,0px),calc(10 * var(--u)));
+  margin:0 !important;
+  transform:none !important;
+  z-index:2;
 }
 /* バースト演出：ガタッと揺れる */
 @keyframes burstShake{
@@ -1249,14 +1255,45 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 .gp-screen.ch7 .gp-hand-row{position:relative;z-index:1;}
 /* プレイヤーの表カード：地の画像だけ差し替え。数字・状態表示・タップ領域は既存のまま（数字は濃い紫で明瞭に） */
 .gp-screen.ch7 .card-stage.cyan{--cardimg:url('img/challenge07-player-card.png');--nc:#2b1a4d;}
+/* ルナの立ち絵：場のカードの後ろ（champ-layer は z-index 0 でUIより後ろ・タップは通す）位置はここで調整 */
+/* v66: 蝶の妖精（第1形態）。上部バーの下〜相手カードの後ろに上半身。胸から下はマスクで消える。位置はここで調整 */
+.gp-screen.ch7 .boss-img{position:absolute;left:50%;top:calc(12 * var(--u));width:calc(372 * var(--u));height:calc(558 * var(--u));margin-left:calc(-186 * var(--u));
+  background:url('img/challenge07-boss1.png') center top/contain no-repeat;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 40%,transparent 50%);mask-image:linear-gradient(180deg,#000 0%,#000 40%,transparent 50%);
+  filter:drop-shadow(0 0 16px rgba(255,140,220,.35));animation:champIn .6s cubic-bezier(.2,1,.3,1) both;}
+/* 相手カードは妖精の胸の位置へ。ラベル・すりガラスは消す */
+.gp-screen.ch7 .gp-dealer-area{margin-top:calc(130 * var(--u)) !important;background:transparent !important;border:none !important;box-shadow:none !important;padding:0 !important;}
+.gp-screen.ch7 .gp-dealer-area .gp-area-label{display:none !important;}
+/* 上部バー：白いガラスをやめて透明に。文字は明るく */
+.gp-screen.ch7 .gp-top-bar{background:transparent !important;background-image:none !important;border:1px solid rgba(255,190,235,.28) !important;box-shadow:none !important;filter:none !important;clip-path:none !important;border-radius:calc(22 * var(--u));}
+.gp-screen.ch7 .gp-top-bar .gp-time-box{background:rgba(255,255,255,.05) !important;border:1px solid rgba(255,170,225,.45) !important;}
+.gp-screen.ch7 .gp-top-bar .gp-time-box .lbl{color:#e6c6ff !important;opacity:1 !important;}
+.gp-screen.ch7 .gp-top-bar .gp-time-box .val{color:#ff8fd2 !important;text-shadow:0 0 10px rgba(255,120,200,.55) !important;}
+.gp-screen.ch7 .gp-top-bar .gp-time-box.urgent{background:rgba(255,90,140,.12) !important;}
+.gp-screen.ch7 .gp-score.you .lbl,.gp-screen.ch7 .gp-score.you .val,.gp-screen.ch7 .gp-score.you .sub b{color:#5fb0ff !important;text-shadow:0 0 8px rgba(95,176,255,.45) !important;}
+.gp-screen.ch7 .gp-score.dealer .lbl,.gp-screen.ch7 .gp-score.dealer .val,.gp-screen.ch7 .gp-score.dealer .sub b{color:#ff9a4a !important;text-shadow:0 0 8px rgba(255,154,74,.45) !important;}
+.gp-screen.ch7 .gp-score .sub{color:#cbb8e8 !important;}
+.gp-screen.ch7 .gp-round-pill{background:rgba(255,255,255,.07) !important;border:1px solid rgba(255,255,255,.2) !important;}
+.gp-screen.ch7 .gp-round-pill .r,.gp-screen.ch7 .gp-round-pill .lvl{color:#f0d8ff !important;}
+.gp-screen.ch7 .gp-icon-btn,.gp-screen.ch7 .gp-track-btn{background:rgba(255,255,255,.06) !important;border:1px solid rgba(255,255,255,.22) !important;color:#e0cffa !important;opacity:.9 !important;}
+.gp-screen.ch7 .gp-track-btn .num{color:#e0cffa !important;}
+.gp-screen.ch7 .gp-track-btn::before{border-color:rgba(255,200,240,.35) !important;}
+/* 合計表示：ピンク発光の数字＋薄紫 */
+.gp-screen.ch7 .gp-field-sum .num:not(.alert):not(.warn):not(.alert-blue){color:#ff8fd2;text-shadow:0 0 12px rgba(255,120,200,.75),0 0 28px rgba(255,120,200,.35);}
+.gp-screen.ch7 .gp-field-sum .num.warn{color:#ffb060;text-shadow:0 0 12px rgba(255,176,96,.7);}
+.gp-screen.ch7 .gp-field-sum .num.alert{color:#ff5f8a;text-shadow:0 0 12px rgba(255,95,138,.8);}
+.gp-screen.ch7 .gp-field-sum .num.alert-blue{color:#7fc4ff;text-shadow:0 0 12px rgba(127,196,255,.8);}
+/* 手札マット：枠を広げてカードが必ずマットの内側に入るように */
+.gp-screen.ch7 .gp-hand-rows{padding:calc(22 * var(--u)) calc(8 * var(--u)) calc(20 * var(--u));}
+.gp-screen.ch7 .gp-hand-rows::before{width:112%;}
 /* ルナの表カード（場に出た時）：地の画像だけ差し替え。数字は濃い紫で明瞭に */
 .gp-screen.ch7 .card-stage.magenta{--cardimg:url('img/challenge07-rival-card-front.png');--nc:#4a1a3e;}
 /* 相手の裏カード：既存の並び・枚数管理はそのまま、見た目だけ画像に */
 .gp-screen.ch7 .gp-dealer-card{aspect-ratio:2/3;border-radius:0;border:none;box-shadow:none;background:url('img/challenge07-rival-card.png') center/contain no-repeat;}
 .gp-screen.ch7 .gp-dealer-area .gp-area-label,.gp-screen.ch7 .gp-hand-area .gp-area-label,.gp-screen.ch7 .gp-field-sum .sep{color:#ecdfff;text-shadow:0 1px 3px rgba(0,0,0,.6);}
-.gp-screen.ch7 .gp-field-sum .ato{color:rgba(236,223,255,.75) !important;text-shadow:0 1px 3px rgba(0,0,0,.6);}
+.gp-screen.ch7 .gp-field-sum .ato{color:#c9a6f0 !important;text-shadow:0 1px 3px rgba(0,0,0,.6);}
+.gp-screen.ch7 .gp-field-sum .sep{color:#c9a6f0;}
 .gp-screen.ch7 .gp-field-sum .ato b{color:#fff !important;}
-.gp-screen.ch7 .gp-field-sum .num:not(.alert):not(.warn):not(.alert-blue){color:#fff;text-shadow:0 0 10px rgba(200,150,255,.8),0 1px 3px rgba(0,0,0,.6);}
 
 /* ===== v61: チャンピオン登場画面・試合中のキャラクター＆セリフ ===== */
 .ci-screen{position:fixed;inset:0;overflow:hidden;background:#0a1030 url('img/area01-bg.png') center/cover no-repeat;display:flex;flex-direction:column;--u:min(calc(100vw / 360), calc(100dvh / 640));
@@ -2270,7 +2307,10 @@ function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic,coachN
 
 
 // ── MenuScreen ──
-const APP_VER='v63'; // v63: 第7ステージ ルナの表向きカード（場に出た時）をピンクの蝶カードに
+const APP_VER='v66'; // v66: 第7 キャラを蝶の妖精に変更（場の上・上半身）、上部UI透明化、合計表示ピンク、手札マットにカードを収める
+// v65: 手札（マット）を画面の一番下に固定。端末の縦サイズに関係なく下端基準
+// v64: 第7ステージ 場のカードの後ろにルナの立ち絵（試し置き）
+// v63: 第7ステージ ルナの表向きカード（場に出た時）をピンクの蝶カードに
 // v62: 第7チャレンジステージ（ルナ・先取15pt・ST6クリアで解放）＋専用背景/手札マット/カード表・裏
 // v61: チャンピオン戦にキャラクター（ルクス）を表示。対戦前の登場画面＋試合中のセリフ
 // v60: クロノリンクの出現率を100%に（ST4以降は毎試合必ず1枚）
@@ -3093,6 +3133,7 @@ function App(){
   const rival=so.rivalName||'DEALER'; // v62: 第7は「ルナ」
   return h('div',{className:'gp-screen'+(so.challenge?' ch7':'')},
     h(ChampionLayer,{champ:stageOptsR.current&&stageOptsR.current.champion?CHAMPIONS[stageOptsR.current.champion]:null}), // v61 チャンピオン戦は立ち絵
+    so.challenge&&h('div',{className:'champ-layer'},h('div',{className:'boss-img'})), // v66 蝶の妖精（第7）
     champLine&&stageOptsR.current&&stageOptsR.current.champion&&h('div',{key:'cl'+champLine.id,className:'champ-bubble'},champLine.text), // 吹き出し（最前面）
     // v56 クロノリンク演出（すべて pointer-events:none）
     chronoFx==='in'&&h('div',{key:'chv'+rNum,className:'chrono-veil'}),
