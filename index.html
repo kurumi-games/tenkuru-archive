@@ -800,12 +800,13 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 
 /* 手札エリアそのものを上へ移動して場に近づける。
    !important でカスタマイズ保存値(--user-hand-y)に負けないようにする */
-/* v65: 手札は画面下端に固定（端末サイズで位置が変わらない）。上の余白は gp-screen の padding-bottom で確保 */
+/* v69: 上から順に積む。場エリアは高さ固定（カードが出ても手札が動かない）、そのすぐ下に手札。下固定はやめた */
+.gp-screen{padding-bottom:max(env(safe-area-inset-bottom,0px),calc(10 * var(--u))) !important;}
+.gp-screen .gp-field-area{flex:0 0 auto !important;min-height:calc(140 * var(--u)) !important;justify-content:center !important;padding-top:calc(6 * var(--u)) !important;padding-bottom:calc(4 * var(--u)) !important;}
+.gp-screen .gp-field-area + .gp-spacer{min-height:0 !important;} /* 場→手札の空きスペーサーは無し */
 .gp-screen > .gp-hand-area{
-  position:absolute !important;
-  left:0;right:0;
-  bottom:max(env(safe-area-inset-bottom,0px),calc(10 * var(--u)));
-  margin:0 !important;
+  position:relative !important;
+  margin:0 calc(-12 * var(--u)) !important;
   transform:none !important;
   z-index:2;
 }
@@ -1260,7 +1261,11 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 .gp-screen.ch7 .boss-img{position:absolute;left:50%;top:calc(12 * var(--u));width:calc(372 * var(--u));height:calc(558 * var(--u));margin-left:calc(-186 * var(--u));
   background:url('img/challenge07-boss1.png') center top/contain no-repeat;
   -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 40%,transparent 50%);mask-image:linear-gradient(180deg,#000 0%,#000 40%,transparent 50%);
-  filter:drop-shadow(0 0 16px rgba(255,140,220,.35));animation:champIn .6s cubic-bezier(.2,1,.3,1) both;}
+  filter:drop-shadow(0 0 16px rgba(255,140,220,.35));transform-origin:50% 70%;
+  animation:champIn .6s cubic-bezier(.2,1,.3,1) both, bossIdle 5.5s ease-in-out .6s infinite, bossGlow 3.2s ease-in-out infinite;}
+/* ゆっくり浮いて、わずかに傾き、呼吸するように大きさが揺れる */
+@keyframes bossIdle{0%,100%{transform:translateY(0) rotate(0deg) scale(1);}30%{transform:translateY(calc(-5 * var(--u))) rotate(-.7deg) scale(1.012);}60%{transform:translateY(calc(-2 * var(--u))) rotate(.5deg) scale(1.006);}80%{transform:translateY(calc(-6 * var(--u))) rotate(.2deg) scale(1.01);}}
+@keyframes bossGlow{0%,100%{filter:drop-shadow(0 0 14px rgba(255,140,220,.3));}50%{filter:drop-shadow(0 0 26px rgba(255,150,230,.6));}}
 /* 相手カードは妖精の胸の位置へ。ラベル・すりガラスは消す */
 .gp-screen.ch7 .gp-dealer-area{margin-top:calc(130 * var(--u)) !important;background:transparent !important;border:none !important;box-shadow:none !important;padding:0 !important;}
 .gp-screen.ch7 .gp-dealer-area .gp-area-label{display:none !important;}
@@ -2308,7 +2313,9 @@ function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic,coachN
 
 
 // ── MenuScreen ──
-const APP_VER='v67'; // v67: 第7ステージ専用BGM（Iridescent_Trap.mp3）
+const APP_VER='v69'; // v69: 手札の下固定をやめ、場のすぐ下に手札を置く（上から順に積む）
+// v68: 場を手札のすぐ上に寄せる（視線移動を減らす）／第7の妖精にゆらぎアニメ／ルナのAIを easy に
+// v67: 第7ステージ専用BGM（Iridescent_Trap.mp3）
 // v66: 第7 キャラを蝶の妖精に変更（場の上・上半身）、上部UI透明化、合計表示ピンク、手札マットにカードを収める
 // v65: 手札（マット）を画面の一番下に固定。端末の縦サイズに関係なく下端基準
 // v64: 第7ステージ 場のカードの後ろにルナの立ち絵（試し置き）
@@ -2344,7 +2351,7 @@ const AREA_01={
     {no:5,name:'シックス・セカンド',description:'制限時間6秒。クロノリンクを実戦で使え',icon:'card',winPt:10,diff:'normal',rule:'normal',chrono:true,timeLimit:6},
     {no:6,name:'チャンピオン',description:'コア・シフト：最初に置いた4が3に変わる',icon:'crown',winPt:15,diff:'hard',rule:'normal',boss:true,chrono:true,ability:'coreShift',champion:'lux'},
     // v62: お試しチャレンジ。ST6クリアで解放。本編の進行・AREA CLEARには数えない。次のステージは解放しない
-    {no:7,name:'ルナ',description:'お試しチャレンジ。通常ルールで先取15pt',icon:'card',winPt:15,diff:'hard',rule:'normal',challenge:true,rivalName:'ルナ',bgm:'Iridescent_Trap.mp3'},
+    {no:7,name:'ルナ',description:'お試しチャレンジ。通常ルールで先取15pt',icon:'card',winPt:15,diff:'easy',rule:'normal',challenge:true,rivalName:'ルナ',bgm:'Iridescent_Trap.mp3'}, // v68: AIは easy
   ]
 };
 const STAGES={
