@@ -1300,8 +1300,8 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 .gp-screen.ch7 .gp-field-sum .sep{color:#c9a6f0;}
 .gp-screen.ch7 .gp-field-sum .ato b{color:#fff !important;}
 
-/* ===== v70: 手札は左詰め（出したカードの穴を詰める） ===== */
-.gp-hand-row{justify-content:flex-start !important;min-height:calc(var(--card-w) * 1.4);} /* 段が空でも高さは保つ */
+/* ===== v71: 場に出たカードは左揃え（手札は元のまま） ===== */
+.gp-screen .gp-field-cards{width:100%;justify-content:flex-start !important;padding-left:calc(6 * var(--u));}
 
 /* ===== v70: ルナ → レイピア 第2形態演出（第7だけ） ===== */
 .gp-screen.ch7 .boss-img.form2{top:calc(-30 * var(--u));width:calc(420 * var(--u));height:calc(630 * var(--u));margin-left:calc(-210 * var(--u));
@@ -2355,7 +2355,8 @@ function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic,coachN
 
 
 // ── MenuScreen ──
-const APP_VER='v70'; // v70: 手札を左詰め／ルナ戦30pt・15ptで第2形態（レイピア）演出
+const APP_VER='v71'; // v71: 手札は元に戻し、場に出たカードを左揃えに
+// v70: ルナ戦30pt・15ptで第2形態（レイピア）演出
 // v69: 手札の下固定をやめ、場のすぐ下に手札を置く（上から順に積む）
 // v68: 場を手札のすぐ上に寄せる（視線移動を減らす）／第7の妖精にゆらぎアニメ／ルナのAIを easy に
 // v67: 第7ステージ専用BGM（Iridescent_Trap.mp3）
@@ -3243,7 +3244,7 @@ function App(){
 
   const so=stageOptsR.current||{};
   const rival=(form2&&so.form2Name)||so.rivalName||'DEALER';
-  const handCards=pH.map((v,i)=>({v,i})).filter(c=>c.v!==null); // v70 残りカードだけ // v62: 第7は「ルナ」／v70: 第2形態は「レイピア」
+  // v62: 第7は「ルナ」／v70: 第2形態は「レイピア」
   return h('div',{className:'gp-screen'+(so.challenge?' ch7':'')},
     h(ChampionLayer,{champ:stageOptsR.current&&stageOptsR.current.champion?CHAMPIONS[stageOptsR.current.champion]:null}), // v61 チャンピオン戦は立ち絵
     so.challenge&&h('div',{className:'champ-layer'},h('div',{key:form2?'f2':'f1',className:'boss-img'+(form2?' form2':'')})), // v66 蝶の妖精（第7）／v70 第2形態
@@ -3340,11 +3341,10 @@ function App(){
       h('div',{className:'gp-area-label'},'YOU — '+pH.filter(Boolean).length+'枚'),
       h('div',{className:'gp-hand-rows'},
         h('div',{className:'gp-hand-row'},
-          // v70: 出したカードの穴は詰めて左揃え（残りカードを上段5枚→下段の順に並べ直す）
-          handCards.slice(0,5).map(({v,i})=>h(SlideCard,{key:i+'_'+v,value:v,onPlay:()=>playCard(i),disabled:countNum>=0||!canPlay(v,fieldSum,field),cardState:countNum>=0?null:handCardState(v,fieldSum,field),onLocked:()=>fxLockHint(lockReason(v,fieldSum,field)),cardRole:'player',isSpecial:!!pSp[i],linkPick:linkMode&&canPlay(v,fieldSum,field)}))
+          pH.slice(0,5).map((v,i)=>v===null?h('div',{key:i,style:{width:'var(--card-w)',height:'calc(var(--card-w) * 1.4)',flexShrink:0}}):h(SlideCard,{key:i+'_'+v,value:v,onPlay:()=>playCard(i),disabled:countNum>=0||!canPlay(v,fieldSum,field),cardState:countNum>=0?null:handCardState(v,fieldSum,field),onLocked:()=>fxLockHint(lockReason(v,fieldSum,field)),cardRole:'player',isSpecial:!!pSp[i],linkPick:linkMode&&canPlay(v,fieldSum,field)}))
         ),
         h('div',{className:'gp-hand-row'},
-          handCards.slice(5).map(({v,i})=>h(SlideCard,{key:i+'_'+v,value:v,onPlay:()=>playCard(i),disabled:countNum>=0||!canPlay(v,fieldSum,field),cardState:countNum>=0?null:handCardState(v,fieldSum,field),onLocked:()=>fxLockHint(lockReason(v,fieldSum,field)),cardRole:'player',isSpecial:!!pSp[i],linkPick:linkMode&&canPlay(v,fieldSum,field)}))
+          pH.slice(5).map((v,i)=>v===null?h('div',{key:i+5,style:{width:'var(--card-w)',height:'calc(var(--card-w) * 1.4)',flexShrink:0}}):h(SlideCard,{key:(i+5)+'_'+v,value:v,onPlay:()=>playCard(i+5),disabled:countNum>=0||!canPlay(v,fieldSum,field),cardState:countNum>=0?null:handCardState(v,fieldSum,field),onLocked:()=>fxLockHint(lockReason(v,fieldSum,field)),cardRole:'player',isSpecial:!!pSp[i+5],linkPick:linkMode&&canPlay(v,fieldSum,field)}))
         )
       )
     ),
