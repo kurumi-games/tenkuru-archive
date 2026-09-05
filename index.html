@@ -1279,15 +1279,21 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 @keyframes pdFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(calc(-2 * var(--u)));}}
 @keyframes pdBlink{0%,90%{opacity:0;}92%,95%{opacity:1;}97%,100%{opacity:0;}}
 @media (prefers-reduced-motion: reduce){.pd-box>div{animation:none !important;}}
+/* v83: 第2形態＝最終形態の1枚絵。上部バー下〜相手カードの間に全身＋四星環。軽く上下に浮く */
+.gp-screen.ch7 .boss-img.form2.final{top:calc(58 * var(--u));width:calc(200 * var(--u));height:calc(178 * var(--u));margin-left:calc(-100 * var(--u));opacity:.95;
+  background:url('img/challenge07-reipia-final.png') center top/contain no-repeat;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 82%,transparent 100%);mask-image:linear-gradient(180deg,#000 0%,#000 82%,transparent 100%);
+  filter:drop-shadow(0 0 10px rgba(190,150,255,.35));animation:form2Pop .5s cubic-bezier(.2,1.2,.3,1) both, finalFloat 4.6s ease-in-out .5s infinite;}
+@keyframes finalFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(calc(-4 * var(--u)));}}
 /* v79: ルナの技「星環」。裏向きカードの周りに軽く動く環（画像は img/challenge07-star-ring.png） */
 .gp-screen.ch7 .gp-dealer-card{position:relative;overflow:visible;}
-.gp-screen.ch7 .gp-dealer-card.ringed{z-index:2;}
-.star-ring{position:absolute;left:50%;top:50%;width:250%;height:250%;margin:-125% 0 0 -125%;pointer-events:none;z-index:3;
-  background:url('img/challenge07-star-ring.png') center 46% / 100% auto no-repeat;
+.gp-screen.ch7 .gp-dealer-card.ringed{z-index:5;}
+.star-ring{position:absolute;left:50%;top:50%;width:calc(44 * var(--u));height:calc(66 * var(--u));margin:calc(-33 * var(--u)) 0 0 calc(-22 * var(--u));pointer-events:none;z-index:3;
+  background:url('img/challenge07-star-ring.png') center center / 100% 100% no-repeat;
   animation:srIn .5s cubic-bezier(.2,1.4,.4,1) both, srFloat 3.2s ease-in-out .5s infinite, srGlow 2.4s ease-in-out infinite;}
 @keyframes srIn{0%{opacity:0;transform:scale(.3) rotate(-40deg);}100%{opacity:1;transform:scale(1) rotate(0);}}
 @keyframes srFloat{0%,100%{transform:translateY(0) rotate(-4deg);}50%{transform:translateY(calc(-1.5 * var(--u))) rotate(4deg);}}
-@keyframes srGlow{0%,100%{filter:drop-shadow(0 0 2px rgba(255,150,230,.5));}50%{filter:drop-shadow(0 0 6px rgba(255,150,230,1));}}
+@keyframes srGlow{0%,100%{filter:brightness(1.25) drop-shadow(0 0 3px rgba(255,170,240,.8));}50%{filter:brightness(1.6) drop-shadow(0 0 8px rgba(255,170,240,1)) drop-shadow(0 0 14px rgba(255,120,220,.7));}}
 .star-ring.done{animation:srOut .5s ease both;}
 @keyframes srOut{to{opacity:0;transform:scale(1.6);}}
 /* 星環完成：場のカードに環の光 */
@@ -1298,7 +1304,10 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
   background:rgba(40,8,50,.8);border:1.5px solid rgba(255,150,230,.9);border-radius:999px;padding:calc(7 * var(--u)) calc(18 * var(--u));color:#ffd6f4;font-size:calc(13 * var(--u));font-weight:900;letter-spacing:calc(2 * var(--u));box-shadow:0 0 22px rgba(255,120,220,.5);animation:linkBan .28s ease both;}
 .sr-banner b{font-family:'Cinzel','Times New Roman',serif;letter-spacing:.14em;color:#fff;margin-right:calc(8 * var(--u));text-shadow:0 0 8px rgba(255,160,240,1);}
 /* 第2形態：休眠中の星環（暗く小さく、立ち絵の四隅） */
-.gp-screen.ch7 .ring-dormant{position:absolute;width:calc(44 * var(--u));height:calc(44 * var(--u));background:center/contain no-repeat;opacity:.3;filter:grayscale(.5) brightness(.6);pointer-events:none;animation:a1Spin 40s linear infinite;}
+.gp-screen.ch7 .ring-dormant{position:absolute;width:calc(50 * var(--u));height:calc(50 * var(--u));background:center/contain no-repeat;opacity:1;filter:brightness(1.35) saturate(1.2) drop-shadow(0 0 6px rgba(255,255,255,.45));pointer-events:none;animation:a1Spin 36s linear infinite, pdFloat 5s ease-in-out infinite;}
+.gp-screen.ch7 .ring-dormant.i1{animation-direction:reverse,normal;}
+.gp-screen.ch7 .ring-dormant.i2{animation-delay:0s,-2.5s;}
+.gp-screen.ch7 .ring-dormant.i3{animation-direction:reverse,normal;animation-delay:0s,-1.2s;}
 /* 相手カード周りの暗い薄膜（白いカードと数字を読ませる） */
 .gp-screen.ch7 .gp-dealer-cards{position:relative;}
 .gp-screen.ch7 .gp-dealer-cards::before{content:'';position:absolute;left:-6%;right:-6%;top:-14%;bottom:-14%;border-radius:999px;background:radial-gradient(ellipse at center,rgba(8,2,20,.55),rgba(8,2,20,0) 75%);z-index:-1;pointer-events:none;}
@@ -2481,7 +2490,10 @@ function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic,coachN
 
 
 // ── MenuScreen ──
-const APP_VER='v80'; // v80: 星環はラウンド毎に1枚付く。時間切れ／使い切りのどちらのリセットでも環付きは残す
+const APP_VER='v83'; // v83: 第2形態は最終形態の1枚絵をそのまま表示（四星環込み）。軽く上下に浮くだけ
+// v82: 星環はゲームのルール（3枚目は合計5以上・4枚目は10ちょうど・最大4枚）に従う／第2形態の周りに星環4つを表示
+// v81: 星環リングの大きさ・位置を絶対値で固定（カード1枚の周りに収まる）
+// v80: 星環はラウンド毎に1枚付く。時間切れ／使い切りのどちらのリセットでも環付きは残す
 // v79: ルナ（第1形態）の技「星環」実装／第2形態の立ち絵を最終形態画像に差し替え
 // v78: 変身の芯をKling動画2本に差し替え（video/shift-1-luna.mp4 → 台詞 → video/shift-2-reipia.mp4）
 // v77: 変身シーンを「乗っ取り」に作り直し（動く立ち絵・浸食・星環の施錠・目が開く・羽の解放）
@@ -3021,7 +3033,10 @@ function App(){
   function attachStarRing(rn){
     if(!starRingActive())return;
     const hand=dHR.current,flags=dRingR.current.slice();const sum=ringSum();
-    const cand=hand.map((v,i)=>(!flags[i]&&v<=10-sum)?i:-1).filter(i=>i>=0);
+    const ringed=hand.filter((v,i)=>flags[i]);
+    if(ringed.length>=4)return;
+    // 場に出す時と同じルール（canPlay）：3枚目は合計5以上、4枚目は10ちょうど。超える値は不可。満たす札が無ければ今ラウンドは付けない
+    const cand=hand.map((v,i)=>(!flags[i]&&sum+v<=10&&canPlay(v,sum,ringed))?i:-1).filter(i=>i>=0);
     if(!cand.length)return;
     const k=cand[Math.floor(Math.random()*cand.length)];flags[k]=true;setDRing(flags);dRingR.current=flags;
     try{resumeAC();fxBell({f:2349,v:0.07,d:0.9,bright:1.3,rev:0.7});fxTone({f:1800,f2:3600,type:'sine',v:0.03,a:0.01,d:0.25,rev:0.5});}catch(e){}
@@ -3482,9 +3497,9 @@ function App(){
     h(ChampionLayer,{champ:stageOptsR.current&&stageOptsR.current.champion?CHAMPIONS[stageOptsR.current.champion]:null}), // v61 チャンピオン戦は立ち絵
     so.challenge&&h('div',{className:'champ-layer'},
       form2
-        ?h('div',{key:'f2',className:'boss-img form2 pd'},h('div',{className:'pd-box'},h('div',{className:'pd-wingL'}),h('div',{className:'pd-wingR'}),h('div',{className:'pd-rings'}),h('div',{className:'pd-body'}),h('div',{className:'pd-lids'}))) // v76: パーツ分けレイピア
+        ?h('div',{key:'f2',className:'boss-img form2 final'}) // v83: 最終形態の1枚絵（四星環込み）をそのまま
         :h('div',{key:'f1',className:'boss-img'}), // v75: ルナ上半身
-      form2&&RING_ORDER.map((k,i)=>h('div',{key:'rd'+k,className:'ring-dormant',style:{left:'calc(50% + '+[-112,68,-112,68][i]+' * var(--u))',top:'calc('+[88,88,168,168][i]+' * var(--u))',backgroundImage:'url('+REIPIA_RINGS[k].image+')'}})) // 休眠中の星環（能力は未実装）
+      null // v83: 星環4つは絵に含まれている
     ),
     shiftScene&&h(ShiftScene,{key:'shift',name:shiftScene.name,form2Name:shiftScene.form2Name,
       onForm2:()=>{if(shiftScene.tok===roundTokR.current){form2R.current=true;setForm2(true);setDealer(dHR.current);}}, // v79: 第2形態では星環なし
