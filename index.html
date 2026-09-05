@@ -1310,33 +1310,77 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
   animation:form2In 1.1s cubic-bezier(.2,1,.3,1) both, bossIdle 6.5s ease-in-out 1.1s infinite, bossGlow2 3s ease-in-out infinite;}
 @keyframes form2In{0%{opacity:0;transform:scale(1.25);filter:brightness(3) blur(10px);}60%{opacity:1;filter:brightness(1.4) blur(0);}100%{opacity:1;transform:scale(1);filter:brightness(1);}}
 @keyframes bossGlow2{0%,100%{filter:drop-shadow(0 0 14px rgba(180,140,255,.35));}50%{filter:drop-shadow(0 0 30px rgba(200,160,255,.7));}}
-.sh-veil{position:fixed;inset:0;z-index:170;background:rgba(10,4,24,.35);backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);animation:shVeil .6s ease both;pointer-events:none;}
-@keyframes shVeil{0%{background:rgba(10,4,24,0);backdrop-filter:blur(0px);-webkit-backdrop-filter:blur(0px);}100%{background:rgba(10,4,24,.55);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);}}
-.sh-veil.dark{animation:none;background:rgba(10,4,24,.55);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);}
-.sh-box{position:fixed;left:50%;top:50%;z-index:172;width:min(88vw,calc(330 * var(--u)));transform:translate(-50%,-50%);pointer-events:none;
-  background:#050208;border:1.5px solid rgba(255,150,220,.55);border-radius:calc(8 * var(--u));padding:calc(16 * var(--u)) calc(16 * var(--u)) calc(18 * var(--u));
-  box-shadow:0 0 40px rgba(255,120,200,.25),0 20px 50px rgba(0,0,0,.7);display:flex;gap:calc(14 * var(--u));align-items:center;animation:shBox .45s cubic-bezier(.2,1.2,.3,1) both;}
-@keyframes shBox{0%{opacity:0;transform:translate(-50%,-50%) scale(.85);}100%{opacity:1;transform:translate(-50%,-50%) scale(1);}}
-.sh-box.crack{animation:shShake .5s ease-in-out both;}
-@keyframes shShake{0%,100%{transform:translate(-50%,-50%);}20%{transform:translate(calc(-50% - 4px),-50%) rotate(-.6deg);}40%{transform:translate(calc(-50% + 4px),-50%) rotate(.6deg);}60%{transform:translate(calc(-50% - 3px),-50%);}80%{transform:translate(calc(-50% + 2px),-50%);}}
-.sh-face{flex-shrink:0;width:calc(86 * var(--u));height:calc(86 * var(--u));border-radius:50%;border:1.5px solid rgba(255,170,230,.7);
-  background:url('img/challenge07-boss1.png') 50% 12% / 240% auto no-repeat;box-shadow:0 0 18px rgba(255,120,200,.45);}
-.sh-tx{flex:1;min-width:0;}
-.sh-tx .nm{font-family:'Noto Sans JP','Hiragino Sans',sans-serif;font-weight:700;font-size:calc(11 * var(--u));letter-spacing:.2em;color:#ff9fd6;margin-bottom:calc(6 * var(--u));}
-.sh-tx .ln{font-family:'Noto Serif JP','Hiragino Mincho ProN',serif;font-weight:700;font-size:calc(16.5 * var(--u));line-height:1.6;color:#fff;letter-spacing:.03em;text-shadow:0 0 10px rgba(255,150,220,.5);
-  overflow:hidden;white-space:nowrap;width:0;animation:shType 1.6s steps(16,end) .35s forwards;}
-@keyframes shType{to{width:100%;}}
-.sh-glass{position:fixed;inset:0;z-index:173;pointer-events:none;width:100%;height:100%;}
-.sh-glass .crk{fill:none;stroke:rgba(255,255,255,.95);stroke-width:.35;stroke-linecap:round;stroke-dasharray:200;stroke-dashoffset:200;filter:drop-shadow(0 0 1px rgba(255,190,240,.9));animation:shCrack .32s ease-out forwards;}
-.sh-glass .shd{fill:rgba(255,235,250,.07);stroke:rgba(255,255,255,.6);stroke-width:.25;transform-box:fill-box;transform-origin:center;opacity:0;animation:shShard 1.1s cubic-bezier(.4,0,.9,.5) forwards;}
+/* --- v74 変身シーン --- */
+.sh-root{position:fixed;inset:0;z-index:170;overflow:hidden;pointer-events:none;}
+.sh-veil{position:absolute;inset:0;background:rgba(6,2,16,.72);animation:shVeil .7s ease both;}
+@keyframes shVeil{0%{opacity:0;}100%{opacity:1;}}
+.sh-stage{position:absolute;inset:0;width:100%;height:100%;display:block;}
+.sh-stage.shards{z-index:6;}
+.sh-void{z-index:2;}
+.sh-white{z-index:7;}
+.sh-cam{transform-box:view-box;transform-origin:var(--ox) var(--oy);animation:shZoom 3.6s cubic-bezier(.3,.6,.4,1) both;}
+@keyframes shZoom{0%{transform:scale(1);}100%{transform:scale(1.09);}}
+.sh-cam.hold{animation:none;transform:scale(1.09);}
+.sh-luna{transform-box:fill-box;transform-origin:50% 40%;animation:shLunaIn .9s cubic-bezier(.2,1,.3,1) both, shBreath 4.2s ease-in-out .9s infinite;}
+@keyframes shLunaIn{0%{opacity:0;transform:translateY(3px) scale(.97);}100%{opacity:1;transform:none;}}
+@keyframes shBreath{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-.6px) scale(1.012);}}
+.sh-glow{opacity:0;animation:shGlowIn 1.2s ease 1.2s both, shGlowPulse 2.2s ease-in-out 2.4s infinite;}
+@keyframes shGlowIn{to{opacity:1;}}
+@keyframes shGlowPulse{0%,100%{opacity:.55;}50%{opacity:1;}}
+.sh-dlg{position:absolute;left:calc(12 * var(--u));right:calc(12 * var(--u));bottom:max(env(safe-area-inset-bottom,0px),calc(18 * var(--u)));
+  background:linear-gradient(180deg,rgba(6,2,14,.86),rgba(2,0,8,.94));border:1px solid rgba(255,150,220,.5);border-radius:calc(6 * var(--u));
+  padding:calc(14 * var(--u)) calc(18 * var(--u)) calc(16 * var(--u));box-shadow:0 0 40px rgba(255,120,200,.18),0 20px 50px rgba(0,0,0,.7);animation:shDlg .5s cubic-bezier(.2,1.2,.3,1) both;}
+@keyframes shDlg{0%{opacity:0;transform:translateY(14px);}100%{opacity:1;transform:none;}}
+.sh-dlg .nm{display:inline-block;font-family:'Noto Sans JP','Hiragino Sans',sans-serif;font-weight:700;font-size:calc(11 * var(--u));letter-spacing:.22em;color:#ff9fd6;border-bottom:1px solid rgba(255,150,220,.5);padding-bottom:2px;margin-bottom:calc(8 * var(--u));}
+.sh-dlg .ln{font-family:'Noto Serif JP','Hiragino Mincho ProN',serif;font-weight:700;font-size:calc(18 * var(--u));line-height:1.7;color:#fff;letter-spacing:.04em;min-height:calc(31 * var(--u));text-shadow:0 0 10px rgba(255,150,220,.45);}
+.sh-dlg .ln .cur{display:inline-block;width:.5em;color:#ff9fd6;animation:a1Twinkle .5s ease-in-out infinite alternate;}
+.sh-shake{animation:shShake .55s ease-in-out both;}
+.sh-shake2{animation:shShake2 .7s ease-in-out both;}
+@keyframes shShake{0%,100%{transform:translate(0,0);}15%{transform:translate(-5px,3px);}30%{transform:translate(5px,-2px);}45%{transform:translate(-4px,-3px);}60%{transform:translate(3px,3px);}75%{transform:translate(-2px,1px);}}
+@keyframes shShake2{0%,100%{transform:translate(0,0);}10%{transform:translate(-9px,5px);}20%{transform:translate(9px,-6px);}30%{transform:translate(-8px,-5px);}40%{transform:translate(7px,6px);}55%{transform:translate(-5px,2px);}70%{transform:translate(4px,-3px);}85%{transform:translate(-2px,1px);}}
+.sh-crk-g{fill:none;stroke:rgba(255,190,240,.42);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;}
+.sh-crk{fill:none;stroke:#fff;stroke-width:.36;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 .6px rgba(255,255,255,.9));}
+.sh-crk,.sh-crk-g{stroke-dasharray:300;stroke-dashoffset:300;animation:shCrack .28s ease-out forwards;}
 @keyframes shCrack{to{stroke-dashoffset:0;}}
-@keyframes shShard{0%{opacity:1;transform:translate(0,0) rotate(0deg);}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--rt)) scale(.7);}}
-.sh-flash{position:fixed;inset:0;z-index:174;pointer-events:none;background:#fff;animation:shFlash .9s ease-out both;}
-@keyframes shFlash{0%{opacity:0;}12%{opacity:1;}100%{opacity:0;}}
-.sh-title{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%);z-index:175;pointer-events:none;text-align:center;animation:shTitle 2.2s ease both;}
-.sh-title .en{font-family:'Cinzel','Times New Roman',serif;font-weight:700;font-size:calc(12 * var(--u));letter-spacing:.4em;text-indent:.4em;color:#d8b8ff;}
-.sh-title .jp{font-family:'Noto Serif JP','Hiragino Mincho ProN',serif;font-weight:800;font-size:calc(34 * var(--u));letter-spacing:.14em;text-indent:.14em;color:#fff;text-shadow:0 0 16px rgba(200,150,255,.9),0 0 40px rgba(160,100,255,.6),0 2px 6px rgba(0,0,0,.8);margin-top:calc(4 * var(--u));}
-@keyframes shTitle{0%{opacity:0;transform:translate(-50%,-50%) scale(.8);filter:blur(8px);}18%{opacity:1;transform:translate(-50%,-50%) scale(1.05);filter:blur(0);}75%{opacity:1;}100%{opacity:0;transform:translate(-50%,-60%);}}
+.sh-impact{opacity:0;animation:shImpact .5s ease-out both;}
+@keyframes shImpact{0%{opacity:0;}20%{opacity:1;}100%{opacity:.35;}}
+.sh-shd{position:absolute;transform-origin:center;will-change:transform,opacity;animation:shShard 1.5s cubic-bezier(.35,0,.85,.45) forwards;}
+@keyframes shShard{0%{transform:translate(0,0) rotate(0);opacity:1;}25%{opacity:1;}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rt));opacity:0;}}
+.sh-white{position:absolute;inset:0;background:#fff;animation:shWhite .5s ease-out both;}
+@keyframes shWhite{0%{opacity:.9;}100%{opacity:0;}}
+/* 虚空 */
+.sh-void{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,#2a0b4a 0%,#12052a 45%,#040110 100%);animation:shVoidIn .6s ease both;}
+@keyframes shVoidIn{0%{opacity:0;}100%{opacity:1;}}
+.sh-void.out{animation:shVoidOut .9s ease both;}
+@keyframes shVoidOut{0%{opacity:1;}100%{opacity:0;}}
+.sh-rays{position:absolute;left:50%;top:44%;width:calc(900 * var(--u));height:calc(900 * var(--u));margin:calc(-450 * var(--u)) 0 0 calc(-450 * var(--u));border-radius:50%;
+  background:conic-gradient(from 0deg,rgba(200,140,255,0) 0deg,rgba(220,170,255,.35) 8deg,rgba(200,140,255,0) 16deg,rgba(255,180,240,.25) 40deg,rgba(200,140,255,0) 50deg,rgba(220,170,255,.35) 80deg,rgba(200,140,255,0) 90deg,rgba(255,180,240,.25) 130deg,rgba(200,140,255,0) 140deg,rgba(220,170,255,.35) 200deg,rgba(200,140,255,0) 210deg,rgba(255,180,240,.25) 260deg,rgba(200,140,255,0) 270deg,rgba(220,170,255,.35) 320deg,rgba(200,140,255,0) 330deg,rgba(200,140,255,0) 360deg);
+  -webkit-mask:radial-gradient(circle,#000 0%,rgba(0,0,0,.6) 30%,transparent 62%);mask:radial-gradient(circle,#000 0%,rgba(0,0,0,.6) 30%,transparent 62%);
+  animation:a1Spin 26s linear infinite, shRaysIn 1.4s ease both;}
+@keyframes shRaysIn{0%{opacity:0;transform:scale(.3);}100%{opacity:1;transform:scale(1);}}
+.sh-vortex{position:absolute;left:50%;top:44%;width:calc(520 * var(--u));height:calc(520 * var(--u));margin:calc(-260 * var(--u)) 0 0 calc(-260 * var(--u));
+  background:url('img/special-vortex.png') center/contain no-repeat;filter:sepia(1) hue-rotate(225deg) saturate(2.2) brightness(.9);opacity:.5;
+  animation:shVortex 9s linear infinite, shVortexIn 1.2s ease both;}
+@keyframes shVortex{to{transform:rotate(-360deg);}}
+@keyframes shVortexIn{0%{opacity:0;}100%{opacity:.55;}}
+.sh-reipia{position:absolute;left:50%;top:46%;width:calc(380 * var(--u));height:calc(570 * var(--u));margin:calc(-300 * var(--u)) 0 0 calc(-190 * var(--u));
+  background:url('img/challenge07-boss2.png') center/contain no-repeat;
+  animation:shReipiaIn 1.6s cubic-bezier(.2,1,.3,1) both, bossIdle 6s ease-in-out 1.6s infinite, bossGlow2 3s ease-in-out infinite;}
+@keyframes shReipiaIn{0%{opacity:0;transform:scale(.55) translateY(40px);filter:brightness(4) blur(12px);}45%{opacity:1;filter:brightness(2) blur(2px);}100%{opacity:1;transform:scale(1) translateY(0);filter:brightness(1) blur(0);}}
+.sh-flash2{position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,#fff 0%,rgba(255,220,255,.8) 25%,rgba(200,140,255,0) 70%);animation:shFlash2 1.2s ease-out both;}
+@keyframes shFlash2{0%{opacity:1;}100%{opacity:0;}}
+.sh-bfly{position:absolute;width:calc(10 * var(--u));height:calc(10 * var(--u));border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;background:radial-gradient(circle,#fff,rgba(255,170,240,.9) 40%,rgba(200,120,255,0) 75%);
+  animation:shBfly var(--d) ease-in-out var(--dl) infinite alternate, a1Twinkle 1.1s ease-in-out infinite alternate;}
+@keyframes shBfly{0%{transform:translate(0,0) scale(.6);}100%{transform:translate(var(--dx),var(--dy)) scale(1.1);}}
+.sh-line2{position:absolute;left:50%;top:83%;transform:translateX(-50%);width:88%;text-align:center;font-family:'Noto Serif JP','Hiragino Mincho ProN',serif;font-weight:700;font-size:calc(16 * var(--u));line-height:1.7;color:#e8d6ff;letter-spacing:.08em;text-shadow:0 0 12px rgba(200,140,255,.7),0 2px 4px rgba(0,0,0,.8);animation:fadeUp .5s ease both;}
+.sh-title{position:absolute;left:50%;top:85%;transform:translate(-50%,-50%);text-align:center;white-space:nowrap;animation:shTitle 2.4s ease both;}
+.sh-title .en{font-family:'Cinzel','Times New Roman',serif;font-weight:700;font-size:calc(12 * var(--u));letter-spacing:.42em;text-indent:.42em;color:#d8b8ff;}
+.sh-title .jp{font-family:'Noto Serif JP','Hiragino Mincho ProN',serif;font-weight:800;font-size:calc(40 * var(--u));letter-spacing:.16em;text-indent:.16em;color:#fff;text-shadow:0 0 18px rgba(200,150,255,1),0 0 48px rgba(160,100,255,.7),0 2px 6px rgba(0,0,0,.9);margin-top:calc(2 * var(--u));}
+.sh-title .jp b{display:inline-block;animation:shChar .5s cubic-bezier(.2,1.2,.3,1) both;animation-delay:calc(var(--i) * .12s);}
+@keyframes shChar{0%{opacity:0;transform:translateY(10px) scale(1.4);filter:blur(6px);}100%{opacity:1;transform:none;filter:blur(0);}}
+@keyframes shTitle{0%{opacity:0;}10%{opacity:1;}80%{opacity:1;}100%{opacity:0;}}
+.sh-lines{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(216,184,255,.8),transparent);animation:shLineGrow .8s ease both;}
+@keyframes shLineGrow{0%{transform:scaleX(0);}100%{transform:scaleX(1);}}
 
 /* ===== v61: チャンピオン登場画面・試合中のキャラクター＆セリフ ===== */
 .ci-screen{position:fixed;inset:0;overflow:hidden;background:#0a1030 url('img/area01-bg.png') center/cover no-repeat;display:flex;flex-direction:column;--u:min(calc(100vw / 360), calc(100dvh / 640));
@@ -1750,6 +1794,8 @@ function playChronoReleaseSE(){ // 解除：「パチッ」＋光が戻る音（
 // v70 ガラス演出SE
 function playGlassCrackSE(){try{resumeAC();noise({vol:0.16,dur:0.05,start:0,lpFreq:6000,q:0.8});noise({vol:0.1,dur:0.04,start:0.12,lpFreq:5000,q:0.8});fxTone({f:5200,f2:3200,type:'triangle',v:0.05,a:0.002,d:0.12,rev:0.4});}catch(e){}}
 function playGlassShatterSE(){try{resumeAC();noise({vol:0.24,dur:0.35,start:0,lpFreq:7000,q:0.6});for(let i=0;i<6;i++)fxBell({f:3000+Math.random()*3000,v:0.05,d:0.5+Math.random()*0.5,t:0.05+i*0.06,bright:1.3,rev:0.8});fxTone({f:900,f2:120,type:'sine',v:0.12,a:0.005,d:0.5,rev:0.6});}catch(e){}}
+function playShiftThump(k){k=k||1;try{resumeAC();fxTone({f:70*k,f2:32,type:'sine',v:0.28,a:0.005,d:0.5,rev:0.3});noise({vol:0.12,dur:0.12,start:0,lpFreq:300,q:1});fxTone({f:110,f2:60,type:'triangle',v:0.1,a:0.05,d:0.3,t:0.12,rev:0.4});}catch(e){}}
+function playTitleHitSE(){try{resumeAC();fxTone({f:55,f2:30,type:'sine',v:0.24,a:0.005,d:1.2,rev:0.5});[392,523,659,784,1047].forEach((f,i)=>fxBell({f,v:0.1,d:2.6,t:0.02+i*0.05,bright:1.15,rev:0.9}));fxAir({v:0.06,a:0.02,d:1.2,hp:5000,rev:0.9});}catch(e){}}
 function playForm2SE(){try{resumeAC();fxAir({v:0.08,a:0.3,d:0.8,hp:2500,rev:0.8});[523,659,784,1047,1319].forEach((f,i)=>fxBell({f,v:0.09,d:2.2,t:0.25+i*0.09,bright:1.1,rev:0.9}));fxTone({f:200,f2:60,type:'sine',v:0.14,a:0.02,d:0.9,rev:0.5});}catch(e){}}
 function duckBGM(on){try{if(bgmAudio)bgmAudio.volume=on?CHRONO_CONFIG.timeStopBgmVolume:0.45;}catch(e){}}
 function playCoreShiftSE(){ // 4が結晶のように割れて3へ
@@ -2355,7 +2401,8 @@ function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic,coachN
 
 
 // ── MenuScreen ──
-const APP_VER='v73'; // v73: 場のカードは「4枚並べた時の左端」の位置から順に置く（1枚目の位置が固定、左すぎない）
+const APP_VER='v74'; // v74: ルナ→レイピアの変身シーンを本格化（動く立ち絵・全文セリフ・ガラス割れ・虚空からの登場）
+// v73: 場のカードは「4枚並べた時の左端」の位置から順に置く（1枚目の位置が固定、左すぎない）
 // v70: ルナ戦30pt・15ptで第2形態（レイピア）演出
 // v69: 手札の下固定をやめ、場のすぐ下に手札を置く（上から順に積む）
 // v68: 場を手札のすぐ上に寄せる（視線移動を減らす）／第7の妖精にゆらぎアニメ／ルナのAIを easy に
@@ -2717,50 +2764,123 @@ function ChampionIntroScreen({champ,stage,onStart}){
   );
 }
 
-// ── v70 第2形態演出：ぼかし→黒い箱にセリフ→ガラスが割れる→閃光→レイピア登場 ──
+// ── v74 変身シーン：ルナ（動く立ち絵）→ セリフ全文 → 鼓動・ひび → 画面が本当に砕ける → 虚空からレイピア ──
 const SHIFT_LINE='みんな蝶（幸せ）になってね⋯';
-function makeShards(){ // 画面を三角形の破片に分割（viewBox 0 0 100 100）
-  const cols=6,rows=9,pts=[];let s=11;const r=()=>{s=(s*9301+49297)%233280;return s/233280;};
-  for(let y=0;y<=rows;y++){const row=[];for(let x=0;x<=cols;x++){const jx=(x===0||x===cols)?0:(r()-0.5)*9,jy=(y===0||y===rows)?0:(r()-0.5)*7;row.push([x*100/cols+jx,y*100/rows+jy]);}pts.push(row);}
-  const sh=[];
-  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
-    const a=pts[y][x],b=pts[y][x+1],c=pts[y+1][x+1],d=pts[y+1][x];
-    const tris=r()<0.5?[[a,b,c],[a,c,d]]:[[a,b,d],[b,c,d]];
-    tris.forEach(t=>{const cx=(t[0][0]+t[1][0]+t[2][0])/3,cy=(t[0][1]+t[1][1]+t[2][1])/3;
-      sh.push({pts:t.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' '),dx:((cx-50)*1.6+(r()-0.5)*20).toFixed(1)+'px',dy:(40+(cy-50)*0.6+r()*60).toFixed(1)+'px',rt:((r()-0.5)*120).toFixed(0)+'deg',dl:(0.05+r()*0.35).toFixed(2)+'s'});});
-  }
-  return sh;
+const SHIFT_LINE2='⋯⋯もう、この子じゃ足りない。';
+const SHIFT_T={dlg:700,typeMs:95,thump1:3900,thump2:4900,shatter:5900,voidIn:6250,reipia:6900,line2:8100,title:9600,voidOut:11400,done:12300};
+// 画面を「割れる面」として扱う。座標は 1単位=画面高さの1%（横は W=100*vw/vh）で正方比率
+function shiftGeom(){
+  const vw=window.innerWidth,vh=window.innerHeight,W=100*vw/vh;
+  const bgR=941/1672;let bw,bh,bx,by;if(W/100>bgR){bw=W;bh=W/bgR;bx=0;by=(100-bh)/2;}else{bh=100;bw=100*bgR;bx=(W-bw)/2;by=0;}
+  const lw=Math.min(W*0.98,74),lh=lw*1.5,lx=(W-lw)/2,ly=4; // ルナ立ち絵（上半身が見える高さ）
+  const ox=W/2,oy=ly+lh*0.40; // 衝撃点＝胸
+  return {vw,vh,W,bg:{x:bx,y:by,w:bw,h:bh},luna:{x:lx,y:ly,w:lw,h:lh},ox,oy};
 }
-function makeCracks(){
-  const c=[];let s=5;const r=()=>{s=(s*9301+49297)%233280;return s/233280;};
-  for(let i=0;i<9;i++){const ang=(i/9)*Math.PI*2+r()*0.5;let x=50,y=50,d='M50 50';for(let k=0;k<5;k++){x+=Math.cos(ang+(r()-0.5)*0.8)*(8+r()*10);y+=Math.sin(ang+(r()-0.5)*0.8)*(8+r()*10);d+=' L'+x.toFixed(1)+' '+y.toFixed(1);}c.push({d,dl:(r()*0.12).toFixed(2)+'s'});}
-  return c;
+function shiftCells(g){ // 衝撃点から放射状のセル（ひびの線＝セルの辺）
+  let s=17;const r=()=>{s=(s*9301+49297)%233280;return s/233280;};
+  const R=[0,9,21,36,56,82,125],M=11;const V=[];
+  for(let k=0;k<R.length;k++){const row=[];for(let j=0;j<M;j++){const th=(j/M)*Math.PI*2+(k?(r()-0.5)*0.25:0);const rr=R[k]*(k?0.85+r()*0.3:0);row.push([g.ox+Math.cos(th)*rr,g.oy+Math.sin(th)*rr]);}V.push(row);}
+  const cells=[];
+  for(let k=0;k<R.length-1;k++)for(let j=0;j<M;j++){const j2=(j+1)%M;const pts=k===0?[V[0][0],V[1][j],V[1][j2]]:[V[k][j],V[k+1][j],V[k+1][j2],V[k][j2]];
+    const cx=pts.reduce((a,p)=>a+p[0],0)/pts.length,cy=pts.reduce((a,p)=>a+p[1],0)/pts.length;const dist=Math.hypot(cx-g.ox,cy-g.oy);
+    cells.push({raw:pts,pts:pts.map(p=>p[0].toFixed(2)+','+p[1].toFixed(2)).join(' '),ring:k,dx:((cx-g.ox)*1.4+(r()-0.5)*14).toFixed(1)+'px',dy:(60+(cy-g.oy)*0.9+r()*70).toFixed(1)+'px',rt:((r()-0.5)*160).toFixed(0)+'deg',dl:(dist*0.004+r()*0.08).toFixed(2)+'s'});}
+  // ひび：放射線（中心→外）と各リングの円周線
+  const rays=[],rings=[];
+  for(let j=0;j<M;j++){let d='';for(let k=0;k<R.length;k++)d+=(k?' L':'M')+V[k][j][0].toFixed(2)+' '+V[k][j][1].toFixed(2);rays.push(d);}
+  for(let k=1;k<R.length;k++){let d='';for(let j=0;j<=M;j++){const p=V[k][j%M];d+=(j?' L':'M')+p[0].toFixed(2)+' '+p[1].toFixed(2);}rings.push(d);}
+  return {cells,rays,rings};
 }
-const SH_SHARDS=makeShards(),SH_CRACKS=makeCracks();
 function ShiftScene({name,form2Name,onDone,onForm2}){
-  const[step,setStep]=useState(0); // 0:ぼかし 1:箱＋セリフ 2:ひび 3:破片 4:閃光＋登場 5:終了
+  const g=useMemo(shiftGeom,[]);const geo=useMemo(()=>shiftCells(g),[g]);
+  // 破片＝背景＋ルナを写した小さなdiv（clip-pathで多角形）。SVGパターンより桁違いに軽い
+  const shards=useMemo(()=>{
+    const u=g.vh/100,Z=1.09,ox=g.ox,oy=g.oy-6;const zp=p=>[(ox+(p[0]-ox)*Z)*u,(oy+(p[1]-oy)*Z)*u];
+    const B=zp([g.bg.x,g.bg.y]),Bw=g.bg.w*Z*u,Bh=g.bg.h*Z*u,L=zp([g.luna.x,g.luna.y]),Lw=g.luna.w*Z*u,Lh=g.luna.h*Z*u;
+    return geo.cells.map(c=>{
+      const pts=c.raw.map(zp);const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
+      const x0=Math.max(-40,Math.min(...xs)),y0=Math.max(-40,Math.min(...ys)),x1=Math.min(g.vw+40,Math.max(...xs)),y1=Math.min(g.vh+40,Math.max(...ys));
+      const w=Math.max(1,x1-x0),hh=Math.max(1,y1-y0);if(w<2||hh<2)return null;
+      const poly=pts.map(p=>(p[0]-x0).toFixed(1)+'px '+(p[1]-y0).toFixed(1)+'px').join(',');
+      return {style:{left:x0+'px',top:y0+'px',width:w+'px',height:hh+'px',clipPath:'polygon('+poly+')',WebkitClipPath:'polygon('+poly+')',
+        backgroundImage:"url('img/challenge07-boss1.png'),linear-gradient(rgba(6,2,16,.55),rgba(6,2,16,.55)),url('img/challenge07-bg.png')",
+        backgroundSize:Lw+'px '+Lh+'px,100% 100%,'+Bw+'px '+Bh+'px',backgroundPosition:(L[0]-x0)+'px '+(L[1]-y0)+'px,0 0,'+(B[0]-x0)+'px '+(B[1]-y0)+'px',backgroundRepeat:'no-repeat',
+        '--dx':c.dx,'--dy':c.dy,'--rt':c.rt,animationDelay:c.dl}};
+    }).filter(Boolean);
+  },[g,geo]);
+  const[ph,setPh]=useState(0);   // 0 veil 1 dlg 2 thump1 3 thump2 4 shatter 5 void 6 reipia 7 line2 8 title 9 voidOut 10 end
+  const[typed,setTyped]=useState(0);const[typed2,setTyped2]=useState(0);
+  const bflies=useMemo(()=>{let s=3;const r=()=>{s=(s*9301+49297)%233280;return s/233280;};return [...Array(14)].map((_,i)=>({x:10+r()*80,y:20+r()*60,dx:(r()-0.5)*80+'px',dy:-(30+r()*90)+'px',d:(2.5+r()*3)+'s',dl:(-r()*4)+'s'}));},[]);
   useEffect(()=>{
     const T=[];const at=(ms,f)=>T.push(setTimeout(f,ms));
-    at(500,()=>setStep(1));
-    at(3300,()=>{setStep(2);try{playGlassCrackSE();}catch(e){}});
-    at(3700,()=>{setStep(3);try{playGlassShatterSE();}catch(e){}});
-    at(4600,()=>{setStep(4);onForm2&&onForm2();try{playForm2SE();}catch(e){}});
-    at(7000,()=>{setStep(5);onDone&&onDone();});
+    try{resumeAC();fxTone({f:60,f2:38,type:'sine',v:0.18,a:0.2,d:1.6,rev:0.4});fxAir({v:0.05,a:0.4,d:1.0,hp:3000,rev:0.8});}catch(e){}
+    at(SHIFT_T.dlg,()=>setPh(1));
+    // 1文字ずつ
+    for(let i=1;i<=SHIFT_LINE.length;i++)at(SHIFT_T.dlg+350+i*SHIFT_T.typeMs,()=>{setTyped(i);try{fxTone({f:2800+Math.random()*400,type:'sine',v:0.018,a:0.002,d:0.05,rev:0.2});}catch(e){}});
+    at(SHIFT_T.thump1,()=>{setPh(2);try{playShiftThump();playGlassCrackSE();}catch(e){}});
+    at(SHIFT_T.thump2,()=>{setPh(3);try{playShiftThump(1.3);playGlassCrackSE();}catch(e){}});
+    at(SHIFT_T.shatter,()=>{setPh(4);try{playGlassShatterSE();}catch(e){}});
+    at(SHIFT_T.voidIn,()=>{setPh(5);try{fxTone({f:80,f2:50,type:'sine',v:0.14,a:0.3,d:3,rev:0.7});}catch(e){}});
+    at(SHIFT_T.reipia,()=>{setPh(6);onForm2&&onForm2();try{playForm2SE();}catch(e){}});
+    at(SHIFT_T.line2,()=>setPh(7));
+    for(let i=1;i<=SHIFT_LINE2.length;i++)at(SHIFT_T.line2+i*80,()=>setTyped2(i));
+    at(SHIFT_T.title,()=>{setPh(8);try{playTitleHitSE();}catch(e){}});
+    at(SHIFT_T.voidOut,()=>setPh(9));
+    at(SHIFT_T.done,()=>{setPh(10);onDone&&onDone();});
     return()=>T.forEach(clearTimeout);
   },[]);
-  if(step>=5)return null;
-  return h(React.Fragment,null,
-    step<4&&h('div',{className:'sh-veil'+(step>0?' dark':'')}),
-    step>=1&&step<4&&h('div',{className:'sh-box'+(step>=2?' crack':'')},
-      h('div',{className:'sh-face'}),
-      h('div',{className:'sh-tx'},h('div',{className:'nm'},name),h('div',{className:'ln'},SHIFT_LINE))
+  if(ph>=10)return null;
+  const W=g.W,vb='0 0 '+W+' 100';
+  const shakeCls=ph===2?' sh-shake':ph===3?' sh-shake2':'';
+  const stageSvg=(children)=>h('svg',{className:'sh-stage'+shakeCls,viewBox:vb,preserveAspectRatio:'none'},children);
+  return h('div',{className:'sh-root'},
+    ph<5&&h('div',{className:'sh-veil'}),
+    // ── 割れる前の面：背景＋ルナ（ゆっくり寄る） ──
+    ph>=1&&ph<4&&stageSvg([
+      h('defs',{key:'d'},
+        h('radialGradient',{id:'shGlowG'},h('stop',{offset:'0%',stopColor:'#ff9fd6',stopOpacity:.55}),h('stop',{offset:'60%',stopColor:'#c070ff',stopOpacity:.18}),h('stop',{offset:'100%',stopColor:'#c070ff',stopOpacity:0})),
+        h('radialGradient',{id:'shImpG'},h('stop',{offset:'0%',stopColor:'#fff',stopOpacity:.9}),h('stop',{offset:'40%',stopColor:'#fff',stopOpacity:.25}),h('stop',{offset:'100%',stopColor:'#fff',stopOpacity:0}))
+      ),
+      h('g',{key:'cam',className:'sh-cam'+(ph>=2?' hold':''),style:{'--ox':g.ox+'px','--oy':(g.oy-6)+'px'}},
+        h('image',{href:'img/challenge07-bg.png',x:g.bg.x,y:g.bg.y,width:g.bg.w,height:g.bg.h,preserveAspectRatio:'none'}),
+        h('rect',{x:0,y:0,width:W,height:100,fill:'rgba(6,2,16,.55)'}),
+        h('ellipse',{className:'sh-glow',cx:g.ox,cy:g.oy-4,rx:g.luna.w*0.42,ry:g.luna.h*0.22,fill:'url(#shGlowG)'}),
+        h('image',{className:'sh-luna',href:'img/challenge07-boss1.png',x:g.luna.x,y:g.luna.y,width:g.luna.w,height:g.luna.h,preserveAspectRatio:'none'})
+      ),
+      // ひび：1回目は内側だけ、2回目は外まで
+      ph>=2&&h('g',{key:'c1'},
+        h('circle',{className:'sh-impact',cx:g.ox,cy:g.oy,r:14,fill:'url(#shImpG)'}),
+        geo.rings.slice(0,3).map((d,i)=>h('path',{key:'rg'+i,className:'sh-crk-g',d})),
+        geo.rays.map((d,i)=>h('path',{key:'r'+i,className:'sh-crk',d,style:{strokeDasharray:'32 400',animationDelay:(i%4)*0.03+'s'}})),
+        geo.rings.slice(0,3).map((d,i)=>h('path',{key:'ri'+i,className:'sh-crk',d,style:{animationDelay:0.1+i*0.06+'s'}}))
+      ),
+      ph>=3&&h('g',{key:'c2'},
+        h('circle',{className:'sh-impact',cx:g.ox,cy:g.oy,r:34,fill:'url(#shImpG)'}),
+        geo.cells.filter((c,i)=>c.ring<3&&i%3===0).map((c,i)=>h('polygon',{key:'w'+i,className:'sh-impact',points:c.pts,fill:'rgba(255,255,255,.18)',style:{animationDelay:0.05+i*0.03+'s'}})),
+        geo.rays.map((d,i)=>h('path',{key:'r2'+i,className:'sh-crk',d,style:{animationDelay:(i%5)*0.03+'s'}})),
+        geo.rings.map((d,i)=>h('path',{key:'ri2'+i,className:'sh-crk',d,style:{animationDelay:0.08+i*0.05+'s'}})),
+        geo.rings.map((d,i)=>h('path',{key:'rg2'+i,className:'sh-crk-g',d,style:{animationDelay:0.08+i*0.05+'s'}}))
+      )
+    ]),
+    // ── セリフ枠 ──
+    ph>=1&&ph<4&&h('div',{className:'sh-dlg'+(ph>=2?' sh-shake':'')},
+      h('div',{className:'nm'},name),
+      h('div',{className:'ln'},SHIFT_LINE.slice(0,typed),typed<SHIFT_LINE.length&&h('span',{className:'cur'},'|'))
     ),
-    (step===2||step===3)&&h('svg',{className:'sh-glass',viewBox:'0 0 100 100',preserveAspectRatio:'none'},
-      SH_CRACKS.map((c,i)=>h('path',{key:'c'+i,className:'crk',d:c.d,style:{animationDelay:c.dl}})),
-      step===3&&SH_SHARDS.map((s,i)=>h('polygon',{key:'s'+i,className:'shd',points:s.pts,style:{'--dx':s.dx,'--dy':s.dy,'--rt':s.rt,animationDelay:s.dl}}))
-    ),
-    step===4&&h('div',{className:'sh-flash'}),
-    step===4&&h('div',{className:'sh-title'},h('div',{className:'en'},'SECOND FORM'),h('div',{className:'jp'},form2Name))
+    // ── 砕ける：面そのものを破片にして落とす（破片に背景とルナが写っている） ──
+    ph===4&&h('div',{className:'sh-white'}),
+    (ph===4||ph===5)&&h('div',{className:'sh-stage shards'},shards.map((s,i)=>h('div',{key:i,className:'sh-shd',style:s.style}))),
+    // ── 虚空：光条・渦・蝶・レイピア ──
+    ph>=5&&h('div',{className:'sh-void'+(ph>=9?' out':'')},
+      h('div',{className:'sh-rays'}),
+      h('div',{className:'sh-vortex'}),
+      bflies.map((b,i)=>h('div',{key:i,className:'sh-bfly',style:{left:b.x+'%',top:b.y+'%','--dx':b.dx,'--dy':b.dy,'--d':b.d,'--dl':b.dl}})),
+      ph>=6&&h('div',{className:'sh-flash2'}),
+      ph>=6&&h('div',{className:'sh-reipia'}),
+      ph===7&&h('div',{className:'sh-line2'},SHIFT_LINE2.slice(0,typed2)),
+      ph>=8&&h('div',{className:'sh-lines',style:{top:'77%'}}),
+      ph>=8&&h('div',{className:'sh-title'},h('div',{className:'en'},'SECOND FORM'),h('div',{className:'jp'},[...form2Name].map((ch,i)=>h('b',{key:i,style:{'--i':i}},ch)))),
+      ph>=8&&h('div',{className:'sh-lines',style:{top:'93%'}})
+    )
   );
 }
 
