@@ -1322,114 +1322,121 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 .gp-screen .gp-field-cards{width:calc(var(--card-w) * 4 + calc(5 * var(--u)) * 3);max-width:100%;margin:0 auto;justify-content:flex-start !important;}
 
 @keyframes bossGlow2{0%,100%{filter:drop-shadow(0 0 14px rgba(180,140,255,.35));}50%{filter:drop-shadow(0 0 30px rgba(200,160,255,.7));}}
-/* --- v75 変身シーン（ルナ→レイピア） --- */
+/* --- v77 変身シーン：乗っ取り --- */
 .sh-root{position:fixed;inset:0;z-index:170;overflow:hidden;pointer-events:none;}
 .sh-veil{position:absolute;inset:0;background:#06020f;opacity:0;animation:shVeil .8s ease .15s both;}
-@keyframes shVeil{0%{opacity:0;}100%{opacity:.88;}}
-.sh-veil.solid{animation:none;opacity:.92;}
+@keyframes shVeil{0%{opacity:0;}100%{opacity:.9;}}
+.sh-veil.solid{animation:none;opacity:.94;}
 .sh-veil.leave{animation:shVeilOut .9s ease both;}
-@keyframes shVeilOut{0%{opacity:.92;}100%{opacity:0;}}
+@keyframes shVeilOut{0%{opacity:.94;}100%{opacity:0;}}
+.sh-vig{position:absolute;inset:0;z-index:3;background:radial-gradient(ellipse at 50% 45%,transparent 40%,rgba(0,0,0,.55) 100%);opacity:0;animation:shVigIn 1.2s ease .4s both;}
+@keyframes shVigIn{to{opacity:1;}}
 .gp-score.you.pt-burst .val{animation:ptBurst .8s ease-out both;}
 @keyframes ptBurst{0%{transform:scale(1);text-shadow:0 0 0 rgba(120,200,255,0);}30%{transform:scale(1.6);text-shadow:0 0 22px rgba(120,200,255,1),0 0 50px rgba(120,200,255,.8);}100%{transform:scale(1);text-shadow:0 0 6px rgba(120,200,255,.5);}}
 .gp-screen.form2-pop{animation:form2ScreenPop .55s cubic-bezier(.2,1.3,.3,1) both;}
 @keyframes form2ScreenPop{0%{transform:scale(.96);opacity:.6;}100%{transform:scale(1);opacity:1;}}
-/* 立ち絵レイヤー */
-.sh-luna{position:absolute;left:50%;top:50%;width:calc(320 * var(--u));height:calc(480 * var(--u));margin:calc(-250 * var(--u)) 0 0 calc(-160 * var(--u));
-  background:url('img/challenge07-luna-full.png') center/contain no-repeat;transform-origin:50% 40%;
-  animation:shLunaIn 1.4s cubic-bezier(.25,.8,.3,1) both, shBreath 4s ease-in-out 1.4s infinite, shDrain 2.6s ease-in .9s both;}
-@keyframes shLunaIn{0%{opacity:0;transform:translate(0,calc(-120 * var(--u))) scale(.45);}100%{opacity:1;transform:translate(0,0) scale(1);}}
-@keyframes shBreath{0%,100%{transform:scale(1) translateY(0);}50%{transform:scale(1.012) translateY(calc(-2 * var(--u)));}}
-@keyframes shDrain{0%{filter:saturate(1) brightness(1);}100%{filter:saturate(.25) brightness(.85);}}
-.sh-luna.still{animation:shDrainHold .6s ease both;}
-@keyframes shDrainHold{0%{filter:saturate(.25) brightness(.85);}100%{filter:saturate(0) brightness(.7) contrast(1.05);}}
-.sh-luna.hide{animation:none;opacity:0;}
-.sh-luna-glow{position:absolute;left:50%;top:50%;width:calc(260 * var(--u));height:calc(260 * var(--u));margin:calc(-170 * var(--u)) 0 0 calc(-130 * var(--u));border-radius:50%;
-  background:radial-gradient(circle,rgba(255,150,220,.45),rgba(190,110,255,.15) 45%,transparent 70%);animation:shGlowPulse 2s ease-in-out 1s infinite, fadeUp .8s ease .9s both;}
-@keyframes shGlowPulse{0%,100%{opacity:.5;transform:scale(1);}50%{opacity:1;transform:scale(1.08);}}
-/* 胸元へ吸い込まれる光の粒 */
-.sh-mote{position:absolute;left:50%;top:50%;width:calc(6 * var(--u));height:calc(6 * var(--u));border-radius:50%;background:radial-gradient(circle,#fff,rgba(255,180,240,.9) 40%,rgba(255,150,220,0) 75%);
-  animation:shMote var(--d) ease-in var(--dl) infinite;opacity:0;}
-@keyframes shMote{0%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(.4);}20%{opacity:1;}100%{opacity:0;transform:translate(calc(-3 * var(--u)),calc(-70 * var(--u))) scale(1.2);}}
-/* 星環（演出中は大きく） */
-.sh-ring{position:absolute;width:calc(150 * var(--u));height:calc(150 * var(--u));margin:calc(-75 * var(--u)) 0 0 calc(-75 * var(--u));background:center/contain no-repeat;
-  animation:shRingIn .7s cubic-bezier(.2,1.2,.3,1) both, shRingSpin 14s linear .7s infinite, shRingCharge 1.6s ease .5s both;}
-@keyframes shRingIn{0%{opacity:0;transform:scale(.3) rotate(-40deg);}100%{opacity:1;transform:scale(1) rotate(0);}}
+/* 常に舞う光の粒（背景層） */
+.sh-dust{position:absolute;z-index:2;width:calc(3 * var(--u));height:calc(3 * var(--u));border-radius:50%;background:rgba(220,190,255,.8);box-shadow:0 0 6px rgba(200,150,255,.8);animation:shDust var(--d) linear var(--dl) infinite;opacity:0;}
+@keyframes shDust{0%{opacity:0;transform:translate(0,0);}15%{opacity:.8;}85%{opacity:.6;}100%{opacity:0;transform:translate(var(--dx),var(--dy));}}
+/* カメラ */
+.sh-cam{position:absolute;z-index:5;left:50%;top:50%;width:calc(320 * var(--u));height:calc(480 * var(--u));margin:calc(-252 * var(--u)) 0 0 calc(-160 * var(--u));transform-origin:50% 30%;
+  animation:shCamIn 1.5s cubic-bezier(.25,.8,.3,1) both, shCamPush 7s ease-in-out 1.5s both;}
+@keyframes shCamIn{0%{opacity:0;transform:translate(0,calc(-140 * var(--u))) scale(.42);}100%{opacity:1;transform:translate(0,0) scale(1);}}
+@keyframes shCamPush{0%{transform:scale(1);}100%{transform:scale(1.07) translateY(calc(6 * var(--u)));}}
+.sh-cam.punch{animation:shCamPunch .6s cubic-bezier(.2,1.2,.3,1) both;}
+.sh-cam.punch.leave,.sh-cam.leave{animation:shCamOut .8s ease both;}
+@keyframes shCamPunch{0%{transform:scale(1.12) translateY(calc(6 * var(--u)));}100%{transform:scale(1) translateY(0);}}
+.sh-cam.leave{animation:shCamOut .8s ease both;}
+@keyframes shCamOut{0%{opacity:1;transform:scale(1);}100%{opacity:0;transform:scale(1.1);}}
+.sh-cam>*{position:absolute;inset:0;}
+.pdf{position:absolute;inset:0;}
+.pdf>div{position:absolute;inset:0;background:center/100% 100% no-repeat;will-change:transform;}
+/* ルナ */
+.pdf>.lf-wing{background-image:url('img/pd-lunaf-wing.png');transform-origin:56% 30%;animation:lfWing 3.6s ease-in-out infinite;}
+.pdf>.lf-deco{background-image:url('img/pd-lunaf-deco.png');animation:pdFloat 5s ease-in-out infinite;}
+.pdf>.lf-body{background-image:url('img/pd-lunaf-body.png');transform-origin:50% 92%;animation:pdBreath 4s ease-in-out infinite;}
+@keyframes lfWing{0%,100%{transform:rotate(0) skewX(0);}50%{transform:rotate(2.5deg) skewX(-1.5deg);}}
+.pdf.drain>div{animation-play-state:running;filter:saturate(1);transition:filter 2.2s ease;}
+.pdf.drain.on>div{filter:saturate(.1) brightness(.8);}
+.pdf.drain.gone>div{opacity:0;transition:opacity 1.4s ease,filter 2.2s ease;}
+/* 目の光が消える（ルナの両目に暗い薄膜） */
+.lf-eyes{position:absolute;left:31%;top:12%;width:16%;height:3%;border-radius:50%;background:radial-gradient(ellipse,rgba(20,8,30,.5),rgba(20,8,30,0) 70%);opacity:0;transition:opacity 1.2s ease;}
+.lf-eyes.on{opacity:1;}
+/* 光の筋（血管） */
+.sh-veins{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+.sh-veins path{fill:none;stroke:rgba(200,120,255,.95);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(190,100,255,.9));stroke-dasharray:900;stroke-dashoffset:900;animation:veinGrow 1.6s ease-out forwards, veinPulse 1.2s ease-in-out 1.6s infinite;}
+@keyframes veinGrow{to{stroke-dashoffset:0;}}
+@keyframes veinPulse{0%,100%{opacity:.6;}50%{opacity:1;}}
+.sh-veins .core{fill:rgba(220,160,255,.9);filter:blur(6px);animation:corePulse 1.1s ease-in-out infinite;}
+@keyframes corePulse{0%,100%{transform:scale(1);opacity:.7;}50%{transform:scale(1.5);opacity:1;}}
+/* レイピア（浸食で下から上へ現れる） */
+.pdf.reipia{-webkit-mask-image:linear-gradient(to top,#000 0%,#000 64%,rgba(0,0,0,.4) 68%,transparent 72%,transparent 100%);mask-image:linear-gradient(to top,#000 0%,#000 64%,rgba(0,0,0,.4) 68%,transparent 72%,transparent 100%);
+  -webkit-mask-size:100% 300%;mask-size:100% 300%;-webkit-mask-position:0 0;mask-position:0 0;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;}
+.pdf.reipia.erode{animation:erode 2.4s cubic-bezier(.4,0,.6,1) forwards;}
+@keyframes erode{0%{-webkit-mask-position:0 0;mask-position:0 0;}100%{-webkit-mask-position:0 52%;mask-position:0 52%;}}
+.pdf.reipia.full{-webkit-mask-image:none;mask-image:none;}
+.pdf>.rf-wingL{background-image:url('img/pd-reipiaf-wingL.png');transform-origin:33% 34%;transform:scaleX(.22) rotate(6deg);}
+.pdf>.rf-wingR{background-image:url('img/pd-reipiaf-wingR.png');transform-origin:67% 34%;transform:scaleX(.22) rotate(-6deg);}
+.pdf>.rf-body{background-image:url('img/pd-reipiaf-body.png');transform-origin:50% 92%;animation:pdBreath 4.4s ease-in-out infinite;}
+.pdf>.rf-lids{background-image:url('img/pd-reipiaf-lids.png');transition:opacity .12s ease;}
+.pdf>.rf-lids.open{opacity:0;}
+.pdf.burst>.rf-wingL{animation:rfBurstL .7s cubic-bezier(.2,1.5,.4,1) both, pdWingL 3.4s ease-in-out .7s infinite;}
+.pdf.burst>.rf-wingR{animation:rfBurstR .7s cubic-bezier(.2,1.5,.4,1) both, pdWingR 3.4s ease-in-out -1s infinite;}
+@keyframes rfBurstL{0%{transform:scaleX(.22) rotate(6deg);}100%{transform:scaleX(1) rotate(0);}}
+@keyframes rfBurstR{0%{transform:scaleX(.22) rotate(-6deg);}100%{transform:scaleX(1) rotate(0);}}
+/* 浸食の縁の光 */
+.sh-edge{position:absolute;left:-10%;right:-10%;height:calc(14 * var(--u));background:linear-gradient(90deg,transparent,rgba(210,150,255,.9),rgba(255,255,255,.95),rgba(210,150,255,.9),transparent);filter:blur(3px);opacity:0;animation:edgeRise 2.4s cubic-bezier(.4,0,.6,1) forwards;}
+@keyframes edgeRise{0%{top:104%;opacity:0;}8%{opacity:1;}92%{opacity:1;}100%{top:-6%;opacity:0;}}
+/* 星環（施錠） */
+.sh-ring{position:absolute;z-index:6;width:calc(130 * var(--u));height:calc(130 * var(--u));background:center/contain no-repeat;
+  animation:ringLock .45s cubic-bezier(.3,1.6,.4,1) both, shRingSpin 22s linear .45s infinite;filter:saturate(1.1) drop-shadow(0 0 8px rgba(255,255,255,.35));}
+@keyframes ringLock{0%{opacity:0;transform:scale(1.8) rotate(-30deg);}70%{opacity:1;transform:scale(.94) rotate(4deg);}100%{opacity:1;transform:scale(1) rotate(0);}}
 @keyframes shRingSpin{to{transform:rotate(360deg);}}
-@keyframes shRingCharge{0%{filter:saturate(.2) brightness(.6);}100%{filter:saturate(1.4) brightness(1.25) drop-shadow(0 0 12px rgba(255,255,255,.5));}}
-.sh-ring.converge{animation:shRingConverge .7s cubic-bezier(.6,0,.9,.4) both;}
-@keyframes shRingConverge{0%{opacity:1;transform:translate(0,0) scale(1);}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(.15);}}
-.sh-ring.orbit{animation:shRingOrbitIn .6s cubic-bezier(.2,1.2,.3,1) both, shRingSpin 18s linear .6s infinite;filter:saturate(1.2) brightness(1.1) drop-shadow(0 0 10px rgba(255,255,255,.4));}
-@keyframes shRingOrbitIn{0%{opacity:0;transform:scale(.4);}100%{opacity:1;transform:scale(1);}}
+.sh-ring.leave{animation:ringOut .6s ease both;}
+@keyframes ringOut{to{opacity:0;transform:scale(1.3);}}
 /* セリフ */
-.sh-dlg{position:absolute;left:calc(12 * var(--u));right:calc(12 * var(--u));bottom:max(env(safe-area-inset-bottom,0px),calc(18 * var(--u)));
+.sh-dlg{position:absolute;left:calc(12 * var(--u));right:calc(12 * var(--u));bottom:max(env(safe-area-inset-bottom,0px),calc(18 * var(--u)));z-index:12;
   background:linear-gradient(180deg,rgba(6,2,14,.86),rgba(2,0,8,.94));border:1px solid rgba(255,150,220,.5);border-radius:calc(6 * var(--u));
   padding:calc(14 * var(--u)) calc(18 * var(--u)) calc(16 * var(--u));box-shadow:0 0 40px rgba(255,120,200,.18),0 20px 50px rgba(0,0,0,.7);animation:shDlg .5s cubic-bezier(.2,1.2,.3,1) both;}
 .sh-dlg.dark{border-color:rgba(190,150,255,.45);box-shadow:0 0 40px rgba(150,100,255,.18),0 20px 50px rgba(0,0,0,.7);}
+.sh-dlg.gone{animation:shDlgOut .5s ease both;}
 @keyframes shDlg{0%{opacity:0;transform:translateY(14px);}100%{opacity:1;transform:none;}}
+@keyframes shDlgOut{0%{opacity:1;}100%{opacity:0;transform:translateY(6px);}}
 .sh-dlg .nm{display:inline-block;font-family:'Noto Sans JP','Hiragino Sans',sans-serif;font-weight:700;font-size:calc(11 * var(--u));letter-spacing:.22em;color:#ff9fd6;border-bottom:1px solid rgba(255,150,220,.5);padding-bottom:2px;margin-bottom:calc(8 * var(--u));}
 .sh-dlg.dark .nm{color:#c8a8ff;border-color:rgba(190,150,255,.5);}
-.sh-dlg .ln{font-family:'Noto Serif JP','Hiragino Mincho ProN',serif;font-weight:700;font-size:calc(18 * var(--u));line-height:1.7;color:#fff;letter-spacing:.04em;min-height:calc(31 * var(--u));text-shadow:0 0 10px rgba(255,150,220,.45);}
+.sh-dlg .ln{font-family:'Noto Serif JP','Hiragino Mincho ProN',serif;font-weight:700;font-size:calc(17 * var(--u));line-height:1.75;color:#fff;letter-spacing:.04em;min-height:calc(30 * var(--u));text-shadow:0 0 10px rgba(255,150,220,.45);}
+.sh-dlg .ln .g{color:#c890ff;text-shadow:0 0 8px rgba(190,120,255,.9);animation:a1Twinkle .12s steps(2) infinite alternate;}
 .sh-dlg .ln .cur{display:inline-block;width:.5em;color:#ff9fd6;animation:a1Twinkle .5s ease-in-out infinite alternate;}
-/* 鼓動・揺れ（2〜4px） */
-.sh-shake{animation:shShake .5s ease-in-out both;}
-.sh-shake2{animation:shShake2 .6s ease-in-out both;}
-@keyframes shShake{0%,100%{transform:translate(0,0);}20%{transform:translate(-2px,2px);}40%{transform:translate(2px,-1px);}60%{transform:translate(-2px,-2px);}80%{transform:translate(1px,1px);}}
-@keyframes shShake2{0%,100%{transform:translate(0,0);}15%{transform:translate(-4px,3px);}30%{transform:translate(4px,-3px);}45%{transform:translate(-3px,-3px);}60%{transform:translate(3px,3px);}80%{transform:translate(-2px,1px);}}
-/* ひび（蝶の羽の形） */
-.sh-stage{position:absolute;inset:0;width:100%;height:100%;display:block;}
-.sh-crk-g{fill:none;stroke:rgba(255,190,240,.16);stroke-width:.55;stroke-linecap:round;stroke-linejoin:round;}
-.sh-crk{fill:none;stroke:rgba(255,255,255,.75);stroke-width:.13;stroke-linecap:round;stroke-linejoin:round;}
-.sh-crk,.sh-crk-g{stroke-dasharray:300;stroke-dashoffset:300;animation:shCrack .3s ease-out forwards;}
-@keyframes shCrack{to{stroke-dashoffset:0;}}
-.sh-impact{opacity:0;animation:shImpact .5s ease-out both;}
-@keyframes shImpact{0%{opacity:0;}20%{opacity:1;}100%{opacity:.35;}}
-/* 破片 */
-.sh-stage.shards{z-index:6;}
-.sh-shd{position:absolute;transform-origin:center;will-change:transform,opacity;animation:shShard 1.4s cubic-bezier(.35,0,.85,.45) forwards;}
-@keyframes shShard{0%{transform:translate(0,0) rotate(0);opacity:1;}25%{opacity:1;}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rt));opacity:0;}}
-.sh-white{position:absolute;inset:0;z-index:7;background:radial-gradient(circle at 50% 42%,#fff,rgba(255,220,255,.7) 30%,rgba(255,200,255,0) 70%);animation:shWhite .45s ease-out both;}
-@keyframes shWhite{0%{opacity:.75;}100%{opacity:0;}}
-/* レイピア・老化ルナ・ヘアピン */
-.sh-reipia-wrap{position:absolute;inset:0;z-index:5;transform:translateX(calc(62 * var(--u)));transition:transform .8s cubic-bezier(.2,1,.3,1);}
-.sh-reipia-wrap.center{transform:translateX(0);}
-.sh-reipia{position:absolute;left:50%;top:50%;width:calc(330 * var(--u));height:calc(495 * var(--u));margin:calc(-262 * var(--u)) 0 0 calc(-165 * var(--u));
-  background:url('img/challenge07-reipia-full.png') center/contain no-repeat;
-  animation:shReipiaIn 1.1s cubic-bezier(.2,1,.3,1) both, bossIdle 6s ease-in-out 1.1s infinite, bossGlow2 3s ease-in-out infinite;}
-@keyframes shReipiaIn{0%{opacity:0;transform:translateY(calc(30 * var(--u))) scale(.7);filter:brightness(3) blur(8px);}50%{opacity:1;filter:brightness(1.6) blur(1px);}100%{opacity:1;transform:none;filter:brightness(1) blur(0);}}
-.sh-reipia.center{animation:shReipiaCenter .7s cubic-bezier(.2,1,.3,1) both, bossIdle 6s ease-in-out .7s infinite, bossGlow2 3s ease-in-out infinite;}
-@keyframes shReipiaCenter{0%{transform:translate(0,0) scale(1);}100%{transform:translate(0,calc(-10 * var(--u))) scale(1.04);}}
-.sh-reipia.leave{animation:shReipiaOut .8s ease both;}
-@keyframes shReipiaOut{0%{opacity:1;transform:scale(1.04) translateY(calc(-10 * var(--u)));}100%{opacity:0;transform:scale(1.12) translateY(calc(-20 * var(--u)));}}
-.sh-aged-wrap{position:absolute;left:50%;top:50%;width:calc(300 * var(--u));height:calc(450 * var(--u));margin:calc(-232 * var(--u)) 0 0 calc(-150 * var(--u));z-index:3;transform:translate(calc(-78 * var(--u)),calc(8 * var(--u))) scale(.88);}
-.sh-young{position:absolute;inset:0;background:url('img/challenge07-luna-full.png') center/contain no-repeat;filter:saturate(0) brightness(.75);animation:shYoungOut .5s ease .2s both;}
-@keyframes shYoungOut{0%{opacity:1;}100%{opacity:0;}}
-.sh-aged{position:absolute;inset:0;background:url('img/challenge07-luna-aged.png') center/contain no-repeat;opacity:0;
-  -webkit-mask-image:linear-gradient(0deg,transparent 0%,#000 var(--m1,0%),#000 100%);mask-image:linear-gradient(0deg,transparent 0%,#000 var(--m1,0%),#000 100%);
-  animation:shAgedIn .5s ease .2s both;}
-@keyframes shAgedIn{0%{opacity:0;}100%{opacity:.95;}}
-.sh-aged.ash{animation:shAgedIn .5s ease both, shAsh 1.5s ease-in .1s forwards;}
-@keyframes shAsh{0%{-webkit-mask-image:linear-gradient(0deg,transparent 0%,#000 8%,#000 100%);mask-image:linear-gradient(0deg,transparent 0%,#000 8%,#000 100%);opacity:.95;filter:saturate(1);}
-  100%{-webkit-mask-image:linear-gradient(0deg,transparent 0%,transparent 96%,#000 130%);mask-image:linear-gradient(0deg,transparent 0%,transparent 96%,#000 130%);opacity:.6;filter:saturate(0) brightness(1.3);}}
-.sh-ash{position:absolute;width:calc(5 * var(--u));height:calc(5 * var(--u));border-radius:40%;background:rgba(235,225,240,.85);opacity:0;animation:shAshFly var(--d) ease-out var(--dl) forwards;}
-@keyframes shAshFly{0%{opacity:0;transform:translate(0,0) rotate(0);}15%{opacity:.9;}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--rt));}}
-.sh-hairpin{position:absolute;left:50%;top:44%;width:calc(84 * var(--u));height:calc(75 * var(--u));margin-left:calc(-112 * var(--u));z-index:8;
-  background:url('img/challenge07-hairpin.png') center/contain no-repeat;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));
-  animation:shHairpin 1.5s cubic-bezier(.4,0,.8,.6) both;}
-@keyframes shHairpin{0%{opacity:0;transform:translate(0,0) rotate(-10deg) scale(.8);}15%{opacity:1;}100%{opacity:.9;transform:translate(calc(-20 * var(--u)),calc(330 * var(--u))) rotate(50deg) scale(1);}}
-.sh-title{position:absolute;left:50%;top:84%;transform:translate(-50%,-50%);z-index:9;text-align:center;white-space:nowrap;animation:shTitle 2.6s ease both;}
+/* 解放 */
+.sh-void{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse at 50% 42%,#2a0b4a 0%,#12052a 45%,#040110 100%);animation:shVoidIn .5s ease both;}
+@keyframes shVoidIn{0%{opacity:0;}100%{opacity:1;}}
+.sh-rays{position:absolute;left:50%;top:44%;width:calc(900 * var(--u));height:calc(900 * var(--u));margin:calc(-450 * var(--u)) 0 0 calc(-450 * var(--u));border-radius:50%;z-index:1;
+  background:conic-gradient(from 0deg,rgba(200,140,255,0) 0deg,rgba(220,170,255,.35) 8deg,rgba(200,140,255,0) 16deg,rgba(255,180,240,.25) 40deg,rgba(200,140,255,0) 50deg,rgba(220,170,255,.35) 80deg,rgba(200,140,255,0) 90deg,rgba(255,180,240,.25) 130deg,rgba(200,140,255,0) 140deg,rgba(220,170,255,.35) 200deg,rgba(200,140,255,0) 210deg,rgba(255,180,240,.25) 260deg,rgba(200,140,255,0) 270deg,rgba(220,170,255,.35) 320deg,rgba(200,140,255,0) 330deg,rgba(200,140,255,0) 360deg);
+  -webkit-mask:radial-gradient(circle,#000 0%,rgba(0,0,0,.6) 30%,transparent 62%);mask:radial-gradient(circle,#000 0%,rgba(0,0,0,.6) 30%,transparent 62%);
+  animation:a1Spin 26s linear infinite, shRaysIn 1.2s ease both;}
+@keyframes shRaysIn{0%{opacity:0;transform:scale(.3);}100%{opacity:1;transform:scale(1);}}
+.sh-wave{position:absolute;left:50%;top:44%;width:calc(120 * var(--u));height:calc(120 * var(--u));margin:calc(-60 * var(--u)) 0 0 calc(-60 * var(--u));border-radius:50%;z-index:11;
+  border:3px solid rgba(255,255,255,.9);box-shadow:0 0 30px rgba(200,150,255,.9),inset 0 0 30px rgba(200,150,255,.6);animation:shWave .8s ease-out both;}
+@keyframes shWave{0%{transform:scale(.2);opacity:1;}100%{transform:scale(8);opacity:0;}}
+.sh-white{position:absolute;inset:0;z-index:10;background:radial-gradient(circle at 50% 42%,#fff,rgba(255,220,255,.6) 30%,rgba(255,200,255,0) 70%);animation:shWhite .4s ease-out both;}
+@keyframes shWhite{0%{opacity:.7;}100%{opacity:0;}}
+.sh-title{position:absolute;left:50%;top:86%;transform:translate(-50%,-50%);z-index:12;text-align:center;white-space:nowrap;animation:shTitle 2.4s ease both;}
 .sh-title .en{font-family:'Cinzel','Times New Roman',serif;font-weight:700;font-size:calc(11 * var(--u));letter-spacing:.42em;text-indent:.42em;color:#d8b8ff;}
 .sh-title .jp{font-family:'Noto Serif JP','Hiragino Mincho ProN',serif;font-weight:800;font-size:calc(32 * var(--u));letter-spacing:.16em;text-indent:.16em;color:#fff;text-shadow:0 0 16px rgba(200,150,255,1),0 0 40px rgba(160,100,255,.7),0 2px 6px rgba(0,0,0,.9);margin-top:calc(2 * var(--u));}
 .sh-title .jp b{display:inline-block;animation:shChar .5s cubic-bezier(.2,1.2,.3,1) both;animation-delay:calc(var(--i) * .12s);}
 @keyframes shChar{0%{opacity:0;transform:translateY(10px) scale(1.4);filter:blur(6px);}100%{opacity:1;transform:none;filter:blur(0);}}
 @keyframes shTitle{0%{opacity:0;}10%{opacity:1;}85%{opacity:1;}100%{opacity:0;}}
-.sh-lines{position:absolute;left:0;right:0;height:1px;z-index:9;background:linear-gradient(90deg,transparent,rgba(216,184,255,.8),transparent);animation:shLineGrow .8s ease both;}
+.sh-lines{position:absolute;left:0;right:0;height:1px;z-index:12;background:linear-gradient(90deg,transparent,rgba(216,184,255,.8),transparent);animation:shLineGrow .8s ease both;}
 @keyframes shLineGrow{0%{transform:scaleX(0);}100%{transform:scaleX(1);}}
-/* reduced motion: 短いフェードだけ */
-.sh-simple{position:absolute;inset:0;background:#06020f;display:flex;align-items:center;justify-content:center;animation:shVeil .5s ease both;}
+.sh-simple{position:absolute;inset:0;background:#06020f;animation:shVeil .5s ease both;}
 .sh-simple .a,.sh-simple .b{position:absolute;left:50%;top:50%;width:calc(300 * var(--u));height:calc(450 * var(--u));margin:calc(-240 * var(--u)) 0 0 calc(-150 * var(--u));background:center/contain no-repeat;}
-.sh-simple .a{background-image:url('img/challenge07-luna-full.png');animation:shYoungOut 1s ease .6s both;}
-.sh-simple .b{background-image:url('img/challenge07-reipia-full.png');opacity:0;animation:shAgedIn 1s ease .6s both;}
-@media (prefers-reduced-motion: reduce){.sh-shake,.sh-shake2{animation:none !important;}}
+.sh-simple .a{background-image:url('img/challenge07-luna-full.png');animation:shSimpleOut 1s ease .6s both;}
+.sh-simple .b{background-image:url('img/challenge07-reipia-full.png');opacity:0;animation:shSimpleIn 1s ease .6s both;}
+@keyframes shSimpleOut{to{opacity:0;}}
+@keyframes shSimpleIn{to{opacity:1;}}
+.sh-shk{position:absolute;inset:0;z-index:5;}
+.sh-shake2{animation:shShake2 .5s ease-in-out both;}
+@keyframes shShake2{0%,100%{transform:translate(0,0);}15%{transform:translate(-4px,3px);}30%{transform:translate(4px,-3px);}45%{transform:translate(-3px,-3px);}60%{transform:translate(3px,3px);}80%{transform:translate(-2px,1px);}}
 
 /* ===== v61: チャンピオン登場画面・試合中のキャラクター＆セリフ ===== */
 .ci-screen{position:fixed;inset:0;overflow:hidden;background:#0a1030 url('img/area01-bg.png') center/cover no-repeat;display:flex;flex-direction:column;--u:min(calc(100vw / 360), calc(100dvh / 640));
@@ -2451,7 +2458,8 @@ function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic,coachN
 
 
 // ── MenuScreen ──
-const APP_VER='v76'; // v76: レイピア立ち絵をパーツ分け（羽・体・星環・まぶた）してCSSで動かす（ペーパードール）
+const APP_VER='v77'; // v77: 変身シーンを「乗っ取り」に作り直し（動く立ち絵・浸食・星環の施錠・目が開く・羽の解放）
+// v76: レイピア立ち絵をパーツ分け（羽・体・星環・まぶた）してCSSで動かす（ペーパードール）
 // v75: ルナ／レイピア新素材・15pt変身演出（星環・老化ルナ・ヘアピン）・対戦中は上半身立ち絵
 // v74: ルナ→レイピアの変身シーンを本格化（動く立ち絵・全文セリフ・ガラス割れ・虚空からの登場）
 // v73: 場のカードは「4枚並べた時の左端」の位置から順に置く（1枚目の位置が固定、左すぎない）
@@ -2826,138 +2834,89 @@ const REIPIA_RINGS={
 const RING_ORDER=['lock','time','erase','command'];
 // ── v74 変身シーン：ルナ（動く立ち絵）→ セリフ全文 → 鼓動・ひび → 画面が本当に砕ける → 虚空からレイピア ──
 // 画面を「割れる面」として扱う。座標は 1単位=画面高さの1%（横は W=100*vw/vh）
-function shiftGeom(){
-  const vw=window.innerWidth,vh=window.innerHeight,W=100*vw/vh,u=vh/640;
-  const bgR=941/1672;let bw,bh,bx,by;if(W/100>bgR){bw=W;bh=W/bgR;bx=0;by=(100-bh)/2;}else{bh=100;bw=100*bgR;bx=(W-bw)/2;by=0;}
-  // 立ち絵（.sh-luna と同じ位置・大きさ）を単位系へ
-  const lwpx=320*u,lhpx=480*u,lxpx=vw/2-160*u,lypx=vh/2-250*u;
-  const luna={x:lxpx/vh*100,y:lypx/vh*100,w:lwpx/vh*100,h:lhpx/vh*100};
-  const ox=W/2,oy=luna.y+luna.h*0.40; // 衝撃点＝胸
-  return {vw,vh,W,u,bg:{x:bx,y:by,w:bw,h:bh},luna,ox,oy};
-}
-// 蝶の羽の形に割れるセル：斜め4方向（羽）が長く伸び、縦（体の継ぎ目）は短い
-function shiftCells(g){
-  let s=17;const r=()=>{s=(s*9301+49297)%233280;return s/233280;};
-  const R=[0,8,19,33,52,78,120],M=12;const V=[];
-  const wing=th=>0.55+0.75*Math.abs(Math.sin(2*th)); // 羽のローブ
-  for(let k=0;k<R.length;k++){const row=[];for(let j=0;j<M;j++){const th=(j/M)*Math.PI*2+(k?(r()-0.5)*0.22:0);const rr=R[k]*(k?0.85+r()*0.3:0)*wing(th);row.push([g.ox+Math.cos(th)*rr,g.oy+Math.sin(th)*rr]);}V.push(row);}
-  const cells=[];
-  for(let k=0;k<R.length-1;k++)for(let j=0;j<M;j++){const j2=(j+1)%M;const pts=k===0?[V[0][0],V[1][j],V[1][j2]]:[V[k][j],V[k+1][j],V[k+1][j2],V[k][j2]];
-    const cx=pts.reduce((a,p)=>a+p[0],0)/pts.length,cy=pts.reduce((a,p)=>a+p[1],0)/pts.length;const dist=Math.hypot(cx-g.ox,cy-g.oy);
-    cells.push({raw:pts,pts:pts.map(p=>p[0].toFixed(2)+','+p[1].toFixed(2)).join(' '),ring:k,dx:((cx-g.ox)*1.4+(r()-0.5)*14).toFixed(1)+'px',dy:(60+(cy-g.oy)*0.9+r()*70).toFixed(1)+'px',rt:((r()-0.5)*160).toFixed(0)+'deg',dl:(dist*0.004+r()*0.08).toFixed(2)+'s'});}
-  const rays=[],rings=[];
-  for(let j=0;j<M;j++){let d='';for(let k=0;k<R.length;k++)d+=(k?' L':'M')+V[k][j][0].toFixed(2)+' '+V[k][j][1].toFixed(2);rays.push(d);}
-  for(let k=1;k<R.length;k++){let d='';for(let j=0;j<=M;j++){const p=V[k][j%M];d+=(j?' L':'M')+p[0].toFixed(2)+' '+p[1].toFixed(2);}rings.push(d);}
-  // 体の継ぎ目：胸から上下へ伸びる縦線
-  const seam='M'+g.ox+' '+(g.oy-60)+' L'+(g.ox+1.2)+' '+(g.oy-20)+' L'+(g.ox-0.8)+' '+g.oy+' L'+(g.ox+1)+' '+(g.oy+30)+' L'+(g.ox-1.5)+' '+(g.oy+70);
-  return {cells,rays,rings,seam};
-}
-const SHIFT_LINE='みんな蝶（幸せ）になってね⋯';
-const SHIFT_LINE2='⋯⋯もう、この子じゃ足りない。';
-// タイムライン（ms）
-const SHIFT_T={luna:800,type:100,rings:2700,ringGap:350,still:4100,line2:4300,converge:4900,thump1:5100,thump2:5450,shatter:5700,reipia:5900,aged:6400,ash:7000,hairpin:6500,title:7300,leave:8600,done:9500};
+const SHIFT_LINE='みんな蝶（しあわせ）になってね⋯';
+const SHIFT_LINE2A='ルナ⋯あなたは賢い、賢い子⋯';
+const SHIFT_LINE2B='蝶（しあわせ）になって、みんなを救ってあげて⋯';
+const GLITCH_CHARS='蝶✦▮░◆彡';
+// タイムライン（ms）。数字だけで調整できる
+const SHIFT_T={luna:700,type:95,glitch:3050,glitchStep:90,veins:3300,erode:3800,erodeDur:2400,lock:6400,lockGap:220,eyes:7350,line2:7550,type2:85,release:11200,title:11700,leave:13300,done:14200};
+// 胸から広がる光の筋（viewBox 1024×1536 の座標）
+const VEIN_PATHS=['M430 400 C 420 470,380 520,330 560 C 300 590,270 620,250 660','M430 400 C 470 460,520 480,560 520 C 600 560,620 620,640 700','M430 400 C 440 480,450 560,440 640 C 430 720,420 800,430 900','M430 400 C 400 360,380 320,360 280 C 345 250,340 220,350 190','M430 400 C 470 350,500 300,520 240','M430 400 C 380 440,330 430,290 400 C 250 370,210 340,180 320','M430 400 C 460 520,470 660,450 800 C 440 900,450 1000,470 1100','M430 400 C 500 520,560 640,590 780','M430 400 C 390 520,350 640,330 780 C 320 880,330 980,340 1080'];
 function ShiftScene({name,form2Name,onDone,onForm2,onLeave}){
   const reduced=useMemo(()=>{try{return window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}},[]);
-  const g=useMemo(shiftGeom,[]);const geo=useMemo(()=>shiftCells(g),[g]);
   const Q=FX_QUALITY;
-  const[ph,setPh]=useState(0);   // 0 暗転 1 ルナ＋台詞 2 星環 3 静止＋？？？ 4 収縮＋鼓動1 5 鼓動2 6 砕ける 7 レイピア 8 老化ルナ 9 灰 10 タイトル 11 退場 12 終了
-  const[typed,setTyped]=useState(0);const[typed2,setTyped2]=useState(0);const[ringN,setRingN]=useState(0);
-  const motes=useMemo(()=>{let s=3;const r=()=>{s=(s*9301+49297)%233280;return s/233280;};return [...Array(Math.round(16*Q))].map(()=>({sx:((r()-0.5)*260)+'px',sy:((r()-0.6)*400)+'px',d:(1.2+r()*1.2)+'s',dl:(-r()*2.4)+'s'}));},[]);
-  const ashes=useMemo(()=>{let s=9;const r=()=>{s=(s*9301+49297)%233280;return s/233280;};return [...Array(Math.round(26*Q))].map(()=>({x:38+r()*24,y:55+r()*40,dx:((r()-0.3)*120)+'px',dy:(-(60+r()*160))+'px',rt:((r()-0.5)*300)+'deg',d:(1.2+r()*1.4)+'s',dl:(r()*0.9)+'s'}));},[]);
-  const shards=useMemo(()=>{
-    const u=g.vh/100;const zp=p=>[p[0]*u,p[1]*u];
-    const B=zp([g.bg.x,g.bg.y]),Bw=g.bg.w*u,Bh=g.bg.h*u,L=zp([g.luna.x,g.luna.y]),Lw=g.luna.w*u,Lh=g.luna.h*u;
-    const cells=Q<0.6?geo.cells.filter((c,i)=>i%2===0):geo.cells;
-    return cells.map(c=>{
-      const pts=c.raw.map(zp);const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
-      const x0=Math.max(-40,Math.min(...xs)),y0=Math.max(-40,Math.min(...ys)),x1=Math.min(g.vw+40,Math.max(...xs)),y1=Math.min(g.vh+40,Math.max(...ys));
-      const w=Math.max(1,x1-x0),hh=Math.max(1,y1-y0);if(w<2||hh<2)return null;
-      const poly=pts.map(p=>(p[0]-x0).toFixed(1)+'px '+(p[1]-y0).toFixed(1)+'px').join(',');
-      return {style:{left:x0+'px',top:y0+'px',width:w+'px',height:hh+'px',clipPath:'polygon('+poly+')',WebkitClipPath:'polygon('+poly+')',
-        backgroundImage:"url('img/challenge07-luna-full.png'),linear-gradient(rgba(6,2,15,.88),rgba(6,2,15,.88)),url('img/challenge07-bg.png')",
-        backgroundSize:Lw+'px '+Lh+'px,100% 100%,'+Bw+'px '+Bh+'px',backgroundPosition:(L[0]-x0)+'px '+(L[1]-y0)+'px,0 0,'+(B[0]-x0)+'px '+(B[1]-y0)+'px',backgroundRepeat:'no-repeat',
-        filter:'saturate(0) brightness(.7)','--dx':c.dx,'--dy':c.dy,'--rt':c.rt,animationDelay:c.dl}};
-    }).filter(Boolean);
-  },[g,geo]);
+  const[ph,setPh]=useState(0); // 0暗転 1ルナ 2声が乱れる 3光の筋 4浸食 5施錠 6目が開く 7解放 8タイトル 9退場 10終了
+  const[typed,setTyped]=useState(0);const[glitch,setGlitch]=useState(null);const[ringN,setRingN]=useState(0);const[t2a,setT2a]=useState(0);const[t2b,setT2b]=useState(0);
+  const dust=useMemo(()=>{let s=5;const r=()=>{s=(s*9301+49297)%233280;return s/233280;};return [...Array(Math.round(22*Q))].map(()=>({x:r()*100,y:20+r()*80,dx:((r()-0.5)*40)+'px',dy:(-(80+r()*160))+'px',d:(5+r()*5)+'s',dl:(-r()*8)+'s'}));},[]);
   useEffect(()=>{
     const T=[];const at=(ms,f)=>T.push(setTimeout(f,ms));
     try{resumeAC();}catch(e){}
-    if(reduced){ // 簡略版：約2秒のフェード
-      at(300,()=>setPh(1));at(1200,()=>{onForm2&&onForm2();});at(2000,()=>{onLeave&&onLeave();});at(2600,()=>{setPh(12);onDone&&onDone();});
-      return()=>T.forEach(clearTimeout);
-    }
+    if(reduced){at(300,()=>setPh(1));at(1200,()=>{onForm2&&onForm2();});at(2000,()=>{onLeave&&onLeave();});at(2600,()=>{setPh(10);onDone&&onDone();});return()=>T.forEach(clearTimeout);}
     try{fxTone({f:60,f2:38,type:'sine',v:0.16,a:0.2,d:1.4,rev:0.4});fxAir({v:0.04,a:0.4,d:1.0,hp:3000,rev:0.8});}catch(e){}
     at(SHIFT_T.luna,()=>setPh(1));
-    for(let i=1;i<=SHIFT_LINE.length;i++)at(SHIFT_T.luna+300+i*SHIFT_T.type,()=>{setTyped(i);try{fxTone({f:2800+Math.random()*400,type:'sine',v:0.016,a:0.002,d:0.05,rev:0.2});}catch(e){}});
-    at(SHIFT_T.rings,()=>setPh(2));
-    RING_ORDER.forEach((k,i)=>at(SHIFT_T.rings+i*SHIFT_T.ringGap,()=>{setRingN(i+1);try{fxBell({f:[880,1175,1319,1568][i],v:0.08,d:0.9,bright:1.2,rev:0.7});}catch(e){}}));
-    at(SHIFT_T.still,()=>setPh(3));
-    for(let i=1;i<=SHIFT_LINE2.length;i++)at(SHIFT_T.line2+i*70,()=>setTyped2(i));
-    at(SHIFT_T.converge,()=>{setPh(4);try{fxTone({f:1400,f2:200,type:'sine',v:0.08,a:0.01,d:0.6,rev:0.6});}catch(e){}});
-    at(SHIFT_T.thump1,()=>{try{playShiftThump();playGlassCrackSE();}catch(e){}});
-    at(SHIFT_T.thump2,()=>{setPh(5);try{playShiftThump(1.3);playGlassCrackSE();}catch(e){}});
-    at(SHIFT_T.shatter,()=>{setPh(6);try{playGlassShatterSE();}catch(e){}});
-    at(SHIFT_T.reipia,()=>{setPh(7);onForm2&&onForm2();try{playForm2SE();}catch(e){}});
-    at(SHIFT_T.aged,()=>{setPh(8);try{fxTone({f:90,f2:40,type:'sine',v:0.1,a:0.2,d:1.4,rev:0.6});}catch(e){}});
-    at(SHIFT_T.hairpin,()=>{try{setBgmVolume(0.02);fxBell({f:3520,v:0.14,d:1.6,bright:1.4,rev:0.85});fxBell({f:5274,v:0.05,d:0.8,t:0.02,bright:1.3,rev:0.7});}catch(e){}});
-    at(SHIFT_T.ash,()=>setPh(9));
-    at(SHIFT_T.title,()=>{setPh(10);try{setBgmVolume(0.12);playTitleHitSE();}catch(e){}});
-    at(SHIFT_T.leave,()=>{setPh(11);onLeave&&onLeave();});
-    at(SHIFT_T.done,()=>{setPh(12);onDone&&onDone();});
+    for(let i=1;i<=SHIFT_LINE.length;i++)at(SHIFT_T.luna+400+i*SHIFT_T.type,()=>{setTyped(i);try{fxTone({f:2800+Math.random()*400,type:'sine',v:0.016,a:0.002,d:0.05,rev:0.2});}catch(e){}});
+    // 文字が乱れて消える
+    at(SHIFT_T.glitch,()=>setPh(2));
+    for(let k=1;k<=10;k++)at(SHIFT_T.glitch+k*SHIFT_T.glitchStep,()=>{setGlitch(k);try{if(k%2)fxTone({f:1200+Math.random()*1800,type:'square',v:0.012,a:0.001,d:0.03,rev:0.1});}catch(e){}});
+    at(SHIFT_T.veins,()=>{setPh(3);try{fxTone({f:120,f2:220,type:'sine',v:0.1,a:0.3,d:2.2,rev:0.7});fxAir({v:0.03,a:0.5,d:2,hp:2500,rev:0.8});}catch(e){}});
+    at(SHIFT_T.erode,()=>{setPh(4);try{fxTone({f:180,f2:520,type:'triangle',v:0.05,a:0.4,d:2.4,rev:0.8});for(let i=0;i<6;i++)fxBell({f:1500+i*400,v:0.03,d:1.2,t:i*0.4,bright:1.3,rev:0.9});}catch(e){}});
+    at(SHIFT_T.lock,()=>setPh(5));
+    RING_ORDER.forEach((k,i)=>at(SHIFT_T.lock+i*SHIFT_T.lockGap,()=>{setRingN(i+1);try{fxTone({f:2600,f2:900,type:'square',v:0.05,a:0.001,d:0.06,rev:0.3});fxTone({f:260,f2:120,type:'sine',v:0.12,a:0.002,d:0.18,rev:0.4});}catch(e){}}));
+    at(SHIFT_T.eyes,()=>{setPh(6);try{fxBell({f:2093,v:0.09,d:1.8,bright:1.2,rev:0.85});fxAir({v:0.03,a:0.01,d:0.6,hp:6000,rev:0.7});}catch(e){}});
+    for(let i=1;i<=SHIFT_LINE2A.length;i++)at(SHIFT_T.line2+i*SHIFT_T.type2,()=>setT2a(i));
+    const t2b0=SHIFT_T.line2+SHIFT_LINE2A.length*SHIFT_T.type2+500;
+    for(let i=1;i<=SHIFT_LINE2B.length;i++)at(t2b0+i*SHIFT_T.type2,()=>setT2b(i));
+    at(SHIFT_T.release,()=>{setPh(7);onForm2&&onForm2();try{playShiftThump(1.2);playForm2SE();}catch(e){}});
+    at(SHIFT_T.title,()=>{setPh(8);try{playTitleHitSE();}catch(e){}});
+    at(SHIFT_T.leave,()=>{setPh(9);onLeave&&onLeave();});
+    at(SHIFT_T.done,()=>{setPh(10);onDone&&onDone();});
     return()=>T.forEach(clearTimeout);
   },[]);
-  if(ph>=12)return null;
+  if(ph>=10)return null;
   if(reduced)return h('div',{className:'sh-root'},h('div',{className:'sh-simple'},ph>=1&&h('div',{className:'a'}),ph>=1&&h('div',{className:'b'})));
-  const W=g.W,vb='0 0 '+W+' 100';
-  const u=g.u;
-  const ringPos={tl:[-118,-150],tr:[118,-150],bl:[-118,60],br:[118,60]}; // 立ち絵中心からのオフセット（u）
-  const orbitPos={tl:[-125,-135],tr:[125,-135],bl:[-125,45],br:[125,45]};
-  const shakeCls=ph===4?' sh-shake':ph===5?' sh-shake2':'';
+  const u=(window.innerHeight/640)||1;
+  // 乱れた台詞
+  let lineEl=null;
+  if(glitch!=null){
+    const n=SHIFT_LINE.length;let s=17+glitch;const r=()=>{s=(s*9301+49297)%233280;return s/233280;};
+    const keep=Math.max(0,n-glitch*2);
+    lineEl=[...SHIFT_LINE].map((c,i)=>i<keep?c:h('span',{key:i,className:'g'},r()<0.6?GLITCH_CHARS[Math.floor(r()*GLITCH_CHARS.length)]:'　'));
+  }
+  const ringPos={tl:[-130,-150],tr:[130,-150],bl:[-135,10],br:[135,10]};
+  const shakeCls=ph===7?' sh-shake2':'';
   return h('div',{className:'sh-root'},
-    ph<11?h('div',{className:'sh-veil'+(ph>=1?' solid':'')}):h('div',{className:'sh-veil leave'}),
-    // ── ルナ（1〜5） ──
-    ph>=1&&ph<6&&h('div',{className:'sh-stage'+shakeCls},
-      h('div',{className:'sh-luna-glow'}),
-      motes.map((m,i)=>h('div',{key:'m'+i,className:'sh-mote',style:{'--sx':m.sx,'--sy':m.sy,'--d':m.d,'--dl':m.dl}})),
-      h('div',{className:'sh-luna'+(ph>=3?' still':'')}),
-      // 星環：出現 → 充填 → 収縮
-      RING_ORDER.slice(0,ringN).map((k,i)=>{const p=ringPos[REIPIA_RINGS[k].pos];return h('div',{key:k,className:'sh-ring'+(ph>=4?' converge':''),
-        style:{left:'50%',top:'50%',transform:'translate('+p[0]*u+'px,'+(p[1]-10)*u+'px)',marginLeft:(p[0]-75)*u+'px',marginTop:(p[1]-10-75)*u+'px',backgroundImage:'url('+REIPIA_RINGS[k].image+')','--tx':(-p[0]*u)+'px','--ty':((-(p[1]-10)+(-58))*u)+'px'}});}),
-      // ひび
-      ph>=4&&h('svg',{className:'sh-stage',viewBox:vb,preserveAspectRatio:'none'},
-        h('defs',null,h('radialGradient',{id:'shImpG'},h('stop',{offset:'0%',stopColor:'#fff',stopOpacity:.9}),h('stop',{offset:'40%',stopColor:'#fff',stopOpacity:.25}),h('stop',{offset:'100%',stopColor:'#fff',stopOpacity:0}))),
-        h('circle',{className:'sh-impact',cx:g.ox,cy:g.oy,r:12,fill:'url(#shImpG)'}),
-        h('path',{className:'sh-crk',d:geo.seam}),
-        geo.rings.slice(0,2).map((d,i)=>h('path',{key:'ri'+i,className:'sh-crk',d,style:{animationDelay:0.1+i*0.08+'s'}})),
-        geo.rays.map((d,i)=>h('path',{key:'r'+i,className:'sh-crk',d,style:{strokeDasharray:'26 400',animationDelay:(i%4)*0.03+'s'}})),
-        ph>=5&&h('g',null,
-          h('circle',{className:'sh-impact',cx:g.ox,cy:g.oy,r:30,fill:'url(#shImpG)'}),
-          geo.rays.map((d,i)=>h('path',{key:'r2'+i,className:'sh-crk',d,style:{animationDelay:(i%5)*0.03+'s'}})),
-          geo.rings.map((d,i)=>h('path',{key:'ri2'+i,className:'sh-crk',d,style:{animationDelay:0.06+i*0.05+'s'}})),
-          geo.rings.map((d,i)=>h('path',{key:'rg2'+i,className:'sh-crk-g',d,style:{animationDelay:0.06+i*0.05+'s'}}))
-        )
-      )
+   h('div',{className:'sh-shk'+shakeCls},
+    ph<9?h('div',{className:'sh-veil'+(ph>=1?' solid':'')}):h('div',{className:'sh-veil leave'}),
+    ph>=7&&ph<9&&h('div',{className:'sh-void'}),
+    ph>=7&&ph<9&&h('div',{className:'sh-rays'}),
+    h('div',{className:'sh-vig'}),
+    dust.map((d,i)=>h('div',{key:'d'+i,className:'sh-dust',style:{left:d.x+'%',top:d.y+'%','--dx':d.dx,'--dy':d.dy,'--d':d.d,'--dl':d.dl}})),
+    // ── カメラ：ルナ（乗っ取られる側）とレイピア（浸食してくる側）を同じ枠に重ねる ──
+    ph>=1&&h('div',{className:'sh-cam'+(ph>=7&&ph<9?' punch':'')+(ph>=9?' leave':'')},
+      h('div',{className:'pdf drain'+(ph>=2?' on':'')+(ph>=5?' gone':'')},h('div',{className:'lf-wing'}),h('div',{className:'lf-deco'}),h('div',{className:'lf-body'})),
+      h('div',{className:'lf-eyes'+(ph>=2?' on':'')}),
+      (ph>=3&&ph<5)&&h('svg',{className:'sh-veins',viewBox:'0 0 1024 1536',preserveAspectRatio:'none'},
+        h('circle',{className:'core',cx:430,cy:400,r:26,style:{transformOrigin:'430px 400px'}}),
+        VEIN_PATHS.map((d,i)=>h('path',{key:i,d,style:{animationDelay:(i*0.08)+'s, '+(1.6+i*0.08)+'s'}}))
+      ),
+      ph>=4&&h('div',{className:'pdf reipia'+(ph===4?' erode':' full')+(ph>=7?' burst':'')},
+        h('div',{className:'rf-wingL'}),h('div',{className:'rf-wingR'}),h('div',{className:'rf-body'}),h('div',{className:'rf-lids'+(ph>=6?' open':'')})
+      ),
+      ph===4&&h('div',{className:'sh-edge'})
     ),
-    // ── セリフ枠 ──
-    ph>=1&&ph<3&&h('div',{className:'sh-dlg'},h('div',{className:'nm'},name),h('div',{className:'ln'},SHIFT_LINE.slice(0,typed),typed<SHIFT_LINE.length&&h('span',{className:'cur'},'|'))),
-    ph>=3&&ph<6&&h('div',{className:'sh-dlg dark'},h('div',{className:'nm'},'？？？'),h('div',{className:'ln'},SHIFT_LINE2.slice(0,typed2))),
-    // ── 砕ける ──
-    ph===6&&h('div',{className:'sh-white'}),
-    (ph===6||ph===7)&&h('div',{className:'sh-stage shards'},shards.map((s,i)=>h('div',{key:i,className:'sh-shd',style:s.style}))),
-    // ── 老化ルナ（レイピアの後ろ）＋灰＋ヘアピン ──
-    ph>=8&&ph<11&&h('div',{className:'sh-aged-wrap'},
-      h('div',{className:'sh-young'}),
-      h('div',{className:'sh-aged'+(ph>=9?' ash':'')}),
-      ph>=9&&ashes.map((a,i)=>h('div',{key:'a'+i,className:'sh-ash',style:{left:a.x+'%',top:a.y+'%','--dx':a.dx,'--dy':a.dy,'--rt':a.rt,'--d':a.d,'--dl':a.dl}}))
-    ),
-    ph>=8&&ph<11&&h('div',{className:'sh-hairpin'}),
-    // ── レイピア ──
-    ph>=7&&h('div',{className:'sh-reipia-wrap'+(ph>=10?' center':'')},h('div',{className:'sh-reipia'+(ph>=10?' center':'')+(ph>=11?' leave':'')})),
-    // 星環（レイピアの周囲へ再配置）
-    ph>=10&&ph<11&&RING_ORDER.map(k=>{const p=orbitPos[REIPIA_RINGS[k].pos];return h('div',{key:'o'+k,className:'sh-ring orbit',style:{left:'50%',top:'50%',marginLeft:(p[0]-75)*u+'px',marginTop:(p[1]-75)*u+'px',width:130*u+'px',height:130*u+'px',backgroundImage:'url('+REIPIA_RINGS[k].image+')'}});}),
-    ph>=10&&ph<11&&h('div',{className:'sh-lines',style:{top:'77%'}}),
-    ph>=10&&ph<11&&h('div',{className:'sh-title'},h('div',{className:'en'},'SECOND FORM'),h('div',{className:'jp'},[...form2Name].map((ch,i)=>h('b',{key:i,style:{'--i':i}},ch)))),
-    ph>=10&&ph<11&&h('div',{className:'sh-lines',style:{top:'92%'}})
+    // 星環：施錠
+    ph>=5&&RING_ORDER.slice(0,ringN).map(k=>{const p=ringPos[REIPIA_RINGS[k].pos];return h('div',{key:k,className:'sh-ring'+(ph>=9?' leave':''),style:{left:'calc(50% + '+(p[0]-65)*u+'px)',top:'calc(50% + '+(p[1]-65)*u+'px)',backgroundImage:'url('+REIPIA_RINGS[k].image+')'}});})
+   ),
+    // セリフ
+    ph>=1&&ph<3&&h('div',{className:'sh-dlg'+(glitch!=null&&glitch>=8?' gone':'')},h('div',{className:'nm'},name),h('div',{className:'ln'},glitch!=null?lineEl:[SHIFT_LINE.slice(0,typed),typed<SHIFT_LINE.length&&h('span',{key:'c',className:'cur'},'|')])),
+    ph>=6&&ph<7&&h('div',{className:'sh-dlg dark'},h('div',{className:'nm'},form2Name),h('div',{className:'ln'},SHIFT_LINE2A.slice(0,t2a),t2a>=SHIFT_LINE2A.length&&h('br'),t2a>=SHIFT_LINE2A.length&&SHIFT_LINE2B.slice(0,t2b))),
+    // 解放
+    ph===7&&h('div',{className:'sh-white'}),
+    ph>=7&&ph<8&&h('div',{className:'sh-wave'}),
+    ph>=7&&ph<8&&h('div',{className:'sh-wave',style:{animationDelay:'.12s'}}),
+    ph>=8&&ph<9&&h('div',{className:'sh-lines',style:{top:'79%'}}),
+    ph>=8&&ph<9&&h('div',{className:'sh-title'},h('div',{className:'en'},'SECOND FORM'),h('div',{className:'jp'},[...form2Name].map((ch,i)=>h('b',{key:i,style:{'--i':i}},ch)))),
+    ph>=8&&ph<9&&h('div',{className:'sh-lines',style:{top:'93%'}})
   );
 }
 
