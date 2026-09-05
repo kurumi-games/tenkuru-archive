@@ -1300,8 +1300,8 @@ body{background:linear-gradient(180deg,#0a0020 0%,#12002e 40%,#180040 70%,#1a003
 .gp-screen.ch7 .gp-field-sum .sep{color:#c9a6f0;}
 .gp-screen.ch7 .gp-field-sum .ato b{color:#fff !important;}
 
-/* ===== v71: 場に出たカードは左揃え（手札は元のまま） ===== */
-.gp-screen .gp-field-cards{width:100%;justify-content:flex-start !important;padding-left:calc(6 * var(--u));}
+/* ===== v73: 場のカードは4枚ぶんの枠を中央に置き、その左端から順に並べる（1枚目の位置が動かない） ===== */
+.gp-screen .gp-field-cards{width:calc(var(--card-w) * 4 + calc(5 * var(--u)) * 3);max-width:100%;margin:0 auto;justify-content:flex-start !important;}
 
 /* ===== v70: ルナ → レイピア 第2形態演出（第7だけ） ===== */
 .gp-screen.ch7 .boss-img.form2{top:calc(-30 * var(--u));width:calc(420 * var(--u));height:calc(630 * var(--u));margin-left:calc(-210 * var(--u));
@@ -2355,7 +2355,7 @@ function TutorialScreen({pendingDiff,onFinish,onExit,trackNum,toggleMusic,coachN
 
 
 // ── MenuScreen ──
-const APP_VER='v71'; // v71: 手札は元に戻し、場に出たカードを左揃えに
+const APP_VER='v73'; // v73: 場のカードは「4枚並べた時の左端」の位置から順に置く（1枚目の位置が固定、左すぎない）
 // v70: ルナ戦30pt・15ptで第2形態（レイピア）演出
 // v69: 手札の下固定をやめ、場のすぐ下に手札を置く（上から順に積む）
 // v68: 場を手札のすぐ上に寄せる（視線移動を減らす）／第7の妖精にゆらぎアニメ／ルナのAIを easy に
